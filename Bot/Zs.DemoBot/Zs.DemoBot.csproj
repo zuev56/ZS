@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-DemoBot-74FB246E-80E2-4E12-81F8-4F9435A30BCE</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Zs.Bot.Data.SQLite\Zs.Bot.Data.SQLite.csproj" />
+      <ProjectReference Include="..\Zs.Bot.Telegram\Zs.Bot.Telegram.csproj" />
+    </ItemGroup>
+
+</Project>

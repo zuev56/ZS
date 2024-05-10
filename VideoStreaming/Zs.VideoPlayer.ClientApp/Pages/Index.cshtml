@@ -1,0 +1,31 @@
+﻿@page
+@inject Microsoft.Extensions.Configuration.IConfiguration _configuration;
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+    var videoUri = _configuration["VideoUri"];
+}
+
+<div class="text-center">
+    <video id="video_1" class="video-js vjs-fluid vjs-default-skin" controls preload="auto" data-setup='{}'>
+        <source src="@videoUri" type="application/x-mpegURL">
+    </video>
+</div>
+
+@section Scripts{
+    <script>
+        //var player = videojs('video_1');
+        //player.ready(function() {
+        //  var promise = player.play();
+        //
+        //  if (promise !== undefined) {
+        //    promise.then(function() {
+        //      // Autoplay started!
+        //    }).catch(function(error) {
+        //      // Autoplay was prevented.
+        //    });
+        //  }
+        //});
+        //player.play();
+    </script>
+}
