@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Zs.Home.Bot.Features.VkUsers;
+namespace Zs.Home.Application.Features.VkUsers;
 
 internal sealed class User
 {

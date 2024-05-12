@@ -1,16 +1,16 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Zs.Home.Bot.Features.Weather;
+namespace Zs.Home.Application.Features.Weather;
 
-internal sealed class WeatherAnalyzerSettings
+public sealed class WeatherAnalyzerSettings
 {
     public const string SectionName = "WeatherAnalyzer";
     [Required]
     public DeviceSettings[] Devices { get; init; } = Array.Empty<DeviceSettings>();
 }
 
-internal sealed class DeviceSettings
+public sealed class DeviceSettings
 {
     [Required, Url]
     public string Uri { get; init; } = null!;
@@ -19,7 +19,7 @@ internal sealed class DeviceSettings
     public string? Name { get; init; }
 }
 
-internal sealed class SensorSettings
+public sealed class SensorSettings
 {
     [Required]
     public string Name { get; init; } = null!;
@@ -28,7 +28,7 @@ internal sealed class SensorSettings
     public ParameterSettings[] Parameters { get; init; } = Array.Empty<ParameterSettings>();
 }
 
-internal sealed class ParameterSettings
+public sealed class ParameterSettings
 {
     [Required]
     public string Name { get; init; } = null!;

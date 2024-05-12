@@ -1,28 +1,28 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Zs.Home.Bot.Features.Hardware;
-using Zs.Home.Bot.Features.Ping;
-using Zs.Home.Bot.Features.Seq;
-using Zs.Home.Bot.Features.VkUsers;
-using Zs.Home.Bot.Features.Weather;
+using Zs.Home.Application.Features.Hardware;
+using Zs.Home.Application.Features.Ping;
+using Zs.Home.Application.Features.Seq;
+using Zs.Home.Application.Features.VkUsers;
+using Zs.Home.Application.Features.Weather;
 
 namespace Zs.Home.Bot.Interaction;
 
 internal sealed class SystemStatusService
 {
-    private readonly HardwareMonitor _hardwareMonitor;
-    private readonly UserWatcher _userWatcher;
-    private readonly WeatherAnalyzer _weatherAnalyzer;
-    private readonly PingChecker _pingChecker;
-    private readonly SeqEventsInformer _seqEventsInformer;
+    private readonly IHardwareMonitor _hardwareMonitor;
+    private readonly IUserWatcher _userWatcher;
+    private readonly IWeatherAnalyzer _weatherAnalyzer;
+    private readonly IPingChecker _pingChecker;
+    private readonly ISeqEventsInformer _seqEventsInformer;
 
     public SystemStatusService(
-        HardwareMonitor hardwareMonitor,
-        UserWatcher userWatcher,
-        WeatherAnalyzer weatherAnalyzer,
-        PingChecker pingChecker,
-        SeqEventsInformer seqEventsInformer)
+        IHardwareMonitor hardwareMonitor,
+        IUserWatcher userWatcher,
+        IWeatherAnalyzer weatherAnalyzer,
+        IPingChecker pingChecker,
+        ISeqEventsInformer seqEventsInformer)
     {
         _hardwareMonitor = hardwareMonitor;
         _userWatcher = userWatcher;

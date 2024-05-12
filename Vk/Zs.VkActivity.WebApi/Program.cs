@@ -13,7 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using VkActivity.Data;
 using Zs.VkActivity.Common;
 using Zs.VkActivity.Common.Abstractions;
 using Zs.VkActivity.Common.Services;

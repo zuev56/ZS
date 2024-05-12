@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Zs.Home.Bot.Features.Ping;
+namespace Zs.Home.Application.Features.Ping;
 
 public sealed record Target
 {

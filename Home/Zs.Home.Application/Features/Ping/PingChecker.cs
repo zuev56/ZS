@@ -7,11 +7,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
 using Zs.Common.Services.Scheduling;
-using Zs.Home.Bot.Features.Hardware;
 
-namespace Zs.Home.Bot.Features.Ping;
+namespace Zs.Home.Application.Features.Ping;
 
-internal sealed class PingChecker : IHasJob, IHasCurrentState
+internal sealed class PingChecker : IPingChecker
 {
     private const int AttemptsWhenNotReachable = 3;
     private static readonly TimeSpan BaseDelay = 500.Milliseconds();

@@ -6,12 +6,11 @@ using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
 using Zs.Common.Services.Http;
 using Zs.Common.Services.Scheduling;
-using Zs.Home.Bot.Features.Hardware;
-using static Zs.Home.Bot.Features.VkUsers.Constants;
+using static Zs.Home.Application.Features.VkUsers.Constants;
 
-namespace Zs.Home.Bot.Features.VkUsers;
+namespace Zs.Home.Application.Features.VkUsers;
 
-internal sealed class UserWatcher : IHasJob, IHasCurrentState
+internal sealed class UserWatcher : IUserWatcher
 {
     private readonly UserWatcherSettings _options;
     public ProgramJob<string> Job { get; }

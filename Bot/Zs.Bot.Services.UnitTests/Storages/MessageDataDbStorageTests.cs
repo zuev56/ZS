@@ -9,7 +9,6 @@ using Xunit;
 using Zs.Bot.Data.Models;
 using Zs.Bot.Data.Repositories;
 using Zs.Bot.Data.Storages;
-using Zs.Bot.Services.Messaging;
 
 namespace Zs.Bot.Services.UnitTests.Storages;
 

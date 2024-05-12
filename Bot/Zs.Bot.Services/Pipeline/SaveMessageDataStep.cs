@@ -2,7 +2,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Zs.Bot.Data.Models;
 using Zs.Bot.Data.Storages;
-using Zs.Bot.Services.Messaging;
 using Zs.Common.Models;
 
 namespace Zs.Bot.Services.Pipeline;

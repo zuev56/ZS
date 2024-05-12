@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Zs.Home.Bot.Features.Seq;
+namespace Zs.Home.Application.Features.Seq;
 
 public sealed class SeqSettings2 // TODO: remove Zs.Common.Services.Logging.Seq.SeqSettings
 {

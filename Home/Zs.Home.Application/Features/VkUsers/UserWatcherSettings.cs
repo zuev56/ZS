@@ -1,9 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Zs.Home.Bot.Features.VkUsers;
+namespace Zs.Home.Application.Features.VkUsers;
 
-internal sealed class UserWatcherSettings
+public sealed class UserWatcherSettings
 {
     public const string SectionName = "UserWatcher";
 

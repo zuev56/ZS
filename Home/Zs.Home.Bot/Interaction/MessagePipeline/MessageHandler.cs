@@ -2,7 +2,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Zs.Bot.Data.Models;
 using Zs.Bot.Services.Commands;
-using Zs.Bot.Services.Messaging;
 using Zs.Bot.Services.Pipeline;
 using Zs.Common.Models;
 using static Zs.Home.Bot.Faults;

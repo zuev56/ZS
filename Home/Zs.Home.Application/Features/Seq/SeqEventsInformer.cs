@@ -8,12 +8,11 @@ using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
 using Zs.Common.Services.Logging.Seq;
 using Zs.Common.Services.Scheduling;
-using Zs.Home.Bot.Features.Hardware;
 using static System.Environment;
 
-namespace Zs.Home.Bot.Features.Seq;
+namespace Zs.Home.Application.Features.Seq;
 
-public sealed class SeqEventsInformer : IHasCurrentState
+internal sealed class SeqEventsInformer : ISeqEventsInformer
 {
     private const int UtcToMsk = +3;
     private readonly SeqSettings2 _settings;

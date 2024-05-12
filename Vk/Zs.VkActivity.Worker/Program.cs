@@ -6,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using VkActivity.Data;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Logging.DelayedLogger;
 using Zs.Common.Services.Scheduling;

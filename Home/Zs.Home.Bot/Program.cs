@@ -11,6 +11,11 @@ using Zs.Bot.Data.PostgreSQL;
 using Zs.Common.Extensions;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Scheduling;
+using Zs.Home.Application.Features.Hardware;
+using Zs.Home.Application.Features.Ping;
+using Zs.Home.Application.Features.Seq;
+using Zs.Home.Application.Features.VkUsers;
+using Zs.Home.Application.Features.Weather;
 
 namespace Zs.Home.Bot;
 
@@ -82,7 +87,7 @@ public static class Program
                     .AddDbClient(configuration)
                     .AddWeatherAnalyzer(configuration)
                     .AddUserWatcher(configuration)
-                    .AddHardwareMonitor(configuration)
+                    .AddLinuxHardwareMonitor(configuration)
                     .AddInteractionServices(configuration)
                     .AddPingChecker(configuration)
                     .AddSingleton<IScheduler, Scheduler>();

@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Zs.Home.Bot.Features.Hardware;
+namespace Zs.Home.Application.Features.Hardware;
 
 public interface IHasCurrentState
 {

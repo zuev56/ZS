@@ -33,7 +33,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Bot\Zs.Bot.Data.PostgreSQL\Zs.Bot.Data.PostgreSQL.csproj" />
     <ProjectReference Include="..\..\Bot\Zs.Bot.Telegram\Zs.Bot.Telegram.csproj" />
-    <ProjectReference Include="..\..\Parsers\Zs.Parser.EspMeteo\Zs.Parser.EspMeteo.csproj" />
+    <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
   </ItemGroup>
 
 </Project>

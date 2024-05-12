@@ -8,11 +8,10 @@ using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
 using Zs.Common.Services.Scheduling;
 using Zs.Parser.EspMeteo;
-using Zs.Home.Bot.Features.Hardware;
 
-namespace Zs.Home.Bot.Features.Weather;
+namespace Zs.Home.Application.Features.Weather;
 
-internal sealed class WeatherAnalyzer : IHasJob, IHasCurrentState
+internal sealed class WeatherAnalyzer : IWeatherAnalyzer
 {
     private readonly EspMeteoParser _espMeteoParser;
     private readonly WeatherAnalyzerSettings _settings;

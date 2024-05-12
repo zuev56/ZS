@@ -1,6 +1,6 @@
 using Zs.Common.Services.Scheduling;
 
-namespace Zs.Home.Bot.Features.Hardware;
+namespace Zs.Home.Application.Features.Hardware;
 
 public interface IHasJob
 {

@@ -6,9 +6,9 @@ using Zs.Common.Extensions;
 using Zs.Common.Services.Scheduling;
 using static System.Environment;
 
-namespace Zs.Home.Bot.Features.Hardware;
+namespace Zs.Home.Application.Features.Hardware;
 
-public abstract class HardwareMonitor : IHasJob, IHasCurrentState
+internal abstract class HardwareMonitor : IHardwareMonitor
 {
     protected readonly HardwareMonitorSettings Options;
     protected readonly ILogger<HardwareMonitor> Logger;

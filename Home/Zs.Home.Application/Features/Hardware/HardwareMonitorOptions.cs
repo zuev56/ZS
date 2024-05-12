@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Zs.Home.Bot.Features.Hardware;
+namespace Zs.Home.Application.Features.Hardware;
 
-public sealed class HardwareMonitorSettings
+internal sealed class HardwareMonitorSettings
 {
     public const string SectionName = "HardwareMonitor";
 

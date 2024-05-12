@@ -8,14 +8,7 @@ using Zs.Bot.Data.Repositories;
 using Zs.Bot.Services;
 using Zs.Bot.Telegram.Extensions;
 using Zs.Common.Abstractions;
-using Zs.Common.Services.Logging.Seq;
-using Zs.Home.Bot.Features.Hardware;
-using Zs.Home.Bot.Features.Ping;
-using Zs.Home.Bot.Features.Seq;
-using Zs.Home.Bot.Features.VkUsers;
-using Zs.Home.Bot.Features.Weather;
 using Zs.Home.Bot.Interaction;
-using Zs.Parser.EspMeteo;
 
 namespace Zs.Home.Bot;
 
@@ -48,69 +41,12 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
-    internal static IServiceCollection AddSeq(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<SeqSettings2>()
-            .Bind(configuration.GetSection(SeqSettings2.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddSingleton<ISeqService, SeqService>(static provider =>
-        {
-            var options = provider.GetRequiredService<IOptions<SeqSettings2>>().Value;
-            var logger = provider.GetRequiredService<ILogger<SeqService>>();
-
-            return new SeqService(options.Url, options.Token, logger);
-        });
-
-        services.AddSingleton<SeqEventsInformer>();
-
-        return services;
-    }
-
     internal static IServiceCollection AddDbClient(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration["ConnectionStrings:Default"]!;
 
         services.AddSingleton<IDbClient, DbClient>(sp =>
             new DbClient(connectionString, sp.GetService<ILogger<DbClient>>()));
-
-        return services;
-    }
-
-    internal static IServiceCollection AddWeatherAnalyzer(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<WeatherAnalyzerSettings>()
-            .Bind(configuration.GetSection(WeatherAnalyzerSettings.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-        services.AddSingleton<EspMeteoParser>();
-
-        services.AddSingleton<WeatherAnalyzer>();
-
-        return services;
-    }
-
-    internal static IServiceCollection AddUserWatcher(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<UserWatcherSettings>()
-            .Bind(configuration.GetSection(UserWatcherSettings.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddSingleton<UserWatcher>();
-
-        return services;
-    }
-
-    internal static IServiceCollection AddHardwareMonitor(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<HardwareMonitorSettings>()
-            .Bind(configuration.GetSection(HardwareMonitorSettings.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddSingleton<HardwareMonitor, LinuxHardwareMonitor>();
 
         return services;
     }
@@ -129,15 +65,4 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
-    internal static IServiceCollection AddPingChecker(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<PingCheckerSettings>()
-            .Bind(configuration.GetSection(PingCheckerSettings.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddSingleton<PingChecker>();
-
-        return services;
-    }
 }

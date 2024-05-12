@@ -9,11 +9,11 @@ using Zs.Common.Exceptions;
 using Zs.Common.Extensions;
 using Zs.Common.Models;
 using Zs.Common.Services.Shell;
-using static Zs.Home.Bot.Features.Hardware.Constants;
+using static Zs.Home.Application.Features.Hardware.Constants;
 
-namespace Zs.Home.Bot.Features.Hardware;
+namespace Zs.Home.Application.Features.Hardware;
 
-public sealed class LinuxHardwareMonitor : HardwareMonitor
+internal sealed class LinuxHardwareMonitor : HardwareMonitor
 {
     public LinuxHardwareMonitor(
         IOptions<HardwareMonitorSettings> options,

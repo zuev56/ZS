@@ -14,14 +14,14 @@ using Zs.Common.Extensions;
 using Zs.Common.Models;
 using Zs.Common.Services.Scheduling;
 using Zs.Common.Utilities;
-using Zs.Home.Bot.Features.Hardware;
-using Zs.Home.Bot.Features.Ping;
-using Zs.Home.Bot.Features.Seq;
-using Zs.Home.Bot.Features.VkUsers;
-using Zs.Home.Bot.Features.Weather;
+using Zs.Home.Application.Features.Hardware;
+using Zs.Home.Application.Features.Ping;
+using Zs.Home.Application.Features.Seq;
+using Zs.Home.Application.Features.VkUsers;
+using Zs.Home.Application.Features.Weather;
 using Zs.Home.Bot.Interaction;
 using Zs.Home.Bot.Interaction.MessagePipeline;
-using static Zs.Home.Bot.Features.VkUsers.Constants;
+using static Zs.Home.Application.Features.VkUsers.Constants;
 
 namespace Zs.Home.Bot;
 
@@ -102,11 +102,11 @@ internal sealed class HomeBot : IHostedService
     private void CreateJobs()
     {
         // TODO: Вынести из этого класса
-        var userWatcher = _serviceProvider.GetRequiredService<UserWatcher>();
-        var hardwareMonitor = _serviceProvider.GetRequiredService<HardwareMonitor>();
-        var weatherAnalyzer = _serviceProvider.GetRequiredService<WeatherAnalyzer>();
-        var seqEventsInformer = _serviceProvider.GetRequiredService<SeqEventsInformer>();
-        var pingChecker = _serviceProvider.GetRequiredService<PingChecker>();
+        var userWatcher = _serviceProvider.GetRequiredService<IUserWatcher>();
+        var hardwareMonitor = _serviceProvider.GetRequiredService<IHardwareMonitor>();
+        var weatherAnalyzer = _serviceProvider.GetRequiredService<IWeatherAnalyzer>();
+        var seqEventsInformer = _serviceProvider.GetRequiredService<ISeqEventsInformer>();
+        var pingChecker = _serviceProvider.GetRequiredService<IPingChecker>();
 
         _scheduler.Jobs.Add(userWatcher.Job);
         _scheduler.Jobs.Add(hardwareMonitor.Job);
@@ -129,6 +129,7 @@ internal sealed class HomeBot : IHostedService
         return logProcessStateInfo;
     }
 
+    // ReSharper disable once AsyncVoidMethod
     private async void Job_ExecutionCompleted(Job<string> job, Result<string> result)
     {
         try

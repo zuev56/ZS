@@ -1,4 +1,4 @@
-﻿namespace Zs.Home.Bot.Features.Hardware;
+﻿namespace Zs.Home.Application.Features.Hardware;
 
 internal static class Constants
 {
