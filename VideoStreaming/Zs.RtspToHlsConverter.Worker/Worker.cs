@@ -56,22 +56,30 @@ public sealed class Worker : BackgroundService
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            await RunFfmpegInLinux(ct);
+            var bashPath = "/bin/bash";
+            await RunFfmpeg(bashPath, ct);
             return;
         }
 
-        throw new NotImplementedException("Implemented only for Linux");
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var powerShellPath = "powershell.exe";
+            await RunFfmpeg(powerShellPath, ct);
+            return;
+        }
+
+        throw new NotSupportedException("Not supported OS");
     }
 
-    private async Task RunFfmpegInLinux(CancellationToken ct)
+    private async Task RunFfmpeg(string shellPath, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
-        var process = new Process()
+        var process = new Process
         {
-            StartInfo = new ProcessStartInfo()
+            StartInfo = new ProcessStartInfo
             {
-                FileName = "/bin/bash",
+                FileName = shellPath,
                 Arguments = $"-c \"{_ffmpegCommand}\"",
                 RedirectStandardOutput = true
             }

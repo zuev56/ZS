@@ -4,10 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <PublishTrimmed>true</PublishTrimmed>
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+<!--    <PublishTrimmed>true</PublishTrimmed>-->
+<!--    <PublishSingleFile>true</PublishSingleFile>-->
+<!--    <SelfContained>true</SelfContained>-->
+<!--    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>-->
     <UserSecretsId>dotnet-RtspToHlsConverter-816DD30F-26CD-432D-812F-F8EC6ED42B46</UserSecretsId>
   </PropertyGroup>
 

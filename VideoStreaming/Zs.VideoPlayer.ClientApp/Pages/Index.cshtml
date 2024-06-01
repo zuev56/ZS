@@ -7,13 +7,14 @@
 }
 
 <div class="text-center">
-    <video id="video_1" class="video-js vjs-fluid vjs-default-skin" controls preload="auto" data-setup='{}'>
+    <video id="video_1" class="video-js vjs-fluid vjs-default-skin" controls preload="auto" data-setup="{}">
         <source src="@videoUri" type="application/x-mpegURL">
     </video>
 </div>
 
 @section Scripts{
     <script>
+        //videojs.log.level('debug');
         //var player = videojs('video_1');
         //player.ready(function() {
         //  var promise = player.play();
