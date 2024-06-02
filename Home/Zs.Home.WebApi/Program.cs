@@ -23,3 +23,43 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+/*
+ * Weather // Для вывода информации с устройств из разных сфер выгоднее иметь обобщённый DeviceController
+ *      EspMeteoStatus(IP)
+ *        -Temperature
+ *        -Humidity
+ *        -Pressure
+ *      Forecast|CurrentOutside
+
+ * Seq
+ *      Week
+ *      24 hours
+ *      12 hours
+ *      6 hours
+ *      Last hour
+ *
+ * OS
+ *		Journal analyzis
+ *
+ * Hardware // DeviceController
+ *      CPU temperature
+ *      CPU usage
+ *      Memory usage
+ *
+ * Services
+ *      HealthCheck
+ *      Stop
+ *      Start
+ *      Restart
+ *
+ * Network
+ *      Device list
+ *      Unknown devices
+ *
+ * Ping
+ *      IP
+ *      IP:Port
+ *
+ */
