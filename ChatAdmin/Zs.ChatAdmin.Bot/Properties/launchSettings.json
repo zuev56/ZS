@@ -1,7 +1,10 @@
 {
   "profiles": {
     "Zs.Service.ChatAdmin": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
     }
   }
 }

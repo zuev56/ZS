@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -60,19 +59,19 @@ internal sealed class MessageProcessor : IMessageProcessor
     {
         // Начало индивидуального учёта после 100 сообщений в чате от любых пользователей с 00:00 текущего дня.
         // С начала учёта каждому доступно максимум 30 сообщений.
-        // После 25-го сообщения с начала учёта выдать пользователю 
+        // После 25-го сообщения с начала учёта выдать пользователю
         //     предупреждение о приближении к лимиту. При этом создаётся запись
         //     в таблице Ban и ставится пометка о том, что пользователь предупреждён.
-        // При достижении лимита пользователь банится на 3 часа. 
-        //     Если лимит достигнут ближе к концу дня, бан продолжает своё действие 
-        //     до окончания трёхчасового периода. Если 3 часа бана прошло, 
-        //     а день не закончился, позволяем пользователю отправку 5-ти сообщений 
+        // При достижении лимита пользователь банится на 3 часа.
+        //     Если лимит достигнут ближе к концу дня, бан продолжает своё действие
+        //     до окончания трёхчасового периода. Если 3 часа бана прошло,
+        //     а день не закончился, позволяем пользователю отправку 5-ти сообщений
         //     до начала следующего дня
-        // 
-        // После восстановления интернета через 1 минуту происходит 
-        //     переопределение лимитов для того, чтобы не перетереть 
+        //
+        // После восстановления интернета через 1 минуту происходит
+        //     переопределение лимитов для того, чтобы не перетереть
         //     только что полученные сообщения
-        // 
+        //
         // P.S. этот алгоритм придумал заказчик
 
         if (incomingMessage is null)
@@ -105,19 +104,16 @@ internal sealed class MessageProcessor : IMessageProcessor
     {
         var accountingStartDate = ChatStateService.AccountingStartDate is null
              ? "null"
-             : $"'{ChatStateService.AccountingStartDate}'";
+             : $"'{ChatStateService.AccountingStartDate:yyyy-MM-ddTHH:mm:ss}'";
 
-        var queryFormat = @"select ca.sf_process_group_message(
-                 _chat_id => {0},
-                 _message_id => {1},
-                 _accounting_start_date => {2},
-                 _msg_limit_hi => {3},
-                 _msg_limit_hihi => {4},
-                 _msg_limit_after_ban => {5},
-                 _start_account_after => {6})";
-
-        var query = string.Format(CultureInfo.InvariantCulture, queryFormat, incomingMessage.ChatId, incomingMessage.Id, accountingStartDate,
-            ChatStateService.LimitHi, ChatStateService.LimitHiHi, ChatStateService.LimitAfterBan, ChatStateService.AccountingStartsAfter);
+        var query = $@"select ca.sf_process_group_message(
+                 _chat_id => {incomingMessage.ChatId},
+                 _message_id => {incomingMessage.Id},
+                 _accounting_start_date => {accountingStartDate},
+                 _msg_limit_hi => {ChatStateService.LimitHi},
+                 _msg_limit_hihi => { ChatStateService.LimitHiHi},
+                 _msg_limit_after_ban => {ChatStateService.LimitAfterBan},
+                 _start_account_after => {ChatStateService.AccountingStartsAfter})";
 
         var jsonResult = await _dbClient.GetQueryResultAsync(query).ConfigureAwait(false);
         _logger.LogTraceIfNeed("Incoming message sql-processing result: {Result}", new { JsonResult = jsonResult, MessageId = incomingMessage.Id });

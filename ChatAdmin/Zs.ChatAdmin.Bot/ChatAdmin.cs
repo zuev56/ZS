@@ -149,8 +149,6 @@ internal sealed class ChatAdmin : IHostedService
 
         CreateChatAdminJobs(utcOffset);
 
-        CreateSeqJobs(utcOffset);
-
         var logProcessStateInfo = new ProgramJob(
             method: () => Task.Run(() => _logger.LogProcessState(Process.GetCurrentProcess())),
             period: TimeSpan.FromDays(1),
@@ -180,39 +178,5 @@ internal sealed class ChatAdmin : IHostedService
             description: "resetLimits"
         );
         _scheduler.Jobs.Add(resetLimits);
-    }
-
-    private void CreateSeqJobs(TimeSpan utcOffset)
-    {
-        if (_seqService != null)
-        {
-            var dayErrorsAndWarningsInformer = new ProgramJob<string>(
-                method: () => GetSeqEvents(DateTime.UtcNow - TimeSpan.FromHours(1)),
-                period: TimeSpan.FromHours(1),
-                startUtcDate: DateTime.UtcNow.NextHour(),
-                description: "dayErrorsAndWarningsInformer"
-            );
-            dayErrorsAndWarningsInformer.ExecutionCompleted += Job_ExecutionCompleted;
-            _scheduler.Jobs.Add(dayErrorsAndWarningsInformer);
-
-            var nightErrorsAndWarningsInformer = new ProgramJob<string>(
-                method: () => GetSeqEvents(DateTime.UtcNow - TimeSpan.FromHours(12)),
-                period: TimeSpan.FromDays(1),
-                startUtcDate: DateTime.UtcNow.Date + TimeSpan.FromHours(24 + 10) - utcOffset,
-                description: "nightErrorsAndWarningsInformer"
-                );
-            nightErrorsAndWarningsInformer.ExecutionCompleted += Job_ExecutionCompleted;
-            _scheduler.Jobs.Add(nightErrorsAndWarningsInformer);
-        }
-    }
-
-    private async Task<string> GetSeqEvents(DateTime fromDate)
-    {
-        var signals = _configuration.GetSection("Seq:ObservedSignals").Get<int[]>();
-        var events = await _seqService.GetLastEvents(fromDate, 10, signals).ConfigureAwait(false);
-        
-        return events?.Count > 0 
-            ? string.Join(Environment.NewLine + Environment.NewLine, events) 
-            : null;
     }
 }

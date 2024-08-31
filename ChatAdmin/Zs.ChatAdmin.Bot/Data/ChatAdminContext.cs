@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
-using System.Reflection;
+using System.IO;
+using System.Linq;
 using System.Text;
 using ChatAdmin.Bot.Models;
 using Microsoft.EntityFrameworkCore;
@@ -226,17 +227,12 @@ internal sealed class ChatAdminContext : DbContext
         };
         var dbName = connectionStringBuilder["Database"] as string;
 
-        var resources = new[]
-        {
-            "Priveleges.sql",
-            "StoredFunctions.sql",
-            "Triggers.sql"
-        };
+        var sqlFilePaths = Directory.GetFiles(@"..\..\..\Data", "*.sql", SearchOption.AllDirectories).ToList();
 
         var sb = new StringBuilder();
-        foreach (var resourceName in resources)
+        foreach (var sqlFilePath in sqlFilePaths)
         {
-            var sqlScript = Assembly.GetExecutingAssembly().ReadResource(resourceName);
+            var sqlScript = File.ReadAllText(sqlFilePath);
             sb.Append(sqlScript + Environment.NewLine);
         }
 

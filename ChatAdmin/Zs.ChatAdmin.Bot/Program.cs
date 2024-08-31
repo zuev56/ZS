@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -30,7 +31,6 @@ using Zs.Common.Services.Connection;
 using Zs.Common.Services.Logging.Seq;
 using Zs.Common.Services.Scheduler;
 using Zs.Common.Services.Shell;
-using ChatAdminContextFactory = ChatAdmin.Bot.Data.ChatAdminContextFactory;
 
 namespace ChatAdmin.Bot;
 
@@ -50,6 +50,9 @@ internal static class Program
                 Environment.OSVersion,
                 Environment.UserName,
                 Environment.ProcessId);
+
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 
             await CreateHostBuilder(args).RunConsoleAsync().ConfigureAwait(false);
         }
@@ -76,9 +79,6 @@ internal static class Program
 
             configuration.AddJsonFile(arg, optional: true, reloadOnChange: true);
         }
-
-        if (configuration["SecretsPath"] != null)
-            configuration.AddJsonFile(configuration["SecretsPath"]);
 
         AssertConfigurationIsCorrect(configuration);
 
@@ -108,23 +108,18 @@ internal static class Program
             .UseSerilog()
             .ConfigureServices((hostContext, services) =>
             {
-                services.AddDbContext<ChatAdminContext>(options =>
-                    options.UseNpgsql(hostContext.Configuration.GetSecretValue("ConnectionStrings:Default")));
+                var connectionString = hostContext.Configuration.GetSecretValue("ConnectionStrings:Default");
 
-                services.AddDbContext<PostgreSqlBotContext>(options =>
-                    options.UseNpgsql(hostContext.Configuration.GetSecretValue("ConnectionStrings:Default")));
+                services.AddDbContextFactory<ChatAdminContext>(optionsBuilder => { optionsBuilder.UseNpgsql(connectionString); });
+                services.AddDbContextFactory<PostgreSqlBotContext>(optionsBuilder => { optionsBuilder.UseNpgsql(connectionString); });
 
-                // For repositories
-                services.AddScoped<IDbContextFactory<ChatAdminContext>, ChatAdminContextFactory>();
-                services.AddScoped<IDbContextFactory<PostgreSqlBotContext>, PostgreSqlBotContextFactory>();
-
-                services.AddScoped<IConnectionAnalyser, ConnectionAnalyser>(sp =>
+                services.AddSingleton<IConnectionAnalyser, ConnectionAnalyser>(sp =>
                 {
                     var connectionAnalyzer = new ConnectionAnalyser(
                         sp.GetService<ILogger<ConnectionAnalyser>>(),
                         hostContext.Configuration.GetSection("ConnectionAnalyser:Urls").Get<string[]>());
 
-                    if (hostContext.Configuration.GetValue<bool>("Proxy:UseProxy") == true)
+                    if (hostContext.Configuration.GetValue<bool>("Proxy:UseProxy"))
                     {
                         connectionAnalyzer.InitializeProxy(hostContext.Configuration["Proxy:Socket"],
                             hostContext.Configuration.GetSecretValue("Proxy:Login"),
@@ -135,37 +130,45 @@ internal static class Program
                     return connectionAnalyzer;
                 });
 
-                services.AddScoped<ISeqService, SeqService>(sp =>
+                services.AddSingleton<ISeqService, SeqService>(_ =>
                     new SeqService(hostContext.Configuration["Seq:ServerUrl"], hostContext.Configuration.GetSecretValue("Seq:ApiToken")));
 
-                services.AddScoped<ITelegramBotClient>(sp =>
+                services.AddSingleton<ITelegramBotClient>(_ =>
                     new TelegramBotClient(hostContext.Configuration.GetSecretValue("Bot:Token"), new HttpClient()));
 
-                services.AddScoped<IMessenger, TelegramMessenger>();
+                services.AddSingleton<IMessenger, TelegramMessenger>();
 
-                services.AddScoped<HttpClient>();
-                services.AddScoped<IMessageDataSaver, MessageDataDBSaver>();
-                services.AddScoped<ChatStateService>();
-                services.AddScoped<IMessageProcessor, MessageProcessor>();
-                services.AddScoped<IScheduler, Scheduler>();
-                services.AddScoped<IShellLauncher, ShellLauncher>(sp =>
+                services.AddSingleton<HttpClient>();
+                services.AddSingleton<IMessageDataSaver, MessageDataDBSaver>();
+                services.AddSingleton<ChatStateService>();
+                services.AddSingleton<IMessageProcessor, MessageProcessor>();
+                services.AddSingleton<IScheduler, Scheduler>();
+                services.AddSingleton<IShellLauncher, ShellLauncher>(sp =>
                     new ShellLauncher(
                         bashPath: hostContext.Configuration.GetSecretValue("Bot:BashPath"),
                         powerShellPath: hostContext.Configuration.GetSecretValue("Bot:PowerShellPath")
                     ));
-                services.AddScoped<ICommandManager, CommandManager>();
+                services.AddSingleton<ICommandManager, CommandManager>();
 
-                services.AddScoped<IBansRepository, BansRepository<ChatAdminContext>>();
-                services.AddScoped<ICommandsRepository, CommandsRepository<PostgreSqlBotContext>>();
-                services.AddScoped<IUserRolesRepository, UserRolesRepository<PostgreSqlBotContext>>();
-                services.AddScoped<IChatsRepository, ChatsRepository<PostgreSqlBotContext>>();
-                services.AddScoped<IUsersRepository, UsersRepository<PostgreSqlBotContext>>();
-                services.AddScoped<IMessagesRepository, MessagesRepository<PostgreSqlBotContext>>();
-                services.AddScoped<IDbClient, DbClient>(sp =>
+                services.AddSingleton<IBansRepository, BansRepository<ChatAdminContext>>();
+                services.AddSingleton<ICommandsRepository, CommandsRepository<PostgreSqlBotContext>>();
+                services.AddSingleton<IUserRolesRepository, UserRolesRepository<PostgreSqlBotContext>>();
+                services.AddSingleton<IChatsRepository, ChatsRepository<PostgreSqlBotContext>>();
+                services.AddSingleton<IUsersRepository, UsersRepository<PostgreSqlBotContext>>();
+                services.AddSingleton<IMessagesRepository, MessagesRepository<PostgreSqlBotContext>>();
+                services.AddSingleton<IDbClient, DbClient>(sp =>
                     new DbClient(
-                        hostContext.Configuration.GetSecretValue("ConnectionStrings:Default"),
+                        connectionString,
                         sp.GetService<ILogger<DbClient>>())
                     );
+
+                using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>().CreateScope())
+                {
+                    var chatAdminContext = serviceScope.ServiceProvider.GetRequiredService<ChatAdminContext>();
+                    chatAdminContext.Database.Migrate();
+                    var botContext = serviceScope.ServiceProvider.GetRequiredService<PostgreSqlBotContext>();
+                    botContext.Database.Migrate();
+                }
 
                 services.AddHostedService<ChatAdmin>();
             });

@@ -444,6 +444,7 @@ namespace ChatAdmin.Bot.Data.Migrations
                 table: "users",
                 column: "user_role_id");
 
+            migrationBuilder.Sql("CREATE ROLE app WITH NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS CONNECTION LIMIT -1;");
             migrationBuilder.Sql(Zs.Bot.Data.PostgreSQL.PostgreSqlBotContext.GetOtherSqlScripts("appsettings.json"));
             migrationBuilder.Sql(ChatAdminContext.GetOtherSqlScripts("appsettings.json"));
         }
