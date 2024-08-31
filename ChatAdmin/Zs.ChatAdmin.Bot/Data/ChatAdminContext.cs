@@ -227,7 +227,9 @@ internal sealed class ChatAdminContext : DbContext
         };
         var dbName = connectionStringBuilder["Database"] as string;
 
-        var sqlFilePaths = Directory.GetFiles(@"..\..\..\Data", "*.sql", SearchOption.AllDirectories).ToList();
+        var dataDirPath = Directory.GetCurrentDirectory() == "/app" ? "./Data" : "../../../Data";
+
+        var sqlFilePaths = Directory.GetFiles(dataDirPath, "*.sql", SearchOption.AllDirectories).ToList();
 
         var sb = new StringBuilder();
         foreach (var sqlFilePath in sqlFilePaths)
