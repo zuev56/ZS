@@ -9,7 +9,6 @@
     <Product>ChatAdmin.Bot</Product>
     <Authors>zuev56</Authors>
     <PackageId>ChatAdmin.Bot</PackageId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
