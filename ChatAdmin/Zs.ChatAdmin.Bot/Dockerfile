@@ -23,4 +23,4 @@ FROM mcr.microsoft.com/dotnet/runtime:6.0
 WORKDIR /app
 COPY --from=build /app .
 ENV DOTNET_EnableDiagnostics=0
-ENTRYPOINT ["./dotnetapp"]
+ENTRYPOINT ["dotnet", "ChatAdmin.Bot.dll"]
