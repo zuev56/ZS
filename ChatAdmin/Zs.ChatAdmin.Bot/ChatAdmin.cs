@@ -72,7 +72,7 @@ internal sealed class ChatAdmin : IHostedService
         _connectionAnalyser.Start(5000, 30000);
         _scheduler.Start(3000, 1000);
 
-        string startMessage = $"Bot '{nameof(ChatAdmin)}' started."
+        var startMessage = $"Bot '{nameof(ChatAdmin)}' started."
             + Environment.NewLine + Environment.NewLine
             + RuntimeInformationWrapper.GetRuntimeInfo();
 

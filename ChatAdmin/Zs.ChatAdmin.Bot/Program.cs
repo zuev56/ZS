@@ -173,5 +173,4 @@ internal static class Program
                 services.AddHostedService<ChatAdmin>();
             });
     }
-
 }
