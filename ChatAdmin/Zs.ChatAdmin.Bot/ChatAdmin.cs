@@ -26,7 +26,6 @@ internal sealed class ChatAdmin : IHostedService
     private readonly IScheduler _scheduler;
     private readonly IMessageProcessor _messageProcessor;
     private readonly IDbClient _dbClient;
-    private readonly ISeqService _seqService;
     private readonly IConnectionAnalyser _connectionAnalyser;
     private string _botName;
 
@@ -37,26 +36,24 @@ internal sealed class ChatAdmin : IHostedService
         IMessageProcessor messageProcessor,
         IScheduler scheduler,
         IDbClient dbClient,
-        ISeqService seqService,
         ILogger<ChatAdmin> logger)
     {
         try
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _connectionAnalyser = connectionAnalyser ?? throw new ArgumentNullException(nameof(connectionAnalyser));
-            _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
-            _messageProcessor = messageProcessor ?? throw new ArgumentNullException(nameof(messageProcessor));
-            _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
-            _dbClient = dbClient ?? throw new ArgumentNullException(nameof(dbClient));
-            _seqService = seqService ?? throw new ArgumentNullException(nameof(seqService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _configuration = configuration;
+            _connectionAnalyser = connectionAnalyser;
+            _messenger = messenger;
+            _messageProcessor = messageProcessor;
+            _scheduler = scheduler;
+            _dbClient = dbClient;
+            _logger = logger;
 
             CreateJobs();
         }
         catch (Exception ex)
         {
             var tiex = new TypeInitializationException(typeof(ChatAdmin).FullName, ex);
-            _logger.LogErrorIfNeed(tiex, $"{nameof(ChatAdmin)} initialization error");
+            _logger?.LogErrorIfNeed(tiex, $"{nameof(ChatAdmin)} initialization error");
         }
     }
 
@@ -102,7 +99,9 @@ internal sealed class ChatAdmin : IHostedService
     private void СonnectionAnalyser_StatusChanged(ConnectionStatus status)
     {
         if (status == ConnectionStatus.Ok)
+        {
             _messageProcessor?.ChatStateService.SetInternetRepairDate(DateTime.UtcNow);
+        }
         else
         {
             _messageProcessor?.ChatStateService.SetInternetRepairDate(null);
@@ -114,18 +113,18 @@ internal sealed class ChatAdmin : IHostedService
     {
         _messageProcessor.ProcessGroupMessage(e.Message);
 
-        if (BotCommand.IsCommand(e.Message.Text, _botName))
-        {
-            var command = BotCommand.GetCommandFromMessage(e.Message);
-            bool commandsAreAllowed = _configuration.GetValue<bool>("ChatAdmin:Chat:AllowCommands");
-            bool userIsAdminOrOwner = e.User.UserRole >= Role.Admin;
-            bool commandIsFromGroup = e.Chat.Id == _configuration.GetValue<int>("ChatAdmin:Chat:Id");
+        if (!BotCommand.IsCommand(e.Message.Text, _botName))
+            return;
 
-            if ((!commandsAreAllowed && !userIsAdminOrOwner && commandIsFromGroup)
-                || (commandsAreAllowed && commandIsFromGroup && command.TargetBotName != _botName))
-            {
-                e.IsHandled = true;
-            }
+        var command = BotCommand.GetCommandFromMessage(e.Message);
+        var commandsAreAllowed = _configuration.GetValue<bool>("ChatAdmin:Chat:AllowCommands");
+        var userIsAdminOrOwner = e.User.UserRole >= Role.Admin;
+        var commandIsFromGroup = e.Chat.Id == _configuration.GetValue<int>("ChatAdmin:Chat:Id");
+
+        if ((!commandsAreAllowed && !userIsAdminOrOwner && commandIsFromGroup)
+            || (commandsAreAllowed && commandIsFromGroup && command.TargetBotName != _botName))
+        {
+            e.IsHandled = true;
         }
     }
 
@@ -134,9 +133,10 @@ internal sealed class ChatAdmin : IHostedService
         if (result?.IsSuccess == false)
             _logger.LogWarningIfNeed("Job \"{Job}\" execution failed. Result: {Result}", job.Description, result.Value);
 
-        if (result?.IsSuccess == true && result.Value != null
-            && DateTime.Now.Hour >= _configuration.GetValue<int>("Notifier:Time:FromHour")
-            && DateTime.Now.Hour < _configuration.GetValue<int>("Notifier:Time:ToHour"))
+        var currentHout = DateTime.Now.Hour;
+        if (result is {IsSuccess: true, Value: not null}
+            && currentHout >= _configuration.GetValue<int>("Notifier:Time:FromHour")
+            && currentHout < _configuration.GetValue<int>("Notifier:Time:ToHour"))
         {
             await _messenger.AddMessageToOutboxAsync(result.Value, Role.Owner, Role.Admin).ConfigureAwait(false);
         }
@@ -145,21 +145,8 @@ internal sealed class ChatAdmin : IHostedService
     /// <summary>Creating a <see cref="Job"/> list for <see cref="Scheduler"/> instance</summary>
     private void CreateJobs()
     {
-        TimeSpan utcOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
+        var utcOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
 
-        CreateChatAdminJobs(utcOffset);
-
-        var logProcessStateInfo = new ProgramJob(
-            method: () => Task.Run(() => _logger.LogProcessState(Process.GetCurrentProcess())),
-            period: TimeSpan.FromDays(1),
-            startUtcDate: DateTime.UtcNow + TimeSpan.FromMinutes(1),
-            description: "logProcessStateInfo"
-        );
-        _scheduler.Jobs.Add(logProcessStateInfo);
-    }
-
-    private void CreateChatAdminJobs(TimeSpan utcOffset)
-    {
         var sendYesterdaysStatistics = new SqlJob(
             sqlQuery: $"select ca.sf_job_get_yesterdays_statistics({_configuration.GetValue<int>("ChatAdmin:Chat:Id")})",
             resultType: QueryResultType.String,
@@ -178,5 +165,13 @@ internal sealed class ChatAdmin : IHostedService
             description: "resetLimits"
         );
         _scheduler.Jobs.Add(resetLimits);
+
+        var logProcessStateInfo = new ProgramJob(
+            method: () => Task.Run(() => _logger.LogProcessState(Process.GetCurrentProcess())),
+            period: TimeSpan.FromDays(1),
+            startUtcDate: DateTime.UtcNow + TimeSpan.FromMinutes(1),
+            description: "logProcessStateInfo"
+        );
+        _scheduler.Jobs.Add(logProcessStateInfo);
     }
 }
