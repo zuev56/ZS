@@ -22,5 +22,6 @@ RUN dotnet publish -a $TARGETARCH --self-contained true -o /app
 FROM mcr.microsoft.com/dotnet/runtime:6.0
 WORKDIR /app
 COPY --from=build /app .
+ADD /Data /app/Data
 ENV DOTNET_EnableDiagnostics=0
 ENTRYPOINT ["dotnet", "ChatAdmin.Bot.dll"]
