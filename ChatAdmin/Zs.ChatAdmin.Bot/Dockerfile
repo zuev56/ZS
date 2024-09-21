@@ -1,10 +1,6 @@
-﻿
-# docker build -t zs-chat-admin-bot -f .\ChatAdmin\Zs.ChatAdmin.Bot\Dockerfile .
-# docker build buildx --platform linux/amd64,linux/arm64 --build-arg SDKARCH=arm64v8 - produces amd64 and arm64v8 images
-# docker buildx build --platform linux/arm64 -t zs-chat-admin-bot -f Dockerfile .
-
-# Enable using docker build --platform switch (easily)
-# https://github.com/dotnet/dotnet-docker/issues/4388
+﻿# cd git/ZS/ChatAdmin/Zs.ChatAdmin.Bot
+# git pull
+# sudo docker buildx build --platform linux/arm64 -t zs-chat-admin-bot -f Dockerfile .
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 ARG TARGETARCH
