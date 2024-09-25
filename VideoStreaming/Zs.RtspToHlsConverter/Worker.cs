@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Zs.RtspToHlsConverter.Worker;
+namespace Zs.RtspToHlsConverter;
 
 public sealed class Worker : BackgroundService
 {
