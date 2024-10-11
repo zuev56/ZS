@@ -1,7 +1,7 @@
 ﻿# cd git/ZS/VideoStreaming/Zs.VideoPlayer.WebApi
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-video-player-api -f Dockerfile .
-# sudo docker run --name video-player-api -it zs-video-player-api
+# sudo docker run --name video-player-api --mount type=bind,source=/var/lib/videos,target=/var/lib/videos -it zs-video-player-api
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG TARGETARCH
