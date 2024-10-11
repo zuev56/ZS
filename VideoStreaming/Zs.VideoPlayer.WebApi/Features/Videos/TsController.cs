@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Zs.VideoPlayer.WebApi.Features.Videos;
@@ -18,7 +19,7 @@ public class TsController : ControllerBase
     [HttpGet("{fileName}")]
     public async Task<IActionResult> GetAsync(string fileName)
     {
-        Response.Headers.Add("Access-Control-Allow-Origin", "*");
+        Response.Headers.Append("Access-Control-Allow-Origin", "*");
         var tsBytes = await _videoFilesProvider.GetTsAsync(fileName);
 
         return tsBytes != null

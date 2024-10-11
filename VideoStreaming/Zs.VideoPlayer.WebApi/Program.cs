@@ -13,10 +13,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
 builder.Services
-    .AddVideoStreamClient()
-    .AddRtspImageService()
+    // TODO: Вынести зависимость от ffmpeg из API
+    //.AddVideoStreamClient()
+    //.AddRtspImageService()
     .AddVideoFilesProvider();
-    
+
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =

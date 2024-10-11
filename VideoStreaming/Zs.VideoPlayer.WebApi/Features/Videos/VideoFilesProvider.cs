@@ -30,11 +30,11 @@ public sealed class VideoFilesProvider
     public async Task<byte[]?> GetTsAsync(string tsFileName)
     {
         var tsFilePath = Path.Combine(_workingDirectory, tsFileName);
-        
+
         var tsFileBytes = File.Exists(tsFilePath)
             ? await File.ReadAllBytesAsync(tsFilePath)
             : null;
-        
+
         return tsFileBytes;
     }
 }

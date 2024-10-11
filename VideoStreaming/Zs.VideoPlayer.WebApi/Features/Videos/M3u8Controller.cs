@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Zs.VideoPlayer.WebApi.Features.Videos;
@@ -18,9 +20,9 @@ public class M3u8Controller : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAsync()
     {
-        Response.Headers.Add("Access-Control-Allow-Origin", "*");
+        Response.Headers.Append("Access-Control-Allow-Origin", "*");
         var m3u8Bytes = await _videoFilesProvider.GetM3u8Async();
-        
+
         return m3u8Bytes != null
             ? File(m3u8Bytes, "application/octet-stream", enableRangeProcessing: true)
             : NotFound();
