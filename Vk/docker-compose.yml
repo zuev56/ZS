@@ -7,7 +7,7 @@
 
   web-api:
     build:
-      context: ./Zs.VideoPlayer.WebApi
+      context: ./Zs.VkActivity.WebApi
     ports:
       - "6011:80"
     restart: always
