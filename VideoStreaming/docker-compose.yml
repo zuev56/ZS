@@ -4,25 +4,22 @@ services:
   rtsp-to-hls-converter:
     build:
       context: ./Zs.RtspToHlsConverter
+    restart: always
 
   web-api:
     build:
       context: ./Zs.VideoPlayer.WebApi
     ports:
       - "6001:80"
-    networks:
-      - video_stream_network
+    depends_on:
+      - rtsp-to-hls-converter
+    restart: always
 
   client-app:
     build:
       context: ./Zs.VideoPlayer.ClientApp
     ports:
       - "6002:80"
-    networks:
-      - video_stream_network
     depends_on:
       - video-player-api
-
-networks:
-  video_stream_network:
-    driver: bridge
+    restart: always
