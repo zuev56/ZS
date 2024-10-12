@@ -29,11 +29,13 @@ public class IndexModel : PageModel
 
     private async Task SetIpCameraDate()
     {
+        return;
+        // TODO: На новой камере всё равно не работает
         var cameraIp = _configuration["CameraIp"];
         var time = $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}";
         var url = $"http://{cameraIp}/cgi-bin/jvsweb.cgi?cmd=webipcinfo settime {time}";
         using var client = new HttpClient();
-        await client.GetAsync(url);    
+        await client.GetAsync(url);
     }
 
 
