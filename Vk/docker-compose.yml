@@ -1,0 +1,13 @@
+﻿services:
+
+  worker:
+    build:
+      context: ./Zs.VkActivity.Worker
+    restart: always
+
+  web-api:
+    build:
+      context: ./Zs.VideoPlayer.WebApi
+    ports:
+      - "6011:80"
+    restart: always

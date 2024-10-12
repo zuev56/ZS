@@ -4,10 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-        <PublishTrimmed>false</PublishTrimmed>
         <SelfContained>true</SelfContained>
-        <PublishSingleFile>true</PublishSingleFile>
-        <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <!-- https://stackoverflow.com/questions/41546943/how-to-set-aspnetcore-environment-to-be-considered-for-publishing-an-asp-net-cor
@@ -40,6 +38,12 @@
       <ProjectReference Include="..\..\Common\Zs.Common.Services\Zs.Common.Services.csproj" />
       <ProjectReference Include="..\Zs.VkActivity.Common\Zs.VkActivity.Common.csproj" />
       <ProjectReference Include="..\Zs.VkActivity.Data\Zs.VkActivity.Data.csproj" />
+    </ItemGroup>
+  
+    <ItemGroup>
+      <Content Include="..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>
