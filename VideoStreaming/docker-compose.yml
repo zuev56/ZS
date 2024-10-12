@@ -5,6 +5,8 @@ services:
     build:
       context: ./Zs.RtspToHlsConverter
     restart: always
+    volumes:
+      - "/var/lib/videos:/var/lib/videos"
 
   web-api:
     build:
@@ -14,6 +16,8 @@ services:
     depends_on:
       - rtsp-to-hls-converter
     restart: always
+    volumes:
+      - "/var/lib/videos:/var/lib/videos"
 
   client-app:
     build:
