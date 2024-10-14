@@ -139,7 +139,6 @@ public partial class VkActivityContext : DbContext
         var resources = new[]
         {
             "Priveleges.sql",
-            "ForeignTales.sql",
             "StoredFunctions.sql",
             "Views.sql"
         };

@@ -58,5 +58,11 @@ void ConfigureServices(HostBuilderContext context, IServiceCollection services)
     services.AddScoped<IActivityLogItemsRepository, ActivityLogItemsRepository>();
     services.AddScoped<IUsersRepository, UsersRepository>();
 
+    using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>()!.CreateScope())
+    {
+        var dbContext = serviceScope.ServiceProvider.GetRequiredService<VkActivityContext>();
+        dbContext.Database.Migrate();
+    }
+
     services.AddHostedService<WorkerService>();
 }

@@ -12,7 +12,9 @@ public static class ServiceCollectionExtensions
     {
         var provider = services.BuildServiceProvider();
         var configuration = provider.GetRequiredService<IConfiguration>();
-        services.Configure<ConnectionAnalyzerOptions>(configuration.GetSection(ConnectionAnalyzerOptions.SectionName));
+        services.AddOptions<ConnectionAnalyzerOptions>()
+            .Bind(configuration.GetSection(ConnectionAnalyzerOptions.SectionName))
+            .ValidateOnStart();
 
         services.AddSingleton<IConnectionAnalyzer, ConnectionAnalyzer>(provider =>
         {

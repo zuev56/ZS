@@ -65,7 +65,7 @@ namespace VkActivity.Data.Migrations
                 table: "activity_log",
                 columns: new[] { "user_id", "last_seen", "insert_date" });
 
-            migrationBuilder.Sql(VkActivityContext.GetOtherSqlScripts(@"..\VkActivity.Worker\appsettings.Development.json"));
+            migrationBuilder.Sql(VkActivityContext.GetOtherSqlScripts(@"..\Zs.VkActivity.Worker\appsettings.Development.json"));
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
