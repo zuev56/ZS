@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Data.Common;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -124,10 +126,10 @@ public partial class VkActivityContext : DbContext
         });
     }
 
-    public static string GetOtherSqlScripts(string configPath)
+    public static string GetOtherSqlScripts()
     {
         var configuration = new ConfigurationBuilder()
-               .AddJsonFile(System.IO.Path.GetFullPath(configPath))
+               .AddJsonFile(System.IO.Path.GetFullPath("appsettings.json"))
                .Build();
 
         var connectionStringBuilder = new DbConnectionStringBuilder
@@ -136,17 +138,14 @@ public partial class VkActivityContext : DbContext
         };
         var dbName = connectionStringBuilder["Database"] as string;
 
-        var resources = new[]
-        {
-            "Priveleges.sql",
-            "StoredFunctions.sql",
-            "Views.sql"
-        };
+        var dataDirPath = Directory.GetCurrentDirectory() == "/app" ? "./Data" : "../Zs.VkActivity.Data/SQL";
+
+        var sqlFilePaths = Directory.GetFiles(dataDirPath, "*.sql", SearchOption.AllDirectories).ToList();
 
         var sb = new StringBuilder();
-        foreach (var resourceName in resources)
+        foreach (var sqlFilePath in sqlFilePaths)
         {
-            var sqlScript = Assembly.GetExecutingAssembly().ReadResource(resourceName);
+            var sqlScript = File.ReadAllText(sqlFilePath);
             sb.Append(sqlScript + Environment.NewLine);
         }
 
