@@ -138,7 +138,7 @@ public partial class VkActivityContext : DbContext
         };
         var dbName = connectionStringBuilder["Database"] as string;
 
-        var dataDirPath = Directory.GetCurrentDirectory() == "/app" ? "./Data" : "../Zs.VkActivity.Data/SQL";
+        var dataDirPath = Directory.GetCurrentDirectory() == "/app" ? "./" : "../Zs.VkActivity.Data/SQL";
 
         var sqlFilePaths = Directory.GetFiles(dataDirPath, "*.sql", SearchOption.AllDirectories).ToList();
 

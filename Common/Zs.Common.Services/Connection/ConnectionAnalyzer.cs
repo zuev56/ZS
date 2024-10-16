@@ -4,6 +4,7 @@ using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Zs.Common.Extensions;
 
 namespace Zs.Common.Services.Connection;
 
@@ -35,17 +36,17 @@ public sealed class ConnectionAnalyzer : IConnectionAnalyzer
         _timer = new Timer(AnalyzeConnection);
         _timer.Change(dueTime, period);
 
-        _logger?.LogInformation("{Service} started", nameof(ConnectionAnalyzer));
+        _logger?.LogInformation("{Service} started. Use URLs: {urls}", nameof(ConnectionAnalyzer), string.Join(", ", _internetServers));
     }
 
     public void Stop()
     {
         _timer.Dispose();
 
-        _logger?.LogInformation("{Service} stopped", nameof(ConnectionAnalyzer));
+        _logger?.LogInformation("{Service} stopped.", nameof(ConnectionAnalyzer));
     }
 
-    public static async Task<bool> PingHostAsync(string hostAddress)
+    public async Task<bool> PingHostAsync(string hostAddress)
     {
         ArgumentNullException.ThrowIfNull(hostAddress);
 
@@ -56,10 +57,13 @@ public sealed class ConnectionAnalyzer : IConnectionAnalyzer
             using var ping = new Ping();
             var pingReply = await ping.SendPingAsync(hostAddress).ConfigureAwait(false);
 
+            _logger.LogTraceIfNeed("{host} ping result: {pingResult}.", hostAddress, pingReply.Status);
+
             return pingReply.Status == IPStatus.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger?.LogDebug(ex, "Ping host {host} error.", hostAddress);
             return false;
         }
     }
@@ -70,7 +74,7 @@ public sealed class ConnectionAnalyzer : IConnectionAnalyzer
         {
             var analyzeResult = ConnectionStatus.Undefined;
 
-            if (WebProxy?.Address?.Host is { } && !await PingHostAsync(WebProxy.Address.Host))
+            if (WebProxy?.Address?.Host is not null && !await PingHostAsync(WebProxy.Address.Host))
             {
                 analyzeResult = ConnectionStatus.NoProxyConnection;
             }
