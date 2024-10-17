@@ -28,3 +28,6 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Zs.VkActivity.Worker.dll"]
+
+# install iputils-ping
+RUN apt update && apt install -y iputils-ping && rm -rf /var/lib/apt/lists/*
