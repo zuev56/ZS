@@ -2,12 +2,12 @@
 
   worker:
     build:
-      context: ./Zs.VkActivity.Worker
+      context: ./Vk/Zs.VkActivity.Worker
     restart: always
 
   web-api:
     build:
-      context: ./Zs.VkActivity.WebApi
+      context: ./Vk/Zs.VkActivity.WebApi
     ports:
       - "6011:80"
     restart: always

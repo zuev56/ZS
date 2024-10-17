@@ -66,9 +66,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.VideoPlayer.WebApi", "VideoStreaming\Zs.VideoPlayer.WebApi\Zs.VideoPlayer.WebApi.csproj", "{FAE7AF91-DB0B-4880-AAE0-F64F38297EC0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Vk", "Vk", "{8BDD74B4-0A27-42A5-A7D4-A9D7759C4D4B}"
-	ProjectSection(SolutionItems) = preProject
-		Vk\docker-compose.yml = Vk\docker-compose.yml
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.VkActivity.Common", "Vk\Zs.VkActivity.Common\Zs.VkActivity.Common.csproj", "{40763B0C-4E47-4505-9A22-6312E46572D6}"
 EndProject
@@ -91,6 +88,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{34D42050-A376-4010-BE02-552A2A137350}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
+		docker-compose.vk.yml = docker-compose.vk.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Home.ClientApp", "Home\Zs.Home.ClientApp\Zs.Home.ClientApp.csproj", "{CA7EB0DC-0EF4-4180-B49C-BA7E0DE2420F}"
