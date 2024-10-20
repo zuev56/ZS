@@ -3,11 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <PublishTrimmed>false</PublishTrimmed>
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
-    <UserSecretsId>b5476c67-808d-4a38-8c4d-351678fd82a5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,6 +29,13 @@
     <ProjectReference Include="..\..\Bot\Zs.Bot.Data.PostgreSQL\Zs.Bot.Data.PostgreSQL.csproj" />
     <ProjectReference Include="..\..\Bot\Zs.Bot.Telegram\Zs.Bot.Telegram.csproj" />
     <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\.dockerignore">
+      <Link>.dockerignore</Link>
+      <DependentUpon>Dockerfile</DependentUpon>
+    </Content>
   </ItemGroup>
 
 </Project>
