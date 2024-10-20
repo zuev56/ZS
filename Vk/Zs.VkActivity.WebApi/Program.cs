@@ -22,6 +22,7 @@ using Zs.VkActivity.Data.Repositories;
 using Zs.VkActivity.WebApi;
 using Zs.VkActivity.WebApi.Abstractions;
 using Zs.VkActivity.WebApi.Services;
+using static Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders;
 
 [assembly: InternalsVisibleTo("Api.UnitTests")]
 [assembly: InternalsVisibleTo("Api.IntegrationTests")]
@@ -34,7 +35,7 @@ var host = Host.CreateDefaultBuilder(args)
     .Build();
 
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(host.Services.GetService<IConfiguration>())
+    .ReadFrom.Configuration(host.Services.GetRequiredService<IConfiguration>())
     .CreateLogger();
 
 Log.Warning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
@@ -76,6 +77,7 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
         );
 
         services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
+        services.Configure<ForwardedHeadersOptions>(o => o.ForwardedHeaders = XForwardedFor | XForwardedProto);
     })
     .Configure((context, app) =>
     {
@@ -88,6 +90,7 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
             app.UseHsts();
         }
 
+        app.UseForwardedHeaders();
         app.UseSwagger();
         app.UseSwaggerUI(c => c.SwaggerEndpoint(
             context.Configuration[AppSettings.Swagger.EndpointUrl],
@@ -97,7 +100,7 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
         app.UseRouting();
 
         app.UseCors();
-        //app.UseHttpsRedirection();
+        app.UseHttpsRedirection();
 
         app.UseAuthorization();
 
@@ -134,7 +137,7 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
     });
 }
 
-void ConfigureServices(HostBuilderContext context, IServiceCollection services)
+static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
 {
     var configuration = context.Configuration;
 

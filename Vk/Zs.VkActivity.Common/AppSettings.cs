@@ -22,6 +22,7 @@ public static class AppSettings
         public const string Urls = $"{nameof(ConnectionAnalyser)}:{nameof(Urls)}";
     }
 
+    // TODO: Почему это в Common?
     public static class Swagger
     {
         public const string ApiTitle = $"{nameof(Swagger)}:{nameof(ApiTitle)}";
