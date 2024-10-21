@@ -31,7 +31,7 @@ internal sealed class LinuxHardwareMonitor : HardwareMonitor
         EnsureResultSuccessful(commandResult);
 
         var jsonNode = JsonNode.Parse(commandResult.Value)!;
-        return jsonNode["coretemp-isa-0000"]!["Package id 0"]!["temp1_input"]!.GetValue<float>();
+        return jsonNode["cpu_thermal-virtual-0"]!["temp1"]!["temp1_input"]!.GetValue<float>();
     }
 
     protected override async Task<double> GetMemoryUsagePercent()
