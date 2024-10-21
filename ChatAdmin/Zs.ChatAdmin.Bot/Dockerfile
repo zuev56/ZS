@@ -1,7 +1,7 @@
 ﻿# cd git/ZS/ChatAdmin/Zs.ChatAdmin.Bot
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-chat-admin-bot -f Dockerfile .
-# sudo docker run --name my-container-name -it zs-chat-admin-bot
+# sudo docker run --name my-container-name --restart unless-stopped -it zs-chat-admin-bot
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 ARG TARGETARCH

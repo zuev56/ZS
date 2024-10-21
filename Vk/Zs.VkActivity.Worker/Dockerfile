@@ -1,7 +1,7 @@
 ﻿# cd git/ZS (FROM SOLUTION DIRECTORY!!!)
 # git pull
 # sudo docker buildx build --platform linux/arm64 --no-cache -t zs-vk-activity-worker -f Vk/Zs.VkActivity.Worker/Dockerfile .
-# docker run --name vk-activity-worker -it zs-vk-activity-worker
+# docker run --name vk-activity-worker --restart unless-stopped -it zs-vk-activity-worker
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
 USER $APP_UID

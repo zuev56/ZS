@@ -1,7 +1,7 @@
 ﻿# cd git/ZS (FROM SOLUTION DIRECTORY!!!)
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-home-bot -f Home/Zs.Home.Bot/Dockerfile .
-# sudo docker run --name home-bot -it zs-home-bot
+# sudo docker run --name home-bot --restart unless-stopped -it zs-home-bot
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
 USER $APP_UID
@@ -32,3 +32,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Zs.Home.Bot.dll"]
+
+# install iputils-ping, lm-sensors
+USER root
+RUN apt update && apt install -y iputils-ping lm-sensors && rm -rf /var/lib/apt/lists/*
