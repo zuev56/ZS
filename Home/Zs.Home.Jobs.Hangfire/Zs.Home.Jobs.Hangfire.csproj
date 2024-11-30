@@ -25,4 +25,10 @@
       <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
 </Project>
