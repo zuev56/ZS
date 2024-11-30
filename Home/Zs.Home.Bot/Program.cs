@@ -86,7 +86,7 @@ public static class Program
                     .AddSeq(configuration)
                     .AddDbClient(configuration)
                     .AddWeatherAnalyzer(configuration)
-                    .AddUserWatcher(configuration)
+                    .AddUserWatcher(configuration) // TODO: Переедет в Jobs
                     .AddLinuxHardwareMonitor(configuration)
                     .AddInteractionServices(configuration)
                     .AddPingChecker(configuration)

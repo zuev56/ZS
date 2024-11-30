@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Zs.Common.Exceptions;
@@ -16,14 +18,14 @@ public class EspMeteoParser
 {
     private const StringSplitOptions SplitOptions = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
 
-    public async Task<Models.EspMeteo> ParseAsync(string uri)
+    public async Task<Models.EspMeteo> ParseAsync(string uri, CancellationToken cancellationToken = default)
     {
         using var httpClient = new HttpClient();
-        var espMeteoPageHtml = await httpClient.GetStringAsync(uri);
+        var espMeteoPageHtml = await httpClient.GetStringAsync(uri, cancellationToken);
 
         EnsureHtmlIsValid(espMeteoPageHtml);
 
-        var sensors = GetSensors(espMeteoPageHtml!);
+        var sensors = GetSensors(espMeteoPageHtml);
         var espMeteo = new Models.EspMeteo(uri, sensors);
 
         return espMeteo;
@@ -103,7 +105,7 @@ public class EspMeteoParser
         var nameAndValueWithUnit = parameter.Split(':', SplitOptions);
         var name = nameAndValueWithUnit[0].Trim();
         var valueAndUnit = nameAndValueWithUnit[1].Trim('.', ' ').Split(' ', SplitOptions);
-        var value = float.Parse(valueAndUnit[0]);
+        var value = float.Parse(valueAndUnit[0], CultureInfo.InvariantCulture);
         var unit = valueAndUnit[1];
 
         return new Parameter(name, value, unit);
