@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Npgsql;
 using Zs.Common.Extensions;
 using Zs.Home.Jobs.Hangfire;
 using Zs.Home.Jobs.Hangfire.Hangfire;
@@ -79,25 +80,33 @@ static async Task InitializeWeatherRegistratorDatabaseAsync(IServiceProvider ser
     var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
     if (dbContext.ChangeTracker.HasChanges())
     {
-        logger.LogInformationIfNeed("Database has been changed: {Changes}", dbContext.ChangeTracker.ToDebugString());
+        logger.LogInformationIfNeed("Tables 'source' and 'place' has been changed according to the configuration: {Changes}.", dbContext.ChangeTracker.ToDebugString());
         await dbContext.SaveChangesAsync();
     }
     else
     {
-        logger.LogInformationIfNeed("Places and Sources in the database corresponds to the configuration");
+        logger.LogInformationIfNeed("Places and Sources in the database corresponds to the configuration.");
     }
 }
 
 static async Task DeleteHangfireLocksAsync(IServiceProvider serviceProvider)
 {
+    var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
+
     using var scope = serviceProvider.CreateScope();
     var scopedServices = scope.ServiceProvider;
     var dbContext = scopedServices.GetRequiredService<HangfireDbContext>();
 
-    var deleted = await dbContext.Locks.ExecuteDeleteAsync();
-    if (deleted > 0)
+    try
     {
-        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
-        logger.LogInformationIfNeed("Hangfire locks have been removed");
+        var deleted = await dbContext.Locks.ExecuteDeleteAsync();
+        if (deleted > 0)
+        {
+            logger.LogInformationIfNeed("Hangfire locks have been removed.");
+        }
+    }
+    catch (PostgresException e) when (e.MessageText.Contains("does not exist"))
+    {
+        logger.LogInformationIfNeed("Hangfire tables have not been created yet.");
     }
 }
