@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -59,12 +60,9 @@ public sealed class WeatherRegistratorJob
                 return new WeatherData
                 {
                     SourceId = sensorSettings.Id,
-                    Temperature = sensorSettings.Except?.Contains(Temperature) == true ? null
-                        : sensor.Parameters.FirstOrDefault(p => p.Name == Temperature)?.Value,
-                    Humidity = sensorSettings.Except?.Contains(Humidity) == true ? null
-                        : sensor.Parameters.FirstOrDefault(p => p.Name == Humidity)?.Value,
-                    Pressure = sensorSettings.Except?.Contains(Pressure) == true ? null
-                        : sensor.Parameters.FirstOrDefault(p => p.Name == Pressure)?.Value,
+                    Temperature = PrepareValue(sensor, sensorSettings, Temperature),
+                    Humidity = PrepareValue(sensor, sensorSettings, Humidity),
+                    Pressure = PrepareValue(sensor, sensorSettings, Pressure),
                     CO2 = null
                 };
             }))
@@ -73,6 +71,18 @@ public sealed class WeatherRegistratorJob
 
     private Sensor GetSensorSettings(EspMeteo espMeteo, Parser.EspMeteo.Models.Sensor sensor)
         => _settings.Sensors.First(s => s.Uri == espMeteo.Uri && s.Name == sensor.Name);
+
+    private static double? PrepareValue(Zs.Parser.EspMeteo.Models.Sensor sensor, Sensor sensorSettings, string parameterName)
+    {
+        if (sensorSettings.Except?.Contains(parameterName) == true)
+            return null;
+
+        var parameterValue = sensor.Parameters.FirstOrDefault(p => p.Name == parameterName)?.Value;
+
+        return parameterValue.HasValue
+            ? Math.Round(parameterValue.Value, 2)
+            : null;
+    }
 
     private async Task<IReadOnlyList<EspMeteo>> GetEspMeteoInfosAsync(CancellationToken cancellationToken)
     {
