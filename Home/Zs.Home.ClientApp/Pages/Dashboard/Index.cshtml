@@ -1,0 +1,17 @@
+﻿@page "/Dashboard"
+@namespace Zs.Home.ClientApp.Pages.Dashboard
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<h1>@ViewData["Title"]</h1>
+
+<div class="container">
+    <div class="row">
+        @await Html.PartialAsync("_WeatherDashboard", Model.WeatherDashboard)
+    </div>
+
+
+</div>

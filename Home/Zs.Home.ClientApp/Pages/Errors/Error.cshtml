@@ -1,4 +1,8 @@
-﻿@model ErrorViewModel
+﻿@page "/Error"
+@namespace Zs.Home.ClientApp.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@model Zs.Home.ClientApp.Pages.Errors.ErrorModel
 @{
     ViewData["Title"] = "Error";
 }
@@ -15,7 +19,7 @@
 
 <h3>Development Mode</h3>
 <p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
+    Swapping to the <strong>Development</strong> environment displays detailed information about the error that occurred.
 </p>
 <p>
     <strong>The Development environment shouldn't be enabled for deployed applications.</strong>

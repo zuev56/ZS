@@ -1,0 +1,47 @@
+﻿@namespace Zs.Home.ClientApp.Pages.Dashboard
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@using System.Globalization
+@model WeatherDashboard
+@{
+    var nameToImageMap = new Dictionary<string, string>
+    {
+        ["Temperature"] = "thermometer.png",
+        ["Humidity"] = "humidity.png",
+        ["Pressure"] = "pressure.png",
+        ["Co2"] = "co2.png"
+    };
+
+    var statusTuStyleMap = new Dictionary<Status, string>
+    {
+        [Status.Ok] = "bg-success",
+        [Status.Warning] = "bg-warning",
+        [Status.Danger] = "bg-danger"
+    };
+
+}
+
+@foreach (var place in Model.Places)
+{
+    <div class="col card m-2 p-2">
+        <p>@place.Name</p>
+        @foreach (var parameter in place.Parameters)
+        {
+            var minScaleValue = Math.Floor((parameter.LoLo ?? 0) - ((parameter.Lo ?? 0) - (parameter.LoLo ?? 0)));
+            var maxScaleValue = Math.Ceiling((parameter.HiHi ?? 0) + ((parameter.HiHi ?? 0) - (parameter.Hi ?? 0)));
+            var scaleSize = maxScaleValue - minScaleValue;
+            var parameterValueOnScale = parameter.Value - minScaleValue;
+            var parameterValueOnProgress = Math.Round(parameterValueOnScale / scaleSize * 100, 1).ToString(CultureInfo.InvariantCulture);
+
+            <div class="row card mt-1 ms-1 me-1 p-0">
+                <div class="progress p-0">
+                    <img src="@nameToImageMap[parameter.Name]" alt="@parameter.Name" style="padding-top: 0.10rem; padding-bottom: 0.10rem; padding-right: 0.25rem; padding-left: 0.25rem;">
+
+                    <div class="progress-bar @statusTuStyleMap[parameter.Status]" role="progressbar" style="width: @parameterValueOnProgress%" aria-valuenow="@parameterValueOnProgress" aria-valuemin="0" aria-valuemax="100">
+                        @parameter.Value&nbsp;@parameter.Unit
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
