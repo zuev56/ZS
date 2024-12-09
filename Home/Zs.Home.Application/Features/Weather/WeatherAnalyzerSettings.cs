@@ -31,7 +31,8 @@ public sealed class ParameterSettings
 {
     [Required]
     public string Name { get; init; } = null!;
-    public float? HighLimit { get; init; }
-    public float? LowLimit { get; init; }
-    // TODO: Одно свойство должно быть задано
+    public float? LoLo { get; init; }
+    public float? Lo { get; init; }
+    public float? Hi { get; init; }
+    public float? HiHi { get; init; }
 }

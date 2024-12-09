@@ -41,4 +41,6 @@ public sealed class Sensor
 
     [Required]
     public required string Uri { get; init; }
+
+    public string? Except { get; set; }
 }

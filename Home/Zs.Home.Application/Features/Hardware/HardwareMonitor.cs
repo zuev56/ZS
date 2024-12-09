@@ -102,7 +102,7 @@ internal abstract class HardwareMonitor : IHardwareMonitor
         }
     }
 
-    public async Task<string> GetCurrentStateAsync()
+    public async Task<string> GetCurrentStateAsync(TimeSpan? timeout = null)
     {
         var analyzeCpuTemperature = GetCpuTemperature();
         var analyzeCpuUsage = Get15MinAvgCpuUsage();

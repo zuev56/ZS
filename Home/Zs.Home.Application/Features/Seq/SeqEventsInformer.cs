@@ -77,7 +77,7 @@ internal sealed class SeqEventsInformer : ISeqEventsInformer
         return messageBuilder.ToString().ReplaceEndingWithThreeDots(maxStringLength: 4000);
     }
 
-    public async Task<string> GetCurrentStateAsync()
+    public async Task<string> GetCurrentStateAsync(TimeSpan? timeout = null)
     {
         var seqEvents = await _seqService.GetLastEventsAsync(_settings.RequestedEventsCount, _settings.ObservedSignals);
         var lastWeek = seqEvents.Count(e => e.Timestamp > DateTime.UtcNow.AddDays(-7));

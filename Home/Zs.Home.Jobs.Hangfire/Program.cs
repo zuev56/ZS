@@ -11,11 +11,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Zs.Common.Extensions;
+using Zs.Home.Application.Features.Weather.Data;
+using Zs.Home.Application.Features.Weather.Data.Models;
 using Zs.Home.Jobs.Hangfire;
 using Zs.Home.Jobs.Hangfire.Hangfire;
 using Zs.Home.Jobs.Hangfire.WeatherRegistrator;
-using Zs.Home.Jobs.Hangfire.WeatherRegistrator.Models;
-using Place = Zs.Home.Jobs.Hangfire.WeatherRegistrator.Models.Place;
+using Place = Zs.Home.Application.Features.Weather.Data.Models.Place;
 
 var builder = WebApplication.CreateBuilder(args);
 

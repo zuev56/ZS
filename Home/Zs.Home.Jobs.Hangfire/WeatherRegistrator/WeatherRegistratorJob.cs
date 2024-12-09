@@ -8,9 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
-using Zs.Home.Jobs.Hangfire.WeatherRegistrator.Models;
+using Zs.Home.Application.Features.Weather.Data;
+using Zs.Home.Application.Features.Weather.Data.Models;
 using Zs.Parser.EspMeteo;
 using Zs.Parser.EspMeteo.Models;
+using static Zs.Home.Jobs.Hangfire.Constants;
 
 namespace Zs.Home.Jobs.Hangfire.WeatherRegistrator;
 
@@ -50,19 +52,27 @@ public sealed class WeatherRegistratorJob
         var espMeteos = await GetEspMeteoInfosAsync(cancellationToken);
 
         return espMeteos.SelectMany(
-            espMeteo => espMeteo.Sensors.Select(sensor => new WeatherData
+            espMeteo => espMeteo.Sensors.Select(sensor =>
             {
-                SourceId = GetSourceId(espMeteo, sensor),
-                Temperature = sensor.Parameters.FirstOrDefault(p => p.Name == "Temperature")?.Value,
-                Humidity = sensor.Parameters.FirstOrDefault(p => p.Name == "Humidity")?.Value,
-                Pressure = sensor.Parameters.FirstOrDefault(p => p.Name == "Pressure")?.Value,
-                CO2 = null
+                var sensorSettings = GetSensorSettings(espMeteo, sensor);
+
+                return new WeatherData
+                {
+                    SourceId = sensorSettings.Id,
+                    Temperature = sensorSettings.Except?.Contains(Temperature) == true ? null
+                        : sensor.Parameters.FirstOrDefault(p => p.Name == Temperature)?.Value,
+                    Humidity = sensorSettings.Except?.Contains(Humidity) == true ? null
+                        : sensor.Parameters.FirstOrDefault(p => p.Name == Humidity)?.Value,
+                    Pressure = sensorSettings.Except?.Contains(Pressure) == true ? null
+                        : sensor.Parameters.FirstOrDefault(p => p.Name == Pressure)?.Value,
+                    CO2 = null
+                };
             }))
             .ToImmutableList();
     }
 
-    private short GetSourceId(EspMeteo espMeteo, Parser.EspMeteo.Models.Sensor sensor)
-        => _settings.Sensors.First(s => s.Uri == espMeteo.Uri && s.Name == sensor.Name).Id;
+    private Sensor GetSensorSettings(EspMeteo espMeteo, Parser.EspMeteo.Models.Sensor sensor)
+        => _settings.Sensors.First(s => s.Uri == espMeteo.Uri && s.Name == sensor.Name);
 
     private async Task<IReadOnlyList<EspMeteo>> GetEspMeteoInfosAsync(CancellationToken cancellationToken)
     {

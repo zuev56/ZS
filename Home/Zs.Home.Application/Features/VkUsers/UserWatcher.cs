@@ -62,7 +62,7 @@ internal sealed class UserWatcher : IUserWatcher
         return inactiveTime;
     }
 
-    public async Task<string> GetCurrentStateAsync()
+    public async Task<string> GetCurrentStateAsync(TimeSpan? timeout = null)
     {
         var result = new StringBuilder();
         foreach (var userId in _options.TrackedIds)

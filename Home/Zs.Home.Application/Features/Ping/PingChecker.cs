@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
@@ -13,10 +14,11 @@ namespace Zs.Home.Application.Features.Ping;
 internal sealed class PingChecker : IPingChecker
 {
     private const int AttemptsWhenNotReachable = 3;
-    private static readonly TimeSpan BaseDelay = 500.Milliseconds();
+    private static readonly TimeSpan BaseDelay = 300.Milliseconds();
     private readonly PingCheckerSettings _settings;
     private readonly Dictionary<Target, bool> _targetToReachabilityMap = new();
 
+    // TODO: Почему джоб лежит не в боте, если он нужен только там?
     public ProgramJob<string> Job { get; }
 
     public PingChecker(IOptions<PingCheckerSettings> options)
@@ -105,7 +107,7 @@ internal sealed class PingChecker : IPingChecker
         }
     }
 
-    public async Task<string> GetCurrentStateAsync()
+    public async Task<string> GetCurrentStateAsync(TimeSpan? timeout = null)
     {
         if (_settings.Targets.Length == 0)
             return string.Empty;
@@ -113,7 +115,17 @@ internal sealed class PingChecker : IPingChecker
         var stateMessageBuilder = new StringBuilder();
         foreach (var target in _settings.Targets)
         {
-            var hostStatus = await PingAsync(target);
+            var hostStatus = await PingAsync(target).WaitAsync(timeout ?? TimeSpan.MaxValue)
+                .ContinueWith(task =>
+                {
+                    if (!task.IsFaulted)
+                        return task.Result;
+
+                    if (task.Exception!.InnerExceptions.SingleOrDefault() is TimeoutException)
+                        return IPStatus.TimedOut;
+
+                    throw task.Exception;
+                }, TaskContinuationOptions.None);
             var targetName = target.Description ?? target.Host + (target.Port.HasValue ? $":{target.Port}" : string.Empty);
             stateMessageBuilder.AppendLine($"{targetName}: {hostStatus}");
         }

@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Zs.Home.Jobs.Hangfire.WeatherRegistrator.Migrations
+namespace Zs.Home.Application.Features.Weather.Data.Migrations
 {
     /// <inheritdoc />
     public partial class Initial : Migration

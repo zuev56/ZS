@@ -11,6 +11,8 @@ namespace Zs.Home.Bot.Interaction;
 
 internal sealed class SystemStatusService
 {
+    private static readonly TimeSpan _defaultTimeout = TimeSpan.FromSeconds(1);
+
     private readonly IHardwareMonitor _hardwareMonitor;
     private readonly IUserWatcher _userWatcher;
     private readonly IWeatherAnalyzer _weatherAnalyzer;
@@ -51,13 +53,13 @@ internal sealed class SystemStatusService
                $"Request time: {sw.ElapsedMilliseconds} ms";
     }
 
-    public Task<string> GetHardwareStatusAsync() => _hardwareMonitor.GetCurrentStateAsync();
+    public Task<string> GetHardwareStatusAsync() => _hardwareMonitor.GetCurrentStateAsync(_defaultTimeout);
 
-    public Task<string> GetUsersStatusAsync() => _userWatcher.GetCurrentStateAsync();
+    public Task<string> GetUsersStatusAsync() => _userWatcher.GetCurrentStateAsync(_defaultTimeout);
 
-    public Task<string> GetWeatherStatusAsync() => _weatherAnalyzer.GetCurrentStateAsync();
+    public Task<string> GetWeatherStatusAsync() => _weatherAnalyzer.GetCurrentStateAsync(_defaultTimeout);
 
-    public Task<string> GetPingStatusAsync() => _pingChecker.GetCurrentStateAsync();
+    public Task<string> GetPingStatusAsync() => _pingChecker.GetCurrentStateAsync(_defaultTimeout);
 
-    public Task<string> GetSeqStatusAsync() => _seqEventsInformer.GetCurrentStateAsync();
+    public Task<string> GetSeqStatusAsync() => _seqEventsInformer.GetCurrentStateAsync(_defaultTimeout);
 }

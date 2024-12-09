@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Zs.Home.Jobs.Hangfire.WeatherRegistrator.Models;
+namespace Zs.Home.Application.Features.Weather.Data.Models;
 
 public sealed class WeatherData
 {

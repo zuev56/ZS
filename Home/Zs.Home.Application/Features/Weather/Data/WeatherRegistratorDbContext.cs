@@ -1,17 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Zs.Home.Jobs.Hangfire.WeatherRegistrator.Models;
-using static Zs.Home.Jobs.Hangfire.Constants;
+using Zs.Home.Application.Features.Weather.Data.Models;
 
-namespace Zs.Home.Jobs.Hangfire.WeatherRegistrator;
+namespace Zs.Home.Application.Features.Weather.Data;
 
 public sealed class WeatherRegistratorDbContext : DbContext
 {
+    private const string _weatherRegistratorSchema = "weather";
+    private const string _postgresUtcNowValue = "now() at time zone ('utc')";
+
     public WeatherRegistratorDbContext(DbContextOptions<WeatherRegistratorDbContext> options)
         : base(options)
     {
     }
 
-    public DbSet<Models.Place> Places { get; set; }
+    public DbSet<Place> Places { get; set; }
     public DbSet<Source> Sources { get; set; }
     public DbSet<WeatherData> WeatherData { get; set; }
 
@@ -23,7 +25,7 @@ public sealed class WeatherRegistratorDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema(WeatherRegistratorSchema);
+        modelBuilder.HasDefaultSchema(_weatherRegistratorSchema);
         modelBuilder.UseSerialColumns();
 
         ConfigureEntities(modelBuilder);
@@ -33,7 +35,7 @@ public sealed class WeatherRegistratorDbContext : DbContext
 
     private static void ConfigureEntities(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Models.Place>(b =>
+        modelBuilder.Entity<Place>(b =>
         {
             b.ToTable("places");
 
@@ -42,7 +44,7 @@ public sealed class WeatherRegistratorDbContext : DbContext
             b.Property(e => e.Name);
             b.Property(e => e.Description);
             b.Property(e => e.CreatedAt)
-                .HasDefaultValueSql(PostgresUtcNowValue)
+                .HasDefaultValueSql(_postgresUtcNowValue)
                 .ValueGeneratedOnAdd();
         });
 
@@ -56,7 +58,7 @@ public sealed class WeatherRegistratorDbContext : DbContext
             b.Property(e => e.Name);
             b.Property(e => e.Description);
             b.Property(e => e.CreatedAt)
-                .HasDefaultValueSql(PostgresUtcNowValue)
+                .HasDefaultValueSql(_postgresUtcNowValue)
                 .ValueGeneratedOnAdd();
 
             b.HasOne(e => e.Place)
@@ -72,7 +74,7 @@ public sealed class WeatherRegistratorDbContext : DbContext
 
             b.Property(e => e.SourceId);
             b.Property(e => e.CreatedAt)
-                .HasDefaultValueSql(PostgresUtcNowValue)
+                .HasDefaultValueSql(_postgresUtcNowValue)
                 .ValueGeneratedOnAdd();
             b.Property(e => e.Temperature);
             b.Property(e => e.Humidity);
@@ -80,7 +82,7 @@ public sealed class WeatherRegistratorDbContext : DbContext
             b.Property(e => e.CO2);
 
             b.HasOne(e => e.Source)
-                .WithMany()
+                .WithMany(e => e.WeatherData)
                 .HasForeignKey(e => e.SourceId);
         });
     }

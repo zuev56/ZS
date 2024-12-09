@@ -97,15 +97,15 @@ internal sealed class WeatherAnalyzer : IWeatherAnalyzer
                 if (parameterSettings is null)
                     continue;
 
-                if (parameter.Value > parameterSettings.HighLimit)
+                if (parameter.Value > parameterSettings.HiHi)
                 {
-                    var deviation = $"{sensorSettings.Alias ?? sensor.Name}.{parameter.Name}: value {parameter.Value} {parameter.Unit} is higher than limit {parameterSettings.HighLimit} {parameter.Unit}";
+                    var deviation = $"{sensorSettings.Alias ?? sensor.Name}.{parameter.Name}: value {parameter.Value} {parameter.Unit} is higher than limit {parameterSettings.HiHi} {parameter.Unit}";
                     deviations.AppendLine(deviation);
                 }
 
-                if (parameter.Value < parameterSettings.LowLimit)
+                if (parameter.Value < parameterSettings.LoLo)
                 {
-                    var deviation = $"{sensorSettings.Alias ?? sensor.Name}.{parameter.Name}: value {parameter.Value} {parameter.Unit} is lower than limit {parameterSettings.LowLimit} {parameter.Unit}";
+                    var deviation = $"{sensorSettings.Alias ?? sensor.Name}.{parameter.Name}: value {parameter.Value} {parameter.Unit} is lower than limit {parameterSettings.LoLo} {parameter.Unit}";
                     deviations.AppendLine(deviation);
                 }
             }
@@ -115,7 +115,7 @@ internal sealed class WeatherAnalyzer : IWeatherAnalyzer
         return result == espMeteoDeviceName ? string.Empty : result;
     }
 
-    public async Task<string> GetCurrentStateAsync()
+    public async Task<string> GetCurrentStateAsync(TimeSpan? timeout = null)
     {
         var espMeteos = await GetEspMeteoInfosAsync();
         var states = espMeteos.SelectMany(espMeteo =>
