@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Zs.Home.Application.Features.Weather;
+using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.ClientApp.Data;
 using Zs.Home.ClientApp.Pages.Dashboard;
@@ -35,6 +35,11 @@ public static class Program
 
         builder.Services.AddOptions<WeatherDashboardSettings>()
             .Bind(builder.Configuration.GetSection(WeatherDashboardSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        builder.Services.AddOptions<PingCheckerSettings>()
+            .Bind(builder.Configuration.GetSection(PingCheckerSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 

@@ -7,52 +7,76 @@ namespace Zs.Home.ClientApp.Pages.Dashboard;
 
 internal static class Mapper
 {
-    public static WeatherDashboard ToWeatherDashboard(this List<WeatherData> weatherData, WeatherDashboardSettings settings)
+    public static WeatherDashboard ToWeatherDashboard(this IReadOnlyList<WeatherData> weatherData, WeatherDashboardSettings settings)
     {
-        var places = weatherData.Select(d => d.Source.Place!)
-            .Select(p => ToClientModel(p, settings))
+        var dbSources = weatherData
+            .Select(d => d.Source)
+            .DistinctBy(s => s.Id)
             .ToList();
 
-        // Если два датчика находятся в одном месте, то может получиться несколько одноимённых параметров.
-        // Надо подумать, как исключить ненужный. Вероятно, его просто не надо писть в БД.
-        // В ESPMeteo есть датчик температуры, который показывает t устройства, а не воздуха
-        places = places
-            .GroupBy(p => p.Name)
-            .Select(g =>
+        var dbPlaces = dbSources
+            .Select(s => s.Place)
+            .DistinctBy(p => p.Id)
+            .ToList();
+
+        // TODO: O(n^3)
+        foreach (var place in dbPlaces)
+        {
+            place.Sources = dbSources.Where(s => s.PlaceId == place.Id).ToList();
+
+            foreach (var source in place.Sources)
             {
-                var firstPlace = g.First();
-                if (g.Count() > 1)
-                    firstPlace.Parameters = g.SelectMany(p => p.Parameters).ToList();
+                source.Place = place;
+                source.WeatherData = weatherData.Where(d => d.SourceId == source.Id).ToList();
 
-                return firstPlace;
-            }).ToList();
+                foreach (var data in source.WeatherData)
+                {
+                    data.Source = source;
+                }
+            }
+        }
 
-        return new WeatherDashboard { Places = places };
+        var clientPlaces = dbPlaces
+            .Select(p => p.ToClientModel(settings))
+            .ToList();
+
+        return new WeatherDashboard { Places = clientPlaces };
     }
 
     private static Place ToClientModel(
-        this Application.Features.Weather.Data.Models.Place place, WeatherDashboardSettings settings)
+        this Application.Features.Weather.Data.Models.Place place,
+        WeatherDashboardSettings settings)
     {
         var parameters = place.Sources!.SelectMany(s => s.WeatherData!)
             .SelectMany(d =>
             {
-                var placeParameterMap = settings.Parameters
-                    .Where(p => p.PlaceId == d.Source.PlaceId)
-                    .ToDictionary(p => p.Name);
-
                 return new[]
                 {
-                    !d.Temperature.HasValue ? null!
-                        : new AnalogParameter(Temperature, d.Temperature.Value, TemperatureUnit, placeParameterMap[Temperature]),
-                    !d.Humidity.HasValue ? null!
-                        : new AnalogParameter(Humidity, d.Humidity.Value, HumidityUnit, placeParameterMap[Humidity]),
-                    !d.Pressure.HasValue ? null!
-                        : new AnalogParameter(Pressure, d.Pressure.Value, PressureUnit, placeParameterMap[Pressure]),
-                    // !d.CO2.HasValue ? null
+                    !d.Temperature.HasValue
+                        ? (ParameterName: default, Value: default, Unit: default, CreatedAt: default)
+                        : (ParameterName: Temperature, d.Temperature.Value, Unit: TemperatureUnit, d.CreatedAt),
+                    !d.Humidity.HasValue
+                        ? (ParameterName: default, Value: default, Unit: default, CreatedAt: default)
+                        : (ParameterName: Humidity, d.Humidity.Value, Unit: HumidityUnit, d.CreatedAt),
+                    !d.Pressure.HasValue
+                        ? (ParameterName: default, Value: default, Unit: default, CreatedAt: default)
+                        : (ParameterName: Pressure, d.Pressure.Value, Unit: PressureUnit, d.CreatedAt)
+                    // !d.CO2.HasValue ? (default, default, default, default)
                     //     : new AnalogParameter(Co2, d.CO2.Value, Co2Unit, placeParameterMap[Co2])
                 };
             })
-            .Where(p => p != null!)
+            .GroupBy(a => new {a.ParameterName, a.Unit})
+            .Where(g => g.Key.ParameterName != default)
+            .Select(g =>
+            {
+                var valueLog = g.ToDictionary(i => i.CreatedAt, i => i.Value);
+
+                var placeParameterMap = settings.Parameters
+                    .Where(p => p.PlaceId == place.Id)
+                    .ToDictionary(p => p.Name);
+
+                return new AnalogParameter(g.Key.ParameterName!, valueLog, g.Key.Unit!, placeParameterMap[g.Key.ParameterName!]);
+            })
             .ToList();
 
         return new Place

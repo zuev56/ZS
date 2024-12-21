@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Zs.Home.Application.Features.Weather;
 using Zs.Home.Application.Features.Weather.Data;
-using static Zs.Home.ClientApp.Pages.Dashboard.Constants;
 
 namespace Zs.Home.ClientApp.Pages.Dashboard;
 
@@ -33,15 +31,6 @@ public sealed class WeatherDashboardQueryHandler : IRequestHandler<WeatherDashbo
 
         if (!weatherData.Any() || DateTime.UtcNow - weatherData.First().CreatedAt > TimeSpan.FromMinutes(15))
             throw new ApplicationException("No actual weather data found");
-
-        // На данный момент график не строится, поэтому берём только последние значения
-        var sourceCount = weatherData.Select(d => d.SourceId).Distinct().Count();
-        weatherData = weatherData
-            .OrderByDescending(d => d.CreatedAt)
-            .ThenBy(d => d.SourceId)
-            .Take(sourceCount)
-            .ToList();
-
 
         return weatherData.ToWeatherDashboard(_settings);
     }

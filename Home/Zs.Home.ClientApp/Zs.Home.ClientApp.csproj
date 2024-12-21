@@ -9,7 +9,6 @@
 
     <ItemGroup>
         <None Update="app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true"/>
-        <None Include="wwwroot\favicon.ico" />
     </ItemGroup>
 
     <ItemGroup>
@@ -41,14 +40,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Resources.Designer.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Remove="Resources.resx" />
     </ItemGroup>
 
 </Project>

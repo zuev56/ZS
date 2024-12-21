@@ -1,0 +1,77 @@
+﻿@using System.Globalization
+@namespace Zs.Home.ClientApp.Pages.Dashboard
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@model AnalogParameter
+@{
+    var nameToImageMap = new Dictionary<string, string>
+    {
+        ["Temperature"] = "thermometer.png",
+        ["Humidity"] = "humidity.png",
+        ["Pressure"] = "pressure.png",
+        ["Co2"] = "co2.png"
+    };
+
+    var statusToStyleMap = new Dictionary<Status, string>
+    {
+        [Status.Ok] = "bg-success",
+        [Status.Warning] = "bg-warning",
+        [Status.Danger] = "bg-danger"
+    };
+
+    var minScaleValue = Math.Floor((Model.LoLo ?? 0) - ((Model.Lo ?? 0) - (Model.LoLo ?? 0)));
+    var maxScaleValue = Math.Ceiling((Model.HiHi ?? 0) + ((Model.HiHi ?? 0) - (Model.Hi ?? 0)));
+    var scaleSize = maxScaleValue - minScaleValue;
+    var parameterValueOnScale = Model.CurrentValue - minScaleValue;
+    var parameterValueOnProgress = Math.Round(parameterValueOnScale / scaleSize * 100, 1).ToString(CultureInfo.InvariantCulture);
+}
+
+<style>
+    .bg-success {
+        --bs-bg-opacity: 0.8;
+        background-color: rgba(var(--bs-success-rgb), var(--bs-bg-opacity)) !important;
+    }
+
+    .bg-warning {
+        --bs-bg-opacity: 0.9;
+        background-color: rgba(var(--bs-warning-rgb), var(--bs-bg-opacity)) !important;
+    }
+
+    .bg-danger {
+        --bs-bg-opacity: 1;
+        background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
+    }
+</style>
+
+<div class="row card mt-1 ms-1 me-1 p-0">
+    <div class="progress p-0">
+        <img src="@nameToImageMap[Model.Name]" alt="@Model.Name" style="padding-top: 0.10rem; padding-bottom: 0.10rem; padding-right: 0.25rem; padding-left: 0.25rem;">
+
+        <div class="progress-bar @statusToStyleMap[Model.Status]" role="progressbar" style="width: @parameterValueOnProgress%" aria-valuenow="@parameterValueOnProgress" aria-valuemin="0" aria-valuemax="100">
+            @Model.CurrentValue&nbsp;@Model.Unit
+        </div>
+
+        @{
+            var (dynamicIcon, alt, color) = GetDynamicIcon(Model.ValueLog);
+            if (dynamicIcon != null)
+            {
+                <img src="@dynamicIcon" style="padding-top: 0.10rem; padding-bottom: 0.10rem; padding-right: 0.25rem; padding-left: 0.25rem;" alt="@alt">
+            }
+            static (string?, string?, string?) GetDynamicIcon(Dictionary<DateTime, double> valueLog)
+            {
+                var last = valueLog.OrderByDescending(i => i.Key)
+                    .Take(2)
+                    .Select(i => i.Value)
+                    .ToList();
+
+                // TODO: Если значение критичное и направление стрелки неблагоприятное, то подсвечивать соответствующим цветом
+                return (last[0] - last[1]) switch
+                {
+                    > 0 => ("arrow-up.png", "\u2191", "black"),
+                    < 0 => ("arrow-down.png", "\u2193", "black"),
+                    _ => (null, null, null)
+                };
+            }
+        }
+    </div>
+</div>

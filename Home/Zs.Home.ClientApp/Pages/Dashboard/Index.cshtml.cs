@@ -18,9 +18,16 @@ public class IndexModel : PageModel
     }
 
     public WeatherDashboard WeatherDashboard { get; private set; }
+    public PingResult PingResult { get; private set; }
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
-        WeatherDashboard = await _mediator.Send(new WeatherDashboardQuery(), cancellationToken);
+        var weatherDashboardTask = _mediator.Send(new WeatherDashboardQuery(), cancellationToken);
+        var pingResultTask = _mediator.Send(new PingResultQuery(), cancellationToken);
+
+        await Task.WhenAll(weatherDashboardTask, pingResultTask);
+
+        WeatherDashboard = weatherDashboardTask.Result;
+        PingResult = pingResultTask.Result;
     }
 }

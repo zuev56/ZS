@@ -1,31 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Zs.Home.ClientApp.Pages.Dashboard;
 
 public sealed record WeatherDashboard
 {
-    public required IReadOnlyList<Place> Places { get; set; }
+    public required IReadOnlyList<Place> Places { get; init; }
 }
 
 public sealed record Place
 {
     public required string Name { get; init; }
 
-    public IReadOnlyList<AnalogParameter> Parameters { get; set; }
+    public IReadOnlyList<AnalogParameter> Parameters { get; set; } = null!;
 }
 
 public sealed record AnalogParameter
 {
-    public AnalogParameter(string name, double value, string unit)
+    public AnalogParameter(string name, Dictionary<DateTime, double> valueLog, string unit)
     {
         Name = name;
-        Value = Round(value)!.Value;
+        ValueLog = valueLog;
         Unit = unit;
     }
 
-    public AnalogParameter(string name, double value, string unit, WeatherDashboardSettings.Parameter reference)
-        : this(name, value, unit)
+    public AnalogParameter(string name, Dictionary<DateTime, double> valueLog, string unit, WeatherDashboardSettings.Parameter reference)
+        : this(name, valueLog, unit)
     {
         Hi = Round(reference.Hi);
         HiHi = Round(reference.HiHi);
@@ -34,7 +35,8 @@ public sealed record AnalogParameter
     }
 
     public string Name { get; }
-    public double Value { get; }
+    public double CurrentValue => ValueLog.OrderByDescending(kvp => kvp.Key).First().Value;
+    public Dictionary<DateTime, double> ValueLog { get; } = new();
     public string Unit { get; }
     public double? Hi { get; init; }
     public double? HiHi { get; init; }
@@ -47,9 +49,9 @@ public sealed record AnalogParameter
     {
         get
         {
-            if (LoLo < Value && Value < Lo || Hi < Value && Value < HiHi)
+            if (LoLo < CurrentValue && CurrentValue < Lo || Hi < CurrentValue && CurrentValue < HiHi)
                 return Status.Warning;
-            if (LoLo > Value || Value > HiHi)
+            if (LoLo > CurrentValue || CurrentValue > HiHi)
                 return Status.Danger;
 
             return Status.Ok;
@@ -59,7 +61,7 @@ public sealed record AnalogParameter
     private static double? Round(double? rawValue)
         => rawValue.HasValue ? Math.Round(rawValue.Value, 2, MidpointRounding.AwayFromZero) : default;
 
-    public override string ToString() => $"{Value} {Unit}";
+    public override string ToString() => $"{CurrentValue} {Unit}";
 }
 
 public enum Status { Ok, Warning, Danger }
