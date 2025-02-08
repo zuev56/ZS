@@ -37,10 +37,10 @@
         </div>
 
         @{
-            var (dynamicIcon, alt, color) = GetDynamicIcon(Model.ValueLog);
-            if (dynamicIcon != null)
+            var (rotationSign, alternativeText, color) = GetDynamicIcon(Model.ValueLog);
+            if (rotationSign != null)
             {
-                <img src="@dynamicIcon" style="padding-top: 0.10rem; padding-bottom: 0.10rem; padding-right: 0.25rem; padding-left: 0.25rem;" alt="@alt">
+                <img src="arrow-right.png" class="arrow" style="transform: rotate(@{@rotationSign}45deg);" alt="@alternativeText">
             }
             static (string?, string?, string?) GetDynamicIcon(Dictionary<DateTime, double> valueLog)
             {
@@ -52,8 +52,8 @@
                 // TODO: Если значение критичное и направление стрелки неблагоприятное, то подсвечивать соответствующим цветом
                 return (last[0] - last[1]) switch
                 {
-                    > 0 => ("arrow-up.png", "\u2191", "black"),
-                    < 0 => ("arrow-down.png", "\u2193", "black"),
+                    > 0 => ("+", "\u2191", "black"),
+                    < 0 => ("-", "\u2193", "black"),
                     _ => (null, null, null)
                 };
             }
@@ -124,6 +124,6 @@
                       points="@string.Join(Environment.NewLine, points)"/>
         </svg>
 
-        <text class="chart-text">In @chartForHours hours</text>
+        <p class="chart-text">In @chartForHours hours</p>
     </div>
 </div>

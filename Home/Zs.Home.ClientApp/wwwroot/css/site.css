@@ -51,6 +51,13 @@ body {
         background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
     }
 
+    .arrow {
+        padding-top: 0.10rem;
+        padding-bottom: 0.10rem;
+        padding-right: 0.25rem;
+        padding-left: 0.25rem;
+    }
+
     .chart-wrapper {
         position: relative;
         margin: 0;
@@ -68,13 +75,11 @@ body {
     .chart-text {
         z-index: 1;
         position: absolute;
-        left: 0;
-        top: -2px;
-        text-anchor: start;
+        line-height: 90%;
         font-size: 0.5em;
-        margin: 0;
+        margin-left: 1px;
         padding: 0;
-        width: 2.6rem;
+        width: max-content;
         background: rgba(255, 255, 255, 0.7);
     }
 
