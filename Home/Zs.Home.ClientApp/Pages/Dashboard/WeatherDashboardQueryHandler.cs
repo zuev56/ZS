@@ -23,10 +23,10 @@ public sealed class WeatherDashboardQueryHandler : IRequestHandler<WeatherDashbo
     public async Task<WeatherDashboard> Handle(WeatherDashboardQuery request, CancellationToken cancellationToken)
     {
         var weatherData = await _dbContext.WeatherData.AsNoTracking()
+            .Where(d => d.CreatedAt > DateTime.UtcNow.AddDays(-1))
             .Include(d => d.Source)
             .ThenInclude(s => s.Place)
             .OrderByDescending(d => d.CreatedAt)
-            .Take(100)
             .ToListAsync(cancellationToken);
 
         if (!weatherData.Any() || DateTime.UtcNow - weatherData.First().CreatedAt > TimeSpan.FromMinutes(15))

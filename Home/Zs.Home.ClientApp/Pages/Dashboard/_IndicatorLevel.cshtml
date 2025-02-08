@@ -24,26 +24,11 @@
     var scaleSize = maxScaleValue - minScaleValue;
     var parameterValueOnScale = Model.CurrentValue - minScaleValue;
     var parameterValueOnProgress = Math.Round(parameterValueOnScale / scaleSize * 100, 1).ToString(CultureInfo.InvariantCulture);
+
+    var chartForHours = Math.Round((DateTime.UtcNow - Model.ValueLog.OrderBy(kvp => kvp.Key).First().Key).TotalHours);
 }
 
-<style>
-    .bg-success {
-        --bs-bg-opacity: 0.8;
-        background-color: rgba(var(--bs-success-rgb), var(--bs-bg-opacity)) !important;
-    }
-
-    .bg-warning {
-        --bs-bg-opacity: 0.9;
-        background-color: rgba(var(--bs-warning-rgb), var(--bs-bg-opacity)) !important;
-    }
-
-    .bg-danger {
-        --bs-bg-opacity: 1;
-        background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
-    }
-</style>
-
-<div class="row card mt-1 ms-1 me-1 p-0">
+<div class="row card indicator mt-1 ms-1 me-1 p-0">
     <div class="progress p-0">
         <img src="@nameToImageMap[Model.Name]" alt="@Model.Name" style="padding-top: 0.10rem; padding-bottom: 0.10rem; padding-right: 0.25rem; padding-left: 0.25rem;">
 
@@ -72,6 +57,73 @@
                     _ => (null, null, null)
                 };
             }
+
+            /* Дано:
+             *   X   Y         Диапазон возможных значений на графике: от 0 до 16
+             *   0   31        min(Y) = 31 => 0
+             *   1   45        max(Y) = 65 => 16
+             *   3   65
+             *   4   47        65 - 31 = 34   - диапазон фактических значений
+             *                 16 / 34 = 0.47 - коэффициент, на который надо умножить фактические значения
+             *
+             *                                               Значения
+             *   X   Y                                      на графике
+             *   0   31 * 0.47 = 14.57     - 14.57   =>         0
+             *   1   45 * 0.47 = 21.15     - 14.57   =>         6.58
+             *   3   65 * 0.47 = 30.55     - 14.57   =>        15.98
+             *   4   47 * 0.47 = 22.09     - 14.57   =>         7.52
+             */
+
+            var vbHeight = 14; // 16 = 1rem
+            var vbWidth = Model.ValueLog.Count;
+            var min = Model.ValueLog.Values.Min();
+            var max = Model.ValueLog.Values.Max();
+            var kX = 1;
+            var kY = vbHeight / (max - min);
+            var offset = kY * min;
+
+            var points = Model.ValueLog.Values
+                .Select(v => v * kY - offset)
+                .Select((value, index) => string.Create(CultureInfo.GetCultureInfo("en-US"),  $"{index*kX}, {value:F1}"));
+
+            var (lolo, lo, hi, hihi) = ((int)Model.LoLo, (int)Model.Lo, (int)Model.Hi, (int)Model.HiHi);
+            var scaleLength70pct = (Model.HiHi - Model.LoLo) / 70 * 100; // Между LoLo и HiHi 70% шкалы.
+            var scaleLength15pct = scaleLength70pct * 0.3 / 2; // На красные линии выделяем 30% (по 15%)
+            var scaleMinValue = (int)(lolo - scaleLength15pct);
+            var scaleMaxValue = (int)(hihi + scaleLength15pct);
+            var strokeWidth = 1;
+
         }
+
+    </div>
+
+    @* <div class="container" style="height:5px"> *@
+    @*     <div class="row"> *@
+    @*         <div class="col-auto" style="width:15%; background:red">qwe</div> *@
+    @*         <div class="col-auto" style="width:15%; background:orange">qwe</div> *@
+    @*         <div class="col-auto" style="width:40%; background:limegreen">qwe</div> *@
+    @*         <div class="col-auto" style="width:15%; background:orange">qwe</div> *@
+    @*         <div class="col-auto" style="width:15%; background:red">qwe</div> *@
+    @*     </div> *@
+    @* </div> *@
+
+    @* <svg viewBox="@scaleMinValue 0 @scaleMaxValue 3" preserveAspectRatio="none"> *@
+    @*     <line x1="@scaleMinValue" y1="1" x2="@lolo"          y2="1" stroke="red"    stroke-width="3" /> *@
+    @*     <line x1="@lolo"          y1="1" x2="@lo"            y2="1" stroke="orange" stroke-width="3" /> *@
+    @*     <line x1="@lo"            y1="1" x2="@hi"            y2="1" stroke="green"  stroke-width="3" /> *@
+    @*     <line x1="@hi"            y1="1" x2="@hihi"          y2="1" stroke="orange" stroke-width="3" /> *@
+    @*     <line x1="@hihi"          y1="1" x2="@scaleMaxValue" y2="1" stroke="red"    stroke-width="3" /> *@
+    @*     $1$ <circle r="5" cx="@Model.CurrentValue" cy="2" fill="black" stroke-width="1" vector-effect="non-scaling-stroke" /> #1# *@
+    @* </svg> *@
+
+
+    <div class="row chart-wrapper">
+        <svg class="chart chart-line" viewBox="0 0 @vbWidth @vbHeight" preserveAspectRatio="none" >
+            <polyline fill="none" stroke="#0000FF" stroke-width="1"
+                      vector-effect="non-scaling-stroke"
+                      points="@string.Join(Environment.NewLine, points)"/>
+        </svg>
+
+        <text class="chart-text">In @chartForHours hours</text>
     </div>
 </div>

@@ -29,3 +29,53 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+.indicator {
+    .progress {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    .bg-success {
+        --bs-bg-opacity: 0.8;
+        background-color: rgba(var(--bs-success-rgb), var(--bs-bg-opacity)) !important;
+    }
+
+    .bg-warning {
+        --bs-bg-opacity: 0.9;
+        background-color: rgba(var(--bs-warning-rgb), var(--bs-bg-opacity)) !important;
+    }
+
+    .bg-danger {
+        --bs-bg-opacity: 1;
+        background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        margin: 0;
+        padding: 0;
+    }
+
+    .chart-line {
+        height: 1rem;
+        transform: scaleY(-1);
+        padding-left: 3px;
+        padding-right: 3px;
+        padding-top: 1px;
+        padding-bottom: 1px;
+    }
+    .chart-text {
+        z-index: 1;
+        position: absolute;
+        left: 0;
+        top: -2px;
+        text-anchor: start;
+        font-size: 0.5em;
+        margin: 0;
+        padding: 0;
+        width: 2.6rem;
+        background: rgba(255, 255, 255, 0.7);
+    }
+
+}
