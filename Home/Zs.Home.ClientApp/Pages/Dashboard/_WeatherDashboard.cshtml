@@ -4,11 +4,11 @@
 @model WeatherDashboard
 
 <div class="d-flex flex-wrap">
-    @foreach (var place in Model.Places)
+    @foreach (var place in Model.Places.OrderBy(p => p.Name))
     {
         <div class="card m-2 p-2" style="min-width:15rem;">
             <p>@place.Name</p>
-            @foreach (var parameter in place.Parameters)
+            @foreach (var parameter in place.Parameters.OrderBy(p => p.Order))
             {
                 @await Html.PartialAsync("_IndicatorLevel", parameter)
             }

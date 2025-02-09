@@ -12,51 +12,65 @@
         ["Co2"] = "co2.png"
     };
 
-    var statusToStyleMap = new Dictionary<Status, string>
+    var statusToClassMap = new Dictionary<Status, string>
     {
         [Status.Ok] = "bg-success",
         [Status.Warning] = "bg-warning",
         [Status.Danger] = "bg-danger"
     };
 
+    var dynamicToColorMap = new Dictionary<Forecast, string>
+    {
+        [Forecast.Normal] = "gray",
+        [Forecast.Good] = "green",
+        [Forecast.Warning] = "red",
+        [Forecast.Danger] = "red"
+    };
+
     var minScaleValue = Math.Floor((Model.LoLo ?? 0) - ((Model.Lo ?? 0) - (Model.LoLo ?? 0)));
     var maxScaleValue = Math.Ceiling((Model.HiHi ?? 0) + ((Model.HiHi ?? 0) - (Model.Hi ?? 0)));
     var scaleSize = maxScaleValue - minScaleValue;
     var parameterValueOnScale = Model.CurrentValue - minScaleValue;
-    var parameterValueOnProgress = Math.Round(parameterValueOnScale / scaleSize * 100, 1).ToString(CultureInfo.InvariantCulture);
+    var parameterValueOnProgress = parameterValueOnScale / scaleSize * 100;
 
+    var chartStartDate = $"{Model.ValueLog.OrderBy(kvp => kvp.Key).First().Key.ToLocalTime():dd.MM HH:mm}";
     var chartForHours = Math.Round((DateTime.UtcNow - Model.ValueLog.OrderBy(kvp => kvp.Key).First().Key).TotalHours);
+
+    void RenderDynamicArrow()
+    {
+        var arrowPath = (Model.CurrentValue - Model.PreviousValue) switch
+        {
+            > 0 => "M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0z",
+            < 0 => "M14 13.5a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1 0-1h4.793L2.146 2.854a.5.5 0 1 1 .708-.708L13 12.293V7.5a.5.5 0 0 1 1 0z",
+            _ => null
+        };
+
+        if (arrowPath == null)
+            return;
+
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+             fill="@dynamicToColorMap[Model.Forecast]"
+             class="bi bi-arrow-down-right" viewBox="0 0 16 16">
+            <path d="@arrowPath"
+                  stroke-width="0.8" stroke="@dynamicToColorMap[Model.Forecast]"/>
+        </svg>
+    }
 }
 
 <div class="row card indicator mt-1 ms-1 me-1 p-0">
     <div class="progress p-0">
         <img src="@nameToImageMap[Model.Name]" alt="@Model.Name" style="padding-top: 0.10rem; padding-bottom: 0.10rem; padding-right: 0.25rem; padding-left: 0.25rem;">
 
-        <div class="progress-bar @statusToStyleMap[Model.Status]" role="progressbar" style="width: @parameterValueOnProgress%" aria-valuenow="@parameterValueOnProgress" aria-valuemin="0" aria-valuemax="100">
+        @* Примерно 0.2 от прогрессбара занимает иконка и стрелка *@
+        <div class="progress-bar @statusToClassMap[Model.Status]" role="progressbar"
+             style="width: @Math.Round(parameterValueOnScale / scaleSize * 100 * 0.8, 0)%"
+             aria-valuenow="@Math.Round(parameterValueOnProgress, 1).ToString(CultureInfo.InvariantCulture)"
+             aria-valuemin="0" aria-valuemax="100">
             @Model.CurrentValue&nbsp;@Model.Unit
         </div>
 
         @{
-            var (rotationSign, alternativeText, color) = GetDynamicIcon(Model.ValueLog);
-            if (rotationSign != null)
-            {
-                <img src="arrow-right.png" class="arrow" style="transform: rotate(@{@rotationSign}45deg);" alt="@alternativeText">
-            }
-            static (string?, string?, string?) GetDynamicIcon(Dictionary<DateTime, double> valueLog)
-            {
-                var last = valueLog.OrderByDescending(i => i.Key)
-                    .Take(2)
-                    .Select(i => i.Value)
-                    .ToList();
-
-                // TODO: Если значение критичное и направление стрелки неблагоприятное, то подсвечивать соответствующим цветом
-                return (last[0] - last[1]) switch
-                {
-                    > 0 => ("+", "\u2191", "black"),
-                    < 0 => ("-", "\u2193", "black"),
-                    _ => (null, null, null)
-                };
-            }
+            RenderDynamicArrow();
 
             /* Дано:
              *   X   Y         Диапазон возможных значений на графике: от 0 до 16
@@ -124,6 +138,6 @@
                       points="@string.Join(Environment.NewLine, points)"/>
         </svg>
 
-        <p class="chart-text">In @chartForHours hours</p>
+        <p class="chart-text">@chartStartDate</p>
     </div>
 </div>

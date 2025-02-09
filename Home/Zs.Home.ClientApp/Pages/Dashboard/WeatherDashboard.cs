@@ -36,6 +36,7 @@ public sealed record AnalogParameter
 
     public string Name { get; }
     public double CurrentValue => ValueLog.OrderByDescending(kvp => kvp.Key).First().Value;
+    public double PreviousValue => ValueLog.OrderByDescending(kvp => kvp.Key).ElementAt(1).Value;
     public Dictionary<DateTime, double> ValueLog { get; } = new();
     public string Unit { get; }
     public double? Hi { get; init; }
@@ -58,6 +59,35 @@ public sealed record AnalogParameter
         }
     }
 
+    public Forecast Forecast
+    {
+        get
+        {
+            if (Status is Status.Ok)
+                return Forecast.Normal;
+
+            if (Status is Status.Warning)
+            {
+                if (CurrentValue < Lo && CurrentValue < PreviousValue || CurrentValue > Hi && CurrentValue > PreviousValue)
+                    return Forecast.Warning;
+
+                if (CurrentValue < Lo && CurrentValue > PreviousValue || CurrentValue > Hi && CurrentValue < PreviousValue)
+                    return Forecast.Good;
+            }
+
+            if (Status is Status.Danger)
+            {
+                if (CurrentValue < LoLo && CurrentValue < PreviousValue || CurrentValue > HiHi && CurrentValue > PreviousValue)
+                    return Forecast.Danger;
+
+                if (CurrentValue < LoLo && CurrentValue > PreviousValue || CurrentValue > HiHi && CurrentValue < PreviousValue)
+                    return Forecast.Good;
+            }
+
+            throw new NotImplementedException();
+        }
+    }
+
     private static double? Round(double? rawValue)
         => rawValue.HasValue ? Math.Round(rawValue.Value, 2, MidpointRounding.AwayFromZero) : default;
 
@@ -65,3 +95,5 @@ public sealed record AnalogParameter
 }
 
 public enum Status { Ok, Warning, Danger }
+
+public enum Forecast { Normal, Good, Warning, Danger }
