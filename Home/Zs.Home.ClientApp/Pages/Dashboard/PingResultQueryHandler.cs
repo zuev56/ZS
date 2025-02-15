@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -23,7 +24,7 @@ public sealed class PingResultQueryHandler : IRequestHandler<PingResultQuery, Pi
 
     public async Task<PingResult> Handle(PingResultQuery request, CancellationToken cancellationToken)
     {
-        var targetStatuses = await GetCurrentStateAsync(500.Milliseconds());
+        var targetStatuses = await GetCurrentStateAsync(5000.Milliseconds());
 
         return new PingResult { Targets = targetStatuses };
     }
@@ -33,34 +34,34 @@ public sealed class PingResultQueryHandler : IRequestHandler<PingResultQuery, Pi
         if (_settings.Targets.Length == 0)
             return [];
 
-        var targetClientModels = new List<Target>();
+        var targetClientModels = new ConcurrentBag<Target>();
 
-        foreach (var target in _settings.Targets)
+        await Parallel.ForEachAsync(_settings.Targets, async (target, cancellationToken) =>
         {
-            // TODO: Распараллелить!
             var hostStatus = await PingAsync(target, timeout)
                 .ContinueWith(task =>
                 {
                     if (!task.IsFaulted)
                         return task.Result;
 
-                    if (task.Exception!.InnerExceptions.SingleOrDefault() is TimeoutException)
-                        return IPStatus.TimedOut;
+                    return task.Exception!.InnerExceptions.SingleOrDefault() is TimeoutException
+                        ? IPStatus.TimedOut
+                        : throw task.Exception;
 
-                    throw task.Exception;
                 }, TaskContinuationOptions.None);
+
             var targetName = target.Description ?? target.Host + (target.Port.HasValue ? $":{target.Port}" : string.Empty);
 
             targetClientModels.Add(new Target(targetName, hostStatus == IPStatus.Success));
-        }
+        });
 
-        return targetClientModels;
+        return targetClientModels.ToList();
     }
 
     private static async Task<IPStatus> PingAsync(Application.Features.Ping.Target target, TimeSpan timeout)
     {
         return target.Port.HasValue
-            ? Ping(target.Host, target.Port.Value, timeout)
+            ? await PingAsync(target.Host, target.Port.Value, timeout)
             : await PingAsync(target.Host, timeout);
     }
     private static async Task<IPStatus> PingAsync(string host, TimeSpan timeout)
@@ -78,12 +79,12 @@ public sealed class PingResultQueryHandler : IRequestHandler<PingResultQuery, Pi
         }
     }
 
-    private static IPStatus Ping(string host, int port, TimeSpan timeout)
+    private static async Task<IPStatus> PingAsync(string host, int port, TimeSpan timeout)
     {
         try
         {
             var pingTask = Task.Run(() => {using var client = new TcpClient(host, port); });
-            Task.WhenAny(pingTask, Task.Delay(timeout));
+            await Task.WhenAny(pingTask, Task.Delay(timeout));
 
             return pingTask.IsCompletedSuccessfully ? IPStatus.Success : IPStatus.Unknown;
         }
