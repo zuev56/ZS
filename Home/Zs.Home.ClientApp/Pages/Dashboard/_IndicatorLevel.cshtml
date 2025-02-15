@@ -88,7 +88,7 @@
              *   4   47 * 0.47 = 22.09     - 14.57   =>         7.52
              */
 
-            var vbHeight = 14; // 16 = 1rem
+            var vbHeight = 16; // 16 = 1rem
             var vbWidth = Model.ValueLog.Count;
             var min = Model.ValueLog.Values.Min();
             var max = Model.ValueLog.Values.Max();
@@ -130,10 +130,9 @@
     @*     $1$ <circle r="5" cx="@Model.CurrentValue" cy="2" fill="black" stroke-width="1" vector-effect="non-scaling-stroke" /> #1# *@
     @* </svg> *@
 
-
     <div class="row chart-wrapper">
-        <svg class="chart chart-line" viewBox="0 0 @vbWidth @vbHeight" preserveAspectRatio="none" >
-            <polyline fill="none" stroke="#0000FF" stroke-width="1"
+        <svg class="chart chart-line" viewBox="0 -1 @vbWidth @(vbHeight+2)" preserveAspectRatio="none" >
+            <polyline fill="none" stroke="#0000FF"
                       vector-effect="non-scaling-stroke"
                       points="@string.Join(Environment.NewLine, points)"/>
         </svg>
