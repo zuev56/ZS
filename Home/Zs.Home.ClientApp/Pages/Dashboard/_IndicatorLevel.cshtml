@@ -1,6 +1,9 @@
 ﻿@using System.Globalization
+@using Microsoft.Extensions.Logging
+@using Zs.Common.Extensions
 @namespace Zs.Home.ClientApp.Pages.Dashboard
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject ILogger<AnalogParameter> Logger;
 
 @model AnalogParameter
 @{
@@ -48,20 +51,26 @@
         if (arrowPath == null)
             return;
 
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+        <svg width="14" height="14"
              fill="@dynamicToColorMap[Model.Forecast]"
              class="bi bi-arrow-down-right" viewBox="0 0 16 16">
             <path d="@arrowPath"
                   stroke-width="0.8" stroke="@dynamicToColorMap[Model.Forecast]"/>
         </svg>
     }
+
+    Logger.LogDebugIfNeed($"{Model.Name}: [ ..., {string.Join(", ", Model.ValueLog.Values.Take(5).Reverse())} ]," +
+                           $" dynamic=\"{(Model.CurrentValue - Model.PreviousValue) switch { > 0 => "+", < 0 => "-", _ => "0"}}\"," +
+                           $" status=\"{Model.Status}\"," +
+                           $" forecast=\"{Model.Forecast}\"," +
+                           $" LL={Model.LoLo}, L={Model.Lo}, H={Model.Hi}, HH={Model.HiHi}");
 }
 
 <div class="row card indicator mt-1 ms-1 me-1 p-0">
     <div class="progress p-0">
-        <img src="@nameToImageMap[Model.Name]" alt="@Model.Name" style="padding-top: 0.10rem; padding-bottom: 0.10rem; padding-right: 0.25rem; padding-left: 0.25rem;">
+        <img class="icon" src="@nameToImageMap[Model.Name]" alt="@Model.Name[..2]" >
 
-        @* Примерно 0.2 от прогрессбара занимает иконка и стрелка *@
+        @* Примерно 0.2 от прогрессбара занимает иконка и стрелка по краям *@
         <div class="progress-bar @statusToClassMap[Model.Status]" role="progressbar"
              style="width: @Math.Round(parameterValueOnScale / scaleSize * 100 * 0.8, 0)%"
              aria-valuenow="@Math.Round(parameterValueOnProgress, 1).ToString(CultureInfo.InvariantCulture)"
@@ -96,8 +105,9 @@
             var kY = vbHeight / (max - min);
             var offset = kY * min;
 
-            var points = Model.ValueLog.Values
-                .Select(v => v * kY - offset)
+            var points = Model.ValueLog
+                .OrderBy(v => v.Key)
+                .Select(i => i.Value * kY - offset)
                 .Select((value, index) => string.Create(CultureInfo.GetCultureInfo("en-US"),  $"{index*kX}, {value:F1}"));
 
             var (lolo, lo, hi, hihi) = ((int)Model.LoLo, (int)Model.Lo, (int)Model.Hi, (int)Model.HiHi);
@@ -105,8 +115,6 @@
             var scaleLength15pct = scaleLength70pct * 0.3 / 2; // На красные линии выделяем 30% (по 15%)
             var scaleMinValue = (int)(lolo - scaleLength15pct);
             var scaleMaxValue = (int)(hihi + scaleLength15pct);
-            var strokeWidth = 1;
-
         }
 
     </div>
@@ -131,7 +139,7 @@
     @* </svg> *@
 
     <div class="row chart-wrapper">
-        <svg class="chart chart-line" viewBox="0 -1 @vbWidth @(vbHeight+2)" preserveAspectRatio="none" >
+        <svg class="chart chart-line" viewBox="0 -1 @(vbWidth-1) @(vbHeight+2)" preserveAspectRatio="none" >
             <polyline fill="none" stroke="#0000FF"
                       vector-effect="non-scaling-stroke"
                       points="@string.Join(Environment.NewLine, points)"/>

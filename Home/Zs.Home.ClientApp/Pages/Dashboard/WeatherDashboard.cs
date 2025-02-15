@@ -63,7 +63,7 @@ public sealed record AnalogParameter
     {
         get
         {
-            if (Status is Status.Ok)
+            if (Status is Status.Ok || Math.Abs(CurrentValue - PreviousValue) < 0.01)
                 return Forecast.Normal;
 
             if (Status is Status.Warning)
