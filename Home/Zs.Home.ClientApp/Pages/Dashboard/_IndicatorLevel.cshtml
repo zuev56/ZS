@@ -1,11 +1,13 @@
 ﻿@using System.Globalization
 @using Microsoft.Extensions.Logging
 @using Zs.Common.Extensions
+@using Zs.Home.ClientApp.Common
 @namespace Zs.Home.ClientApp.Pages.Dashboard
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @inject ILogger<AnalogParameter> Logger;
 
 @model AnalogParameter
+
 @{
     var nameToImageMap = new Dictionary<string, string>
     {
@@ -36,8 +38,8 @@
     var parameterValueOnScale = Model.CurrentValue - minScaleValue;
     var parameterValueOnProgress = parameterValueOnScale / scaleSize * 100;
 
-    var chartStartDate = $"{Model.ValueLog.OrderBy(kvp => kvp.Key).First().Key.ToLocalTime():dd.MM HH:mm}";
-    var chartForHours = Math.Round((DateTime.UtcNow - Model.ValueLog.OrderBy(kvp => kvp.Key).First().Key).TotalHours);
+    var chartStartAt = (DateTime.UtcNow - Model.ValueLog.Keys.Min()).ToTimeAgo();
+    var chartEndAt = (DateTime.UtcNow - Model.ValueLog.Keys.Max()).ToTimeAgo();
 
     void RenderDynamicArrow()
     {
@@ -53,7 +55,7 @@
 
         <svg width="14" height="14"
              fill="@dynamicToColorMap[Model.Forecast]"
-             class="bi bi-arrow-down-right" viewBox="0 0 16 16">
+             class="bi-arrow-down-right" viewBox="0 0 16 16">
             <path d="@arrowPath"
                   stroke-width="0.8" stroke="@dynamicToColorMap[Model.Forecast]"/>
         </svg>
@@ -139,12 +141,12 @@
     @* </svg> *@
 
     <div class="row chart-wrapper">
-        <svg class="chart chart-line" viewBox="0 -1 @(vbWidth-1) @(vbHeight+2)" preserveAspectRatio="none" >
+        <div class="chart-text">@chartStartAt</div>
+        <svg class="chart chart-line" viewBox="0 -1 @(vbWidth - 1) @(vbHeight + 2)" preserveAspectRatio="none">
             <polyline fill="none" stroke="#0000FF"
                       vector-effect="non-scaling-stroke"
                       points="@string.Join(Environment.NewLine, points)"/>
         </svg>
-
-        <p class="chart-text">@chartStartDate</p>
+        <div class="chart-text">@chartEndAt</div>
     </div>
 </div>

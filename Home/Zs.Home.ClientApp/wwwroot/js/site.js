@@ -1,4 +1,17 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿const updateWeatherTimeoutMs = 30_000;
+const pingTimeoutMs = 30_000;
 
-// Write your JavaScript code.
+window.onload = function () {
+    window.setInterval(updateWeatherDashboard, updateWeatherTimeoutMs);
+    window.setInterval(updatePingResult, pingTimeoutMs);
+}
+
+function updateWeatherDashboard() {
+    if (window.location.pathname.toUpperCase() === "/DASHBOARD")
+        $('#weather-dashboard').load('/Dashboard?Handler=WeatherDashboard');
+}
+
+function updatePingResult() {
+    if (window.location.pathname.toUpperCase() === "/DASHBOARD")
+        $('#ping-result').load('/Dashboard?Handler=PingResult');
+}

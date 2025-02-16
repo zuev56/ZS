@@ -58,11 +58,19 @@ body {
         --bs-bg-opacity: 1;
         background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
     }
+     .bi-arrow-down-right {
+         margin-left: auto;
+         margin-right: 0;
+     }
 
     .chart-wrapper {
-        position: relative;
         margin: 0;
         padding: 0;
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    .row.chart-wrapper > * {
+        flex-shrink: unset !important;
     }
 
     .chart-line {
@@ -72,20 +80,16 @@ body {
         padding-top: 1px;
         padding-bottom: 1px;
         transform: scaleY(-1);
-        /*transform: scaleX(-1);*/
     }
 
     .chart-text {
-        z-index: 1;
-        position: absolute;
-        line-height: 90%;
+        line-height: 70%;
         font-size: 0.5em;
         margin-left: 1px;
         margin-top: 1px;
         padding: 0;
         width: min-content;
         color: dimgray;
-        background: rgba(255, 255, 255, 0.7);
     }
 
 }

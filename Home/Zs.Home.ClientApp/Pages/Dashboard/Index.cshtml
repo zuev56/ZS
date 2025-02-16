@@ -9,10 +9,10 @@
 <h1>@ViewData["Title"]</h1>
 
 <div class="container">
-    <div class="row">
+    <div class="row" id="weather-dashboard">
         @await Html.PartialAsync("_WeatherDashboard", Model.WeatherDashboard)
     </div>
-    <div class="row">
+    <div class="row" id="ping-result">
         @await Html.PartialAsync("_PingResult", Model.PingResult)
     </div>
 

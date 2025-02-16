@@ -55,7 +55,9 @@ public sealed class PingResultQueryHandler : IRequestHandler<PingResultQuery, Pi
             targetClientModels.Add(new Target(targetName, hostStatus == IPStatus.Success));
         });
 
-        return targetClientModels.ToList();
+        return targetClientModels
+            .OrderBy(t => t.Name)
+            .ToList();
     }
 
     private static async Task<IPStatus> PingAsync(Application.Features.Ping.Target target, TimeSpan timeout)
