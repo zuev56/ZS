@@ -35,27 +35,34 @@ public sealed record AnalogParameter
     }
 
     public string Name { get; }
-    public double CurrentValue => ValueLog.OrderByDescending(kvp => kvp.Key).First().Value;
-    public double PreviousValue => ValueLog.OrderByDescending(kvp => kvp.Key).ElementAt(1).Value;
     public Dictionary<DateTime, double> ValueLog { get; } = new();
     public string Unit { get; }
     public double? Hi { get; init; }
     public double? HiHi { get; init; }
     public double? Lo { get; init; }
     public double? LoLo { get; init; }
-
     public short Order { get; set; } = short.MaxValue;
+
+    public double CurrentValue => ValueLog.OrderByDescending(kvp => kvp.Key).First().Value;
+    public double PreviousValue => ValueLog.OrderByDescending(kvp => kvp.Key).ElementAt(1).Value;
+
+    public Dynamic Dynamic => (CurrentValue - PreviousValue) switch
+    {
+        var delta when Math.Abs(delta) < 0.01 => Dynamic.Stable,
+        < 0 => Dynamic.Negative,
+        > 0 => Dynamic.Positive,
+    };
 
     public Status Status
     {
         get
         {
-            if (LoLo < CurrentValue && CurrentValue < Lo || Hi < CurrentValue && CurrentValue < HiHi)
-                return Status.Warning;
-            if (LoLo > CurrentValue || CurrentValue > HiHi)
-                return Status.Danger;
+            if (LoLo < CurrentValue && CurrentValue < Lo) return Status.WarningLo;
+            if (Hi < CurrentValue && CurrentValue < HiHi) return Status.WarningHi;
+            if (LoLo > CurrentValue) return Status.DangerLoLo;
+            if (CurrentValue > HiHi) return Status.DangerHiHi;
 
-            return Status.Ok;
+            return Status.Normal;
         }
     }
 
@@ -63,25 +70,29 @@ public sealed record AnalogParameter
     {
         get
         {
-            if (Status is Status.Ok || Math.Abs(CurrentValue - PreviousValue) < 0.01)
+            if (Status is Status.Normal || Dynamic == Dynamic.Stable)
                 return Forecast.Normal;
 
-            if (Status is Status.Warning)
+            if (Dynamic == Dynamic.Positive)
             {
-                if (CurrentValue < Lo && CurrentValue < PreviousValue || CurrentValue > Hi && CurrentValue > PreviousValue)
-                    return Forecast.Warning;
-
-                if (CurrentValue < Lo && CurrentValue > PreviousValue || CurrentValue > Hi && CurrentValue < PreviousValue)
-                    return Forecast.Good;
+                switch (Status)
+                {
+                    case Status.WarningLo: return Forecast.Good;
+                    case Status.WarningHi: return Forecast.Warning;
+                    case Status.DangerLoLo: return Forecast.Good;
+                    case Status.DangerHiHi: return Forecast.Danger;
+                }
             }
 
-            if (Status is Status.Danger)
+            if (Dynamic == Dynamic.Negative)
             {
-                if (CurrentValue < LoLo && CurrentValue < PreviousValue || CurrentValue > HiHi && CurrentValue > PreviousValue)
-                    return Forecast.Danger;
-
-                if (CurrentValue < LoLo && CurrentValue > PreviousValue || CurrentValue > HiHi && CurrentValue < PreviousValue)
-                    return Forecast.Good;
+                switch (Status)
+                {
+                    case Status.WarningLo: return Forecast.Warning;
+                    case Status.WarningHi: return Forecast.Good;
+                    case Status.DangerLoLo: return Forecast.Danger;
+                    case Status.DangerHiHi: return Forecast.Good;
+                }
             }
 
             throw new NotImplementedException();
@@ -94,6 +105,8 @@ public sealed record AnalogParameter
     public override string ToString() => $"{CurrentValue} {Unit}";
 }
 
-public enum Status { Ok, Warning, Danger }
+public enum Status { DangerLoLo, WarningLo, Normal, WarningHi, DangerHiHi }
+
+public enum Dynamic { Stable, Positive, Negative }
 
 public enum Forecast { Normal, Good, Warning, Danger }

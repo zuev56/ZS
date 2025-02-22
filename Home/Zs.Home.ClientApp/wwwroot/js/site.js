@@ -1,5 +1,5 @@
-﻿const updateWeatherTimeoutMs = 30_000;
-const pingTimeoutMs = 30_000;
+﻿const updateWeatherTimeoutMs = 300_000;
+const pingTimeoutMs = 300_000;
 
 window.onload = function () {
     window.setInterval(updateWeatherDashboard, updateWeatherTimeoutMs);
@@ -7,11 +7,47 @@ window.onload = function () {
 }
 
 function updateWeatherDashboard() {
-    if (window.location.pathname.toUpperCase() === "/DASHBOARD")
-        $('#weather-dashboard').load('/Dashboard?Handler=WeatherDashboard');
+    if (window.location.pathname.toUpperCase() !== '/DASHBOARD')
+        return;
+
+    var elementId = 'weather-dashboard';
+
+    fetch('/Dashboard?Handler=WeatherDashboard')
+        .then((response) => {
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error('updateWeatherDashboard error!');
+        })
+        .then((responseHtml) => {
+            document.getElementById(elementId).innerHTML = responseHtml;
+        })
+        .catch((error) => {
+            console.error(error);
+
+            document.getElementById(elementId).disable();
+        });
 }
 
 function updatePingResult() {
-    if (window.location.pathname.toUpperCase() === "/DASHBOARD")
-        $('#ping-result').load('/Dashboard?Handler=PingResult');
+    if (window.location.pathname.toUpperCase() !== '/DASHBOARD')
+        return;
+
+    var elementId = 'ping-result';
+
+    fetch('/Dashboard?Handler=PingResult')
+        .then((response) => {
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error('updatePingResult error!');
+        })
+        .then((responseHtml) => {
+            document.getElementById(elementId).innerHTML = responseHtml;
+        })
+        .catch((error) => {
+            console.error(error);
+
+            document.getElementById(elementId).disable();
+        });
 }

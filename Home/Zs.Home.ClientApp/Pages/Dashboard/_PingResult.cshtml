@@ -10,8 +10,11 @@
     };
 }
 
-<div class="col card m-2 p-2">
-    <div class="d-flex flex-wrap">
+<div class="bg-body-tertiary ping-result">
+
+    <h6>Ping</h6>
+
+    <div class="d-flex flex-wrap p-1">
         @foreach (var target in Model.Targets)
         {
             <div class="badge m-1 @statusToStyleMap[target.IsReachable]">@target.Name</div>

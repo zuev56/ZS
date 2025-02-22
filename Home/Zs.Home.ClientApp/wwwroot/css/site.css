@@ -30,6 +30,11 @@ body {
   text-align: start;
 }
 
+
+.bg-body-tertiary {
+    margin: 5px 0;
+}
+
 .indicator {
 
     .icon {
@@ -91,5 +96,11 @@ body {
         width: min-content;
         color: dimgray;
     }
+}
 
+.ping-result {
+
+    .badge {
+        font-weight: 500;
+    }
 }
