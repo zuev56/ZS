@@ -12,12 +12,11 @@
     </ItemGroup>
 
     <ItemGroup>
-
-      <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" />
-      <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
+        <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" />
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
       
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
         <PackageReference Include="HtmlTags" Version="8.1.1" />
@@ -35,17 +34,20 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Pages\Auth\" />
+        <Folder Include="Pages\Auth\" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
+        <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <Content Update="wwwroot\css\site.css">
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      </Content>
+        <Content Update="wwwroot\css\site.css">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
 </Project>
