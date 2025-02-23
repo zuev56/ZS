@@ -1,10 +1,12 @@
 using System;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Zs.Common.Extensions;
 using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather.Data;
@@ -18,6 +20,8 @@ public static class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        builder.Configuration.TryLoadConfigurationJsonFromArguments(Assembly.GetAssembly(typeof(Program))!, args);
 
         // Add services to the container.
         var connectionString = builder.Configuration.GetConnectionString("Identity") ??
