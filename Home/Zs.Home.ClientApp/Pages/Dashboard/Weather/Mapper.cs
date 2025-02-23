@@ -3,7 +3,7 @@ using System.Linq;
 using Zs.Home.Application.Features.Weather.Data.Models;
 using static Zs.Home.ClientApp.Pages.Dashboard.Constants;
 
-namespace Zs.Home.ClientApp.Pages.Dashboard;
+namespace Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
 internal static class Mapper
 {

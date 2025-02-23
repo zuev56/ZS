@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Zs.Home.Application.Features.VkUsers;
 
-internal sealed class User
+public sealed class User
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }

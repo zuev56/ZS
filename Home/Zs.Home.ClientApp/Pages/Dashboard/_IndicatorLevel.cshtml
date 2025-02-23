@@ -2,11 +2,12 @@
 @using Microsoft.Extensions.Logging
 @using Zs.Common.Extensions
 @using Zs.Home.ClientApp.Common
+@using Zs.Home.ClientApp.Pages.Dashboard.Weather
 @namespace Zs.Home.ClientApp.Pages.Dashboard
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @inject ILogger<AnalogParameter> Logger;
 
-@model AnalogParameter
+@model Zs.Home.ClientApp.Pages.Dashboard.Weather.AnalogParameter
 
 @{
     var nameToImageMap = new Dictionary<string, string>

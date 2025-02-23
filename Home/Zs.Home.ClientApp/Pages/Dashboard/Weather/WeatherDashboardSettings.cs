@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Zs.Home.ClientApp.Pages.Dashboard;
+namespace Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
 public sealed class WeatherDashboardSettings
 {

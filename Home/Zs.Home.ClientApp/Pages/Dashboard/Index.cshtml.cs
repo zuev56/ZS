@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Logging;
+using Zs.Home.ClientApp.Pages.Dashboard.Ping;
+using Zs.Home.ClientApp.Pages.Dashboard.Vk;
+using Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
 namespace Zs.Home.ClientApp.Pages.Dashboard;
 
@@ -21,16 +24,19 @@ public class IndexModel : PageModel
 
     public WeatherDashboard WeatherDashboard { get; private set; }
     public PingResult PingResult { get; private set; }
+    public Vk.VkActivity VkActivity { get; private set; }
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
         var weatherDashboardTask = _mediator.Send(new WeatherDashboardQuery(), cancellationToken);
         var pingResultTask = _mediator.Send(new PingResultQuery(), cancellationToken);
+        var vkActivity = _mediator.Send(new VkActivityQuery(), cancellationToken);
 
-        await Task.WhenAll(weatherDashboardTask, pingResultTask);
+        await Task.WhenAll(weatherDashboardTask, pingResultTask, vkActivity);
 
         WeatherDashboard = weatherDashboardTask.Result;
         PingResult = pingResultTask.Result;
+        VkActivity = vkActivity.Result;
     }
 
     public async Task<PartialViewResult> OnGetWeatherDashboardAsync(CancellationToken cancellationToken)
@@ -38,7 +44,7 @@ public class IndexModel : PageModel
         var weatherDashboard = await _mediator.Send(new WeatherDashboardQuery(), cancellationToken);
 
         return new PartialViewResult {
-            ViewName = "_WeatherDashboard",
+            ViewName = "Weather/_WeatherDashboard",
             ViewData = new ViewDataDictionary<WeatherDashboard>(ViewData, weatherDashboard)
         };
     }
@@ -48,8 +54,18 @@ public class IndexModel : PageModel
         var pingResult = await _mediator.Send(new PingResultQuery(), cancellationToken);
 
         return new PartialViewResult {
-            ViewName = "_PingResult",
+            ViewName = "Ping/_PingResult",
             ViewData = new ViewDataDictionary<PingResult>(ViewData, pingResult)
+        };
+    }
+
+    public async Task<PartialViewResult> OnGetVkActivityAsync(CancellationToken cancellationToken)
+    {
+        var vkActivity = await _mediator.Send(new VkActivityQuery(), cancellationToken);
+
+        return new PartialViewResult {
+            ViewName = "Vk/_VkActivity",
+            ViewData = new ViewDataDictionary<Vk.VkActivity>(ViewData, vkActivity)
         };
     }
 }

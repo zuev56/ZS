@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -19,25 +20,24 @@ internal sealed class UserWatcher : IUserWatcher
     {
         _options = options.Value;
 
-        Job = new ProgramJob<string>(
-            period: 5.Minutes(),
-            method: DetectInactiveUsersAsync,
-            description: InactiveUsersInformer,
-            startUtcDate: DateTime.UtcNow + 5.Seconds(),
-            logger: logger);
+        if (_options.CreateJob)
+        {
+            Job = new ProgramJob<string>(
+                period: 5.Minutes(),
+                method: DetectInactiveUsersAsync,
+                description: InactiveUsersInformer,
+                startUtcDate: DateTime.UtcNow + 5.Seconds(),
+                logger: logger);
+        }
     }
 
     private async Task<string> DetectInactiveUsersAsync()
     {
         var result = new StringBuilder();
-        foreach (var userId in _options.TrackedIds)
-        {
-            var inactiveTime = await GetInactiveTimeAsync(userId);
-            if (inactiveTime < _options.InactiveHoursLimit.Hours())
-                continue;
 
-            var user = await GetUserAsync(userId);
-            if (user == null)
+        await foreach (var (user, inactiveTime) in GetUsersWithInactiveTimeAsync())
+        {
+            if (inactiveTime < _options.InactiveHoursLimit.Hours())
                 continue;
 
             var userName = $"{user.FirstName} {user.LastName}";
@@ -45,6 +45,19 @@ internal sealed class UserWatcher : IUserWatcher
         }
 
         return result.ToString().Trim();
+    }
+
+    public async IAsyncEnumerable<(User, TimeSpan InactiveTime)> GetUsersWithInactiveTimeAsync()
+    {
+        foreach (var userId in _options.TrackedIds)
+        {
+            var inactiveTimeTask = GetInactiveTimeAsync(userId);
+            var userTask = GetUserAsync(userId);
+            await Task.WhenAll(inactiveTimeTask, userTask);
+
+            if (userTask.Result != null)
+                yield return (userTask.Result, inactiveTimeTask.Result);
+        }
     }
 
     private async Task<User?> GetUserAsync(int userId)

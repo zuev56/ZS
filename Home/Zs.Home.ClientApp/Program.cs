@@ -6,9 +6,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Zs.Home.Application.Features.Ping;
+using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.ClientApp.Data;
-using Zs.Home.ClientApp.Pages.Dashboard;
+using Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
 namespace Zs.Home.ClientApp;
 
@@ -42,6 +43,8 @@ public static class Program
             .Bind(builder.Configuration.GetSection(PingCheckerSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        builder.Services.AddUserWatcher(builder.Configuration);
 
         builder.Services
             .AddMediatR(config=> config.RegisterServicesFromAssemblies(typeof(Program).Assembly))

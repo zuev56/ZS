@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Zs.Home.ClientApp.Pages.Dashboard;
+namespace Zs.Home.ClientApp.Pages.Dashboard.Ping;
 
 public sealed record PingResult
 {

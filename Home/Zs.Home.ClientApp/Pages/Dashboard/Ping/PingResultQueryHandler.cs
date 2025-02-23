@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
 using Zs.Home.Application.Features.Ping;
 
-namespace Zs.Home.ClientApp.Pages.Dashboard;
+namespace Zs.Home.ClientApp.Pages.Dashboard.Ping;
 
 public sealed class PingResultQueryHandler : IRequestHandler<PingResultQuery, PingResult>
 {
@@ -70,7 +70,7 @@ public sealed class PingResultQueryHandler : IRequestHandler<PingResultQuery, Pi
     {
         try
         {
-            using var ping = new Ping();
+            using var ping = new System.Net.NetworkInformation.Ping();
             var pingReply = await ping.SendPingAsync(host, timeout).ConfigureAwait(false);
 
             return pingReply.Status;

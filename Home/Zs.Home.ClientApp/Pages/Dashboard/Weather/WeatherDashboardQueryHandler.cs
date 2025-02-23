@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Zs.Home.Application.Features.Weather.Data;
 
-namespace Zs.Home.ClientApp.Pages.Dashboard;
+namespace Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
 public sealed class WeatherDashboardQueryHandler : IRequestHandler<WeatherDashboardQuery, WeatherDashboard>
 {
