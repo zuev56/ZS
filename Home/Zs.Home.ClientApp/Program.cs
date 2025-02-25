@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Zs.Common.Extensions;
 using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.VkUsers;
@@ -54,7 +55,12 @@ public static class Program
             .AddMediatR(config=> config.RegisterServicesFromAssemblies(typeof(Program).Assembly))
             .AddRazorPages();
 
+        builder.Logging.AddConsole();
+
         var app = builder.Build();
+
+        app.Logger.LogProgramStartup();
+        app.Logger.LogAppliedConfigurationFiles(builder.Configuration);
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

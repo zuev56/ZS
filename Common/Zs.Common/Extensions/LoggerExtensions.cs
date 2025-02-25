@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Zs.Common.Extensions;
 
 public static class LoggerExtensions
 {
-    public static void LogProgramStart(this ILogger logger)
+    public static void LogProgramStartup(this ILogger logger)
     {
         logger.LogWarning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
             Process.GetCurrentProcess().MainModule?.ModuleName,
@@ -16,6 +17,16 @@ public static class LoggerExtensions
             Environment.UserName,
             Environment.ProcessId);
     }
+
+    public static void LogAppliedConfigurationFiles(this ILogger logger, IConfigurationBuilder configuration)
+    {
+        var configFiles = configuration.Sources
+            .Where(s => s is FileConfigurationSource)
+            .Select(s => ((FileConfigurationSource)s).Path);
+
+        logger.LogInformationIfNeed($"Configuration files: {string.Join(", ", configFiles)}");
+    }
+
 
     public static void LogProcessState(this ILogger logger, Process process)
     {

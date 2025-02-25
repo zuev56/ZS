@@ -1,28 +1,15 @@
 ﻿services:
 
-  rtsp-to-hls-converter:
+  bot:
     build:
-      context: ./Zs.RtspToHlsConverter
+      context: ./Zs.Home.Bot
     restart: always
-    volumes:
-      - "/var/lib/videos:/var/lib/videos"
-
-  web-api:
-    build:
-      context: ./Zs.VideoPlayer.WebApi
-    ports:
-      - "6001:80"
-    depends_on:
-      - rtsp-to-hls-converter
-    restart: always
-    volumes:
-      - "/var/lib/videos:/var/lib/videos"
 
   client-app:
     build:
-      context: ./Zs.VideoPlayer.ClientApp
+      context: ./Zs.Home.ClientApp
     ports:
-      - "6002:80"
-    depends_on:
-      - web-api
+      - "6021:80"
     restart: always
+    volumes:
+      - "/opt/configs:/opt/configs/:ro" # for external configurations
