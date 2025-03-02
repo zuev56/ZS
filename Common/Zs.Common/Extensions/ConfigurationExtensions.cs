@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -50,4 +51,11 @@ public static class ConfigurationExtensions
 
         return loaded;
     }
+
+    public static List<string> GetAppliedConfigurationFileNames(this IConfigurationBuilder configuration)
+        => configuration.Sources
+            .Where(s => s is FileConfigurationSource)
+            .Select(s => ((FileConfigurationSource)s).Path)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList()!;
 }

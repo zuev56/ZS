@@ -1,4 +1,9 @@
+using System.Reflection;
+using Zs.Common.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
 
 // Add services to the container.
 builder.Services.AddRazorPages();

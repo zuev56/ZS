@@ -22,7 +22,7 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Configuration.TryLoadConfigurationJsonFromArguments(Assembly.GetAssembly(typeof(Program))!, args);
+        builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
 
         // Add services to the container.
         var connectionString = builder.Configuration.GetConnectionString("Identity") ??
@@ -60,7 +60,6 @@ public static class Program
         var app = builder.Build();
 
         app.Logger.LogProgramStartup();
-        app.Logger.LogAppliedConfigurationFiles(builder.Configuration);
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

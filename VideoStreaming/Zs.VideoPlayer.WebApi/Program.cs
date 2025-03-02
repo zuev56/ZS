@@ -1,10 +1,14 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Zs.Common.Extensions;
 using Zs.VideoPlayer.WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
 
 // Add services to the container.
 

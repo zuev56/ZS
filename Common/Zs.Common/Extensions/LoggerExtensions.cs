@@ -20,13 +20,10 @@ public static class LoggerExtensions
 
     public static void LogAppliedConfigurationFiles(this ILogger logger, IConfigurationBuilder configuration)
     {
-        var configFiles = configuration.Sources
-            .Where(s => s is FileConfigurationSource)
-            .Select(s => ((FileConfigurationSource)s).Path);
+        var configFiles = configuration.GetAppliedConfigurationFileNames();
 
         logger.LogInformationIfNeed($"Configuration files: {string.Join(", ", configFiles)}");
     }
-
 
     public static void LogProcessState(this ILogger logger, Process process)
     {
