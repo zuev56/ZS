@@ -9,9 +9,10 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Zs.Bot.Data.Abstractions;
@@ -23,88 +24,58 @@ using Zs.Bot.Services.Commands;
 using Zs.Bot.Services.DataSavers;
 using Zs.Bot.Services.Messaging;
 using Zs.Common.Abstractions;
-using Zs.Common.Exceptions;
 using Zs.Common.Extensions;
-using Zs.Common.Models;
 using Zs.Common.Services.Abstractions;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Logging.Seq;
 using Zs.Common.Services.Scheduler;
 using Zs.Common.Services.Shell;
+using Path = System.IO.Path;
 
 namespace ChatAdmin.Bot;
 
-internal static class Program
+internal sealed class Program
 {
     public static async Task Main(string[] args)
     {
-        try
-        {
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(CreateConfiguration(args), "Serilog")
-                .CreateLogger();
+        var host = CreateHostBuilder(args).Build();
 
-            Log.Warning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
-                Process.GetCurrentProcess().MainModule.ModuleName,
-                Environment.MachineName,
-                Environment.OSVersion,
-                Environment.UserName,
-                Environment.ProcessId);
+        var logger = host.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
+            Process.GetCurrentProcess().MainModule?.ModuleName,
+            Environment.MachineName,
+            Environment.OSVersion,
+            Environment.UserName,
+            Environment.ProcessId);
 
-            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-            CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
-
-            await CreateHostBuilder(args).RunConsoleAsync().ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            ProgramUtilites.TrySaveFailInfo(ex.ToText());
-            Console.WriteLine(ex.ToText());
-            Console.Read();
-        }
+        await host.RunAsync();
     }
 
-    private static IConfiguration CreateConfiguration(string[] args)
-    {
-        if (!File.Exists(ProgramUtilites.MainConfigurationPath))
-            throw new AppsettingsNotFoundException();
-
-        var configuration = new ConfigurationManager();
-        configuration.AddJsonFile(ProgramUtilites.MainConfigurationPath, optional: false, reloadOnChange: true);
-
-        foreach (var arg in args)
-        {
-            if (!File.Exists(arg))
-                throw new FileNotFoundException($"Wrong configuration path:\n{arg}");
-
-            configuration.AddJsonFile(arg, optional: true, reloadOnChange: true);
-        }
-
-        AssertConfigurationIsCorrect(configuration);
-
-        return configuration;
-    }
-
-    private static void AssertConfigurationIsCorrect(IConfiguration configuration)
-    {
-        // TODO
-        // BotToken
-        // ConnectionStrings
-        // "ChatAdmin": { "Chat": { "Id": 2, "TimeZone": "MSK" },
-        // UnaccountedUserIds
-        // "BotUserId": -1,
-        // "MessageLimitHi": 3,
-        // "MessageLimitHiHi": 5,
-        // "MessageLimitAfterBan": 2,
-        // "AccountingStartsAfter": 2,
-        // "WaitAfterConnectionRepairedSec": 30
-        //}
-    }
-
-    public static IHostBuilder CreateHostBuilder(string[] args)
+    private static IHostBuilder CreateHostBuilder(string[] args)
     {
         return Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostContext, configurationBuilder) => configurationBuilder.AddConfiguration(CreateConfiguration(args)))
+            .ConfigureAppConfiguration(configurationBuilder =>
+            {
+                if (args?.Any() != true)
+                    return;
+
+                foreach (var arg in args.Distinct().Where(a => !string.IsNullOrWhiteSpace(a)))
+                {
+                    if (File.Exists(arg) && Path.GetExtension(arg).Equals(".json", StringComparison.InvariantCultureIgnoreCase))
+                        configurationBuilder.AddJsonFile(arg);
+
+                    var configFilePath = Path.Combine(arg, $"{Assembly.GetAssembly(typeof(Program))!.GetName().Name}.json");
+                    if (File.Exists(configFilePath))
+                        configurationBuilder.AddJsonFile(configFilePath);
+                }
+
+                var configFiles = configurationBuilder.Sources
+                    .Where(s => s is FileConfigurationSource)
+                    .Select(s => ((FileConfigurationSource)s).Path)
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList()!;
+                Console.WriteLine($"Applied configuration files: {string.Join(", ", configFiles)}");
+            })
             .UseSerilog()
             .ConfigureServices((hostContext, services) =>
             {
