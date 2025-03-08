@@ -1,0 +1,502 @@
+﻿{
+  "x-generator": "NSwag v14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))",
+  "swagger": "2.0",
+  "info": {
+    "title": "VkActivity API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/activity/{userId}/period/{fromDate}/{toDate}": {
+      "get": {
+        "tags": [
+          "ActivityLog"
+        ],
+        "operationId": "ActivityLog_GetPeriodInfo",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "format": "int32",
+            "x-nullable": false
+          },
+          {
+            "type": "string",
+            "name": "fromDate",
+            "in": "path",
+            "required": true,
+            "format": "date-time",
+            "x-nullable": false
+          },
+          {
+            "type": "string",
+            "name": "toDate",
+            "in": "path",
+            "required": true,
+            "format": "date-time",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/PeriodInfoDto"
+            }
+          }
+        }
+      }
+    },
+    "/api/activity/{userId}/day/{date}": {
+      "get": {
+        "tags": [
+          "ActivityLog"
+        ],
+        "operationId": "ActivityLog_GetDayInfo",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "format": "int32",
+            "x-nullable": false
+          },
+          {
+            "type": "string",
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "format": "date-time",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/PeriodInfoDto"
+            }
+          }
+        }
+      }
+    },
+    "/api/activity/{userId}/fulltime": {
+      "get": {
+        "tags": [
+          "ActivityLog"
+        ],
+        "operationId": "ActivityLog_GetFullTimeInfo",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "format": "int32",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/PeriodInfoDto"
+            }
+          }
+        }
+      }
+    },
+    "/api/activity/{userId}/last-utc": {
+      "get": {
+        "tags": [
+          "ActivityLog"
+        ],
+        "operationId": "ActivityLog_GetLastVisitDate",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "format": "int32",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "/api/activity/{userId}/is-online": {
+      "get": {
+        "tags": [
+          "ActivityLog"
+        ],
+        "operationId": "ActivityLog_IsOnline",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "format": "int32",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "/api/healthcheck": {
+      "get": {
+        "tags": [
+          "HealthCheck"
+        ],
+        "operationId": "HealthCheck_GetHealthInfoGET",
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      },
+      "head": {
+        "tags": [
+          "HealthCheck"
+        ],
+        "operationId": "HealthCheck_GetHealthInfoHEAD",
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/api/listusers/period/{fromDate}/{toDate}": {
+      "get": {
+        "tags": [
+          "ListUsers"
+        ],
+        "operationId": "ListUsers_GetUsersWithActivity",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "fromDate",
+            "in": "path",
+            "required": true,
+            "format": "date-time",
+            "x-nullable": false
+          },
+          {
+            "type": "string",
+            "name": "toDate",
+            "in": "path",
+            "required": true,
+            "format": "date-time",
+            "x-nullable": false
+          },
+          {
+            "type": "string",
+            "name": "filterText",
+            "in": "query",
+            "x-nullable": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ListUserDto"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{userId}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GetUser",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "format": "int32",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/UserDto"
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_AddNewUsers",
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "screenNames",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserDto"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/friends/{userId}": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_AddFriendsOf",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "format": "int32",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserDto"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "PeriodInfoDto": {
+      "type": "object",
+      "required": [
+        "userId",
+        "userName",
+        "visitInfos",
+        "allVisitsCount",
+        "analyzedDaysCount",
+        "activityDaysCount"
+      ],
+      "properties": {
+        "userId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "visitInfos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VisitInfoDto"
+          }
+        },
+        "allVisitsCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "fullTime": {
+          "type": "string"
+        },
+        "analyzedDaysCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "activityDaysCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "avgDailyTime": {
+          "type": "string"
+        }
+      }
+    },
+    "VisitInfoDto": {
+      "type": "object",
+      "required": [
+        "platform",
+        "count",
+        "time"
+      ],
+      "properties": {
+        "platform": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "time": {
+          "type": "string"
+        }
+      }
+    },
+    "ListUserDto": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "isOnline",
+        "activitySec"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "isOnline": {
+          "type": "boolean"
+        },
+        "activitySec": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "UserDto": {
+      "type": "object",
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

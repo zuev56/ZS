@@ -45,6 +45,15 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
 {
     webHostBuilder.ConfigureServices((context, services) =>
     {
+        services.AddSwaggerDocument(config =>
+        {
+            config.PostProcess = document =>
+            {
+                document.Info.Title = "VkActivity API";
+                document.Info.Version = "v1";
+            };
+        });
+
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -92,6 +101,7 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
             context.Configuration[AppSettings.Swagger.EndpointUrl],
             context.Configuration[AppSettings.Swagger.ApiTitle] + " " + context.Configuration[AppSettings.Swagger.ApiVersion])
         );
+        app.UseOpenApi();
 
         app.UseRouting();
 
