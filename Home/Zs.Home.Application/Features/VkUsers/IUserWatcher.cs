@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zs.Home.Application.Features.Hardware;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Zs.Home.Application.Features.VkUsers;
 
-public interface IUserWatcher : IHasJob, IHasCurrentState
+public interface IUserWatcher
 {
-    IAsyncEnumerable<(User, TimeSpan InactiveTime)> GetUsersWithInactiveTimeAsync();
+    Task<IReadOnlyDictionary<User, TimeSpan>> GetUsersWithInactiveTimeAsync(
+        int[] userIds, CancellationToken cancellationToken);
 }

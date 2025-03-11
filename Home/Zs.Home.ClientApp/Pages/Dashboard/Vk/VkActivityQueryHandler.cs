@@ -21,8 +21,9 @@ public sealed class VkActivityQueryHandler : IRequestHandler<VkActivityQuery, Vk
     public async Task<VkActivity> Handle(VkActivityQuery request, CancellationToken cancellationToken)
     {
         var users = new List<User>();
+        var usersWithInactiveTime = await _userWatcher.GetUsersWithInactiveTimeAsync(_options.TrackedIds, cancellationToken);
 
-        await foreach (var (user, inactiveTime) in _userWatcher.GetUsersWithInactiveTimeAsync().WithCancellation(cancellationToken))
+        foreach (var (user, inactiveTime) in usersWithInactiveTime)
         {
             var name = $"{user.FirstName} {user.LastName}";
             var lastActivity = inactiveTime.TotalHours < _options.InactiveHoursLimit

@@ -1,4 +1,4 @@
-﻿{
+{
   "runtime": "Net90",
   "defaultVariables": null,
   "documentGenerator": {
@@ -17,8 +17,8 @@
       "generateClientInterfaces": true,
       "suppressClientInterfacesOutput": false,
       "clientBaseInterface": null,
-      "injectHttpClient": true,
-      "disposeHttpClient": true,
+      "injectHttpClient": false,
+      "disposeHttpClient": false,
       "protectedMethods": [],
       "generateExceptionClasses": true,
       "exceptionClass": "ApiException",

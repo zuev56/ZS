@@ -73,7 +73,7 @@ public static class Program
             app.UseHsts();
         }
 
-        app.UseStaticFiles();// в net9 не было
+        app.UseStaticFiles();
 
         app.UseHttpsRedirection();
 

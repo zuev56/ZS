@@ -9,6 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Common\Zs.Common.Services\Zs.Common.Services.csproj" />
       <ProjectReference Include="..\..\Parsers\Zs.Parser.EspMeteo\Zs.Parser.EspMeteo.csproj" />
+      <ProjectReference Include="..\..\Vk\Zs.VkActivity.WebApi.Client\Zs.VkActivity.WebApi.Client.csproj" />
     </ItemGroup>
 
     <ItemGroup>

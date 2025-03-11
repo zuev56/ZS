@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Zs.Home.ClientApp.Pages.Dashboard.Vk;
 
-public sealed record VkActivity
+public sealed record VkActivity //VkActivityResponse?
 {
     public required IReadOnlyList<User> Users { get; init; }
 }

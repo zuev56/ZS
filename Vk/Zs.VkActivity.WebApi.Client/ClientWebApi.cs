@@ -71,16 +71,14 @@ namespace Zs.VkActivity.WebApi
         private string _baseUrl;
         #pragma warning restore 8618
 
-        private System.Net.Http.HttpClient _httpClient;
         private static System.Lazy<System.Text.Json.JsonSerializerOptions> _settings = new System.Lazy<System.Text.Json.JsonSerializerOptions>(CreateSerializerSettings, true);
         private System.Text.Json.JsonSerializerOptions _instanceSettings;
 
     #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public ActivityLogClient(string baseUrl, System.Net.Http.HttpClient httpClient)
+        public ActivityLogClient(string baseUrl)
     #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             BaseUrl = baseUrl;
-            _httpClient = httpClient;
             Initialize();
         }
 
@@ -131,7 +129,7 @@ namespace Zs.VkActivity.WebApi
             if (toDate == null)
                 throw new System.ArgumentNullException("toDate");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -218,7 +216,7 @@ namespace Zs.VkActivity.WebApi
             if (date == null)
                 throw new System.ArgumentNullException("date");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -300,7 +298,7 @@ namespace Zs.VkActivity.WebApi
             if (userId == null)
                 throw new System.ArgumentNullException("userId");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -381,7 +379,7 @@ namespace Zs.VkActivity.WebApi
             if (userId == null)
                 throw new System.ArgumentNullException("userId");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -462,7 +460,7 @@ namespace Zs.VkActivity.WebApi
             if (userId == null)
                 throw new System.ArgumentNullException("userId");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -665,16 +663,14 @@ namespace Zs.VkActivity.WebApi
         private string _baseUrl;
         #pragma warning restore 8618
 
-        private System.Net.Http.HttpClient _httpClient;
         private static System.Lazy<System.Text.Json.JsonSerializerOptions> _settings = new System.Lazy<System.Text.Json.JsonSerializerOptions>(CreateSerializerSettings, true);
         private System.Text.Json.JsonSerializerOptions _instanceSettings;
 
     #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public HealthCheckClient(string baseUrl, System.Net.Http.HttpClient httpClient)
+        public HealthCheckClient(string baseUrl)
     #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             BaseUrl = baseUrl;
-            _httpClient = httpClient;
             Initialize();
         }
 
@@ -716,7 +712,7 @@ namespace Zs.VkActivity.WebApi
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<FileResponse> GetHealthInfoGETAsync(System.Threading.CancellationToken cancellationToken)
         {
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -790,7 +786,7 @@ namespace Zs.VkActivity.WebApi
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<FileResponse> GetHealthInfoHEADAsync(System.Threading.CancellationToken cancellationToken)
         {
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -982,16 +978,14 @@ namespace Zs.VkActivity.WebApi
         private string _baseUrl;
         #pragma warning restore 8618
 
-        private System.Net.Http.HttpClient _httpClient;
         private static System.Lazy<System.Text.Json.JsonSerializerOptions> _settings = new System.Lazy<System.Text.Json.JsonSerializerOptions>(CreateSerializerSettings, true);
         private System.Text.Json.JsonSerializerOptions _instanceSettings;
 
     #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public ListUsersClient(string baseUrl, System.Net.Http.HttpClient httpClient)
+        public ListUsersClient(string baseUrl)
     #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             BaseUrl = baseUrl;
-            _httpClient = httpClient;
             Initialize();
         }
 
@@ -1039,7 +1033,7 @@ namespace Zs.VkActivity.WebApi
             if (toDate == null)
                 throw new System.ArgumentNullException("toDate");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -1256,16 +1250,14 @@ namespace Zs.VkActivity.WebApi
         private string _baseUrl;
         #pragma warning restore 8618
 
-        private System.Net.Http.HttpClient _httpClient;
         private static System.Lazy<System.Text.Json.JsonSerializerOptions> _settings = new System.Lazy<System.Text.Json.JsonSerializerOptions>(CreateSerializerSettings, true);
         private System.Text.Json.JsonSerializerOptions _instanceSettings;
 
     #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public UsersClient(string baseUrl, System.Net.Http.HttpClient httpClient)
+        public UsersClient(string baseUrl)
     #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             BaseUrl = baseUrl;
-            _httpClient = httpClient;
             Initialize();
         }
 
@@ -1310,7 +1302,7 @@ namespace Zs.VkActivity.WebApi
             if (userId == null)
                 throw new System.ArgumentNullException("userId");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -1390,7 +1382,7 @@ namespace Zs.VkActivity.WebApi
             if (screenNames == null)
                 throw new System.ArgumentNullException("screenNames");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
@@ -1473,7 +1465,7 @@ namespace Zs.VkActivity.WebApi
             if (userId == null)
                 throw new System.ArgumentNullException("userId");
 
-            var client_ = _httpClient;
+            var client_ = new System.Net.Http.HttpClient();
             var disposeClient_ = false;
             try
             {
