@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,6 +63,28 @@ public sealed class Request
 
         _logger?.LogTraceIfNeed("GET {uri} {time} ms", _uri, stopWatch.ElapsedMilliseconds);
         return result;
+    }
+
+    public async Task<HttpStatusCode> PostAsync<TPayload>(TPayload payload, CancellationToken cancellationToken = default)
+    {
+        var stopWatch = Stopwatch.StartNew();
+        using var httpClient = _httpClientFactory != null ? _httpClientFactory.CreateClient() : new HttpClient();
+        SetHeaders(httpClient);
+
+        try
+        {
+            var content = JsonContent.Create(payload);
+            var response = await httpClient.PostAsync(_uri, content, cancellationToken).ConfigureAwait(false);
+
+            _logger?.LogTraceIfNeed("POST ({statusCode}) {uri} {time} ms", response.StatusCode, _uri, stopWatch.ElapsedMilliseconds);
+
+            return response.StatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogErrorIfNeed(ex, "POST {uri} {time} ms", _uri, stopWatch.ElapsedMilliseconds);
+            throw;
+        }
     }
 
     private void SetHeaders(HttpClient httpClient)

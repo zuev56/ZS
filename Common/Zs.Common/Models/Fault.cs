@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-#nullable enable
+
 namespace Zs.Common.Models;
 
 public sealed class Fault

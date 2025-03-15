@@ -3,13 +3,13 @@
     "VkActivity.Api": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "http://localhost:5101/swagger/",
+      "launchUrl": "http://localhost:6011/swagger/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5101/swagger/index.html"
+        "ASPNETCORE_URLS": "http://localhost:6011/swagger/index.html"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5101/swagger/"
+      "applicationUrl": "http://localhost:6011/swagger/"
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json"

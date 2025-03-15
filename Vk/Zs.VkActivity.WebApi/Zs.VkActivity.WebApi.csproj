@@ -22,6 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\..\Common\Zs.Common.Data.Postgres\Zs.Common.Data.Postgres.csproj" />
 	  <ProjectReference Include="..\..\Common\Zs.Common.Services\Zs.Common.Services.csproj" />
 	  <ProjectReference Include="..\Zs.VkActivity.Common\Zs.VkActivity.Common.csproj" />
 	  <ProjectReference Include="..\Zs.VkActivity.Data\Zs.VkActivity.Data.csproj" />
