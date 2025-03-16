@@ -1,0 +1,62 @@
+﻿using System.Diagnostics;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Zs.Common.Extensions;
+using Zs.Home.Application.Features.VkUsers;
+using Zs.Home.Jobs.Hangfire.Extensions;
+using Zs.Home.Jobs.Hangfire.Notification;
+
+namespace Zs.Home.Jobs.Hangfire.UserWatcher;
+
+// ReSharper disable once ClassNeverInstantiated.Global
+public sealed class UserWatcherJob
+{
+    private readonly IUserWatcher _userWatcher;
+    private readonly UserWatcherSettings _settings;
+    private readonly Notifier _notifier;
+    private readonly ILogger<UserWatcherJob> _logger;
+
+    public UserWatcherJob(
+        IUserWatcher userWatcher,
+        IOptions<UserWatcherSettings> settings,
+        Notifier notifier,
+        ILogger<UserWatcherJob> logger)
+    {
+        _userWatcher = userWatcher;
+        _notifier = notifier;
+        _settings = settings.Value;
+        _logger = logger;
+    }
+
+    public async Task ExecuteAsync(CancellationToken ct)
+    {
+        var sw = Stopwatch.StartNew();
+        _logger.LogJobStart();
+
+        var inactiveUsersInfo = await DetectInactiveUsersAsync(ct);
+
+        await _notifier.SendNotificationAsync(inactiveUsersInfo, ct);
+
+        _logger.LogJobFinish(sw.Elapsed);
+    }
+
+    private async Task<string> DetectInactiveUsersAsync(CancellationToken ct)
+    {
+        var result = new StringBuilder();
+        var usersWithInactiveTime = await _userWatcher.GetUsersWithInactiveTimeAsync(_settings.TrackedIds, ct);
+
+        foreach (var (user, inactiveTime) in usersWithInactiveTime)
+        {
+            if (inactiveTime < _settings.InactiveHoursLimit.Hours())
+                continue;
+
+            var userName = $"{user.FirstName} {user.LastName}";
+            result.AppendLine($@"User {userName} is not active for {inactiveTime:hh\:mm\:ss}");
+        }
+
+        return result.ToString().Trim();
+    }
+}

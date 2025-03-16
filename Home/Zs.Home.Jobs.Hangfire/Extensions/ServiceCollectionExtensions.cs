@@ -9,7 +9,7 @@ using Zs.Home.Jobs.Hangfire.WeatherRegistrator;
 using Zs.Parser.EspMeteo;
 using static Zs.Home.Jobs.Hangfire.Constants;
 
-namespace Zs.Home.Jobs.Hangfire;
+namespace Zs.Home.Jobs.Hangfire.Extensions;
 
 internal static class ServiceCollectionExtensions
 {

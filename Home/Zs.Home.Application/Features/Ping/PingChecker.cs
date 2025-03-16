@@ -1,90 +1,34 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
-using Zs.Common.Services.Scheduling;
 
 namespace Zs.Home.Application.Features.Ping;
 
-internal sealed class PingChecker : IPingChecker
+public sealed record PingTarget
 {
-    private const int AttemptsWhenNotReachable = 3;
+    public PingTarget(string ip, short? port = null)
+    {
+        Ip = IPAddress.Parse(ip);
+        Port = port;
+    }
+
+    public IPAddress Ip { get; }
+    public short? Port { get; }
+}
+
+internal sealed class PingChecker
+{
     private static readonly TimeSpan BaseDelay = 300.Milliseconds();
-    private readonly PingCheckerSettings _settings;
-    private readonly Dictionary<Target, bool> _targetToReachabilityMap = new();
 
-    // TODO: Почему джоб лежит не в боте, если он нужен только там?
-    public ProgramJob<string> Job { get; }
-
-    public PingChecker(IOptions<PingCheckerSettings> options)
-    {
-        _settings = options.Value;
-
-        Job = new ProgramJob<string>(
-            period: 20.Seconds(),
-            method: PingTargetsAsync,
-            startUtcDate: DateTime.UtcNow + 7.Seconds());
-    }
-
-    private async Task<string> PingTargetsAsync()
-    {
-        var message = new StringBuilder();
-        foreach (var target in _settings.Targets)
-        {
-            var isReachable = await IsReachable(target);
-
-            if (_targetToReachabilityMap.TryGetValue(target, out var lastIsReachable))
-            {
-                if (lastIsReachable == isReachable)
-                    continue;
-
-                _targetToReachabilityMap[target] = isReachable;
-
-                if (message.Length > 0)
-                    message.Append(Environment.NewLine);
-
-                message.Append($"Connection to '{target.Description}' {(isReachable ? "restored" : "lost")}.");
-            }
-            else
-                _targetToReachabilityMap.Add(target, isReachable);
-        }
-
-        return message.ToString();
-    }
-
-    private static async Task<bool> IsReachable(Target target)
-    {
-        var attempt = 0;
-        while (attempt++ < AttemptsWhenNotReachable)
-        {
-            var pingStatus = await PingAsync(target);
-            if (pingStatus == IPStatus.Success)
-                return true;
-
-            await Task.Delay(BaseDelay * attempt);
-        }
-
-        return false;
-    }
-
-    private static async Task<IPStatus> PingAsync(Target target)
-    {
-        return target.Port.HasValue
-            ? Ping(target.Host, target.Port.Value)
-            : await PingAsync(target.Host);
-    }
-
-    private static async Task<IPStatus> PingAsync(string host)
+    public async Task<IPStatus> PingAsync(string hostNameOrAddress)
     {
         try
         {
             using var ping = new System.Net.NetworkInformation.Ping();
-            var pingReply = await ping.SendPingAsync(host).ConfigureAwait(false);
+            var pingReply = await ping.SendPingAsync(hostNameOrAddress).ConfigureAwait(false);
 
             return pingReply.Status;
         }
@@ -94,7 +38,8 @@ internal sealed class PingChecker : IPingChecker
         }
     }
 
-    private static IPStatus Ping(string host, int port)
+    [Obsolete("Скорее всего, этот метод избыточен. Проверить вызов PingAsync(1.1.1.1:123)")]
+    public static IPStatus Ping(string host, short port)
     {
         try
         {
@@ -107,29 +52,26 @@ internal sealed class PingChecker : IPingChecker
         }
     }
 
-    public async Task<string> GetCurrentStateAsync(TimeSpan? timeout = null)
+    // Если PingAsync(1.1.1.1:123) сработает, то PingTarget можно заменить на string
+    public async Task<bool> IsReachable(PingTarget target, int attempts = 1)
     {
-        if (_settings.Targets.Length == 0)
-            return string.Empty;
-
-        var stateMessageBuilder = new StringBuilder();
-        foreach (var target in _settings.Targets)
+        var attempt = 0;
+        while (attempt++ < attempts)
         {
-            var hostStatus = await PingAsync(target).WaitAsync(timeout ?? TimeSpan.MaxValue)
-                .ContinueWith(task =>
-                {
-                    if (!task.IsFaulted)
-                        return task.Result;
+            var pingStatus = await PingAsync(target);
+            if (pingStatus == IPStatus.Success)
+                return true;
 
-                    if (task.Exception!.InnerExceptions.SingleOrDefault() is TimeoutException)
-                        return IPStatus.TimedOut;
-
-                    throw task.Exception;
-                }, TaskContinuationOptions.None);
-            var targetName = target.Description ?? target.Host + (target.Port.HasValue ? $":{target.Port}" : string.Empty);
-            stateMessageBuilder.AppendLine($"{targetName}: {hostStatus}");
+            await Task.Delay(BaseDelay * attempt);
         }
 
-        return stateMessageBuilder.ToString().Trim();
+        return false;
+    }
+
+    private async Task<IPStatus> PingAsync(PingTarget target)
+    {
+        return target.Port.HasValue
+            ? Ping(target.Ip.ToString(), target.Port.Value)
+            : await PingAsync(target.Ip.ToString());
     }
 }

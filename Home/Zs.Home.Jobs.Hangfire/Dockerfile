@@ -1,15 +1,13 @@
-﻿# cd git/ZS (FROM SOLUTION DIRECTORY!!!)
+﻿# cd git/ZS
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-home-jobs-hangfire -f Home/Zs.Home.Jobs.Hangfire/Dockerfile .
-# sudo docker run --name home-jobs-hangfire --restart unless-stopped -it zs-home-jobs-hangfire
+# sudo docker run --name home-jobs-hangfire --restart unless-stopped -p 6023:80 -it zs-home-jobs-hangfire
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Home/Zs.Home.Jobs.Hangfire/Zs.Home.Jobs.Hangfire.csproj", "Home/Zs.Home.Jobs.Hangfire/"]

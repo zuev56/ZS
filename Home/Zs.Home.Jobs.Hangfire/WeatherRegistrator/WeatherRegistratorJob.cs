@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Zs.Common.Extensions;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.Application.Features.Weather.Data.Models;
+using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Parser.EspMeteo;
 using Zs.Parser.EspMeteo.Models;
 using static Zs.Home.Jobs.Hangfire.Constants;
@@ -37,15 +37,15 @@ public sealed class WeatherRegistratorJob
         _logger = logger;
     }
 
-    public async Task ExequteAsync(CancellationToken cancellationToken)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var sw = Stopwatch.StartNew();
-        _logger.LogDebugIfNeed("Start {Job}", nameof(WeatherRegistratorJob));
+        _logger.LogJobStart();
 
         var weatherData = await GetWeatherDataAsync(cancellationToken);
 
         await SaveWeatherDataAsync(weatherData, cancellationToken);
-        _logger.LogDebugIfNeed("Finish {Job}, elapsed: {Elapsed}", nameof(WeatherRegistratorJob), sw.Elapsed);
+        _logger.LogJobFinish(sw.Elapsed);
     }
 
     private async Task<IReadOnlyList<WeatherData>> GetWeatherDataAsync(CancellationToken cancellationToken)

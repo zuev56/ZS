@@ -17,8 +17,6 @@ using Zs.Common.Utilities;
 using Zs.Home.Application.Features.Hardware;
 using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Seq;
-using Zs.Home.Application.Features.VkUsers;
-using Zs.Home.Application.Features.Weather;
 using Zs.Home.Bot.Interaction;
 using Zs.Home.Bot.Interaction.MessagePipeline;
 using static Zs.Home.Application.Features.VkUsers.Constants;
@@ -101,16 +99,14 @@ internal sealed class HomeBot : IHostedService
 
     private void CreateJobs()
     {
-        // TODO: Вынести из этого класса
-        var userWatcher = _serviceProvider.GetRequiredService<IUserWatcher>();
+        // Наверное, тут стоит оставить джоб, который будет проверять работоспособность Hangfire (убеждаться, что там выполняются задачи)
+
+        // TODO: Вынести из этого проекта
         var hardwareMonitor = _serviceProvider.GetRequiredService<IHardwareMonitor>();
-        var weatherAnalyzer = _serviceProvider.GetRequiredService<IWeatherAnalyzer>();
         var seqEventsInformer = _serviceProvider.GetRequiredService<ISeqEventsInformer>();
         var pingChecker = _serviceProvider.GetRequiredService<IPingChecker>();
 
-        _scheduler.Jobs.Add(userWatcher.Job);
         _scheduler.Jobs.Add(hardwareMonitor.Job);
-        _scheduler.Jobs.Add(weatherAnalyzer.Job);
         _scheduler.Jobs.Add(seqEventsInformer.DayEventsInformerJob);
         _scheduler.Jobs.Add(seqEventsInformer.NightEventsInformerJob);
         _scheduler.Jobs.Add(pingChecker.Job);

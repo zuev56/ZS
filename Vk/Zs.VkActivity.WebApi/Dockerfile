@@ -13,8 +13,11 @@ WORKDIR /src
 COPY ["Vk/Zs.VkActivity.WebApi/Zs.VkActivity.WebApi.csproj", "Vk/Zs.VkActivity.WebApi/"]
 COPY ["Common/Zs.Common.Services/Zs.Common.Services.csproj", "Common/Zs.Common.Services/"]
 COPY ["Common/Zs.Common/Zs.Common.csproj", "Common/Zs.Common/"]
+COPY ["Common/Zs.Common.Data.Postgres/Zs.Common.Data.Postgres.csproj", "Common/Zs.Common.Data.Postgres/"]
 COPY ["Vk/Zs.VkActivity.Common/Zs.VkActivity.Common.csproj", "Vk/Zs.VkActivity.Common/"]
 COPY ["Vk/Zs.VkActivity.Data/Zs.VkActivity.Data.csproj", "Vk/Zs.VkActivity.Data/"]
+
+
 RUN dotnet restore "Vk/Zs.VkActivity.WebApi/Zs.VkActivity.WebApi.csproj"
 COPY . .
 WORKDIR "/src/Vk/Zs.VkActivity.WebApi"

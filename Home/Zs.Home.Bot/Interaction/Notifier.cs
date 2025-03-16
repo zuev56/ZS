@@ -47,13 +47,13 @@ internal sealed class Notifier
     private static string GetPreparedMessage(string message)
         => message.ReplaceEndingWithThreeDots(4000);
 
-    public async Task NotifyAsync(string jobResult)
+    public async Task NotifyAsync(string message)
     {
         var curHour = DateTime.Now.Hour;
-        if (string.IsNullOrWhiteSpace(jobResult) || curHour < _notifierSettings.FromHour || curHour >= _notifierSettings.ToHour)
+        if (string.IsNullOrWhiteSpace(message) || curHour < _notifierSettings.FromHour || curHour >= _notifierSettings.ToHour)
             return;
 
-        var preparedMessage = GetPreparedMessage(jobResult);
+        var preparedMessage = GetPreparedMessage(message);
         await ForceNotifyAsync(preparedMessage);
     }
 

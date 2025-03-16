@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Zs.Home.Application.Features.Weather;
 
-public sealed class WeatherAnalyzerSettings
+public class WeatherAnalyzerSettings
 {
     public const string SectionName = "WeatherAnalyzer";
     [Required]

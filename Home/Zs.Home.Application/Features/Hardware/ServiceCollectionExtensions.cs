@@ -12,7 +12,7 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddSingleton<IHardwareMonitor, LinuxHardwareMonitor>();
+        services.AddSingleton<IHardwareMonitor, LinuxHardwareMonitorOld>();
 
         return services;
     }

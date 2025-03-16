@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Zs.Home.Application.Features.VkUsers;
 
-public sealed class UserWatcherSettings
+public class UserWatcherSettings
 {
     public const string SectionName = "UserWatcher";
 
@@ -14,6 +14,4 @@ public sealed class UserWatcherSettings
 
     [Required]
     public double InactiveHoursLimit { get; set; }
-
-    public bool CreateJob { get; set; }
 }

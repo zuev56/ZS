@@ -24,7 +24,7 @@ public partial class HangfireDbContext : DbContext
                 .HasColumnName("acquired");
             entity.Property(e => e.Resource)
                 .HasColumnName("resource");
-            entity.Property(e => e.Updatecount)
+            entity.Property(e => e.UpdateCount)
                 .HasDefaultValue(0)
                 .HasColumnName("updatecount");
         });

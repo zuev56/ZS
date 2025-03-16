@@ -12,7 +12,7 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddSingleton<IPingChecker, PingChecker>();
+        services.AddSingleton<IPingChecker, PingCheckerOld>();
 
         return services;
     }

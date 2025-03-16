@@ -12,6 +12,8 @@ using static System.Environment;
 
 namespace Zs.Home.Application.Features.Seq;
 
+
+// Это надо перенести в бота или в проект с джобами, а оттуда отправлять сообщения боту
 internal sealed class SeqEventsInformer : ISeqEventsInformer
 {
     private const int UtcToMsk = +3;

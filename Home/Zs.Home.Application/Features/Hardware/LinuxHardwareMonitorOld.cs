@@ -13,23 +13,20 @@ using static Zs.Home.Application.Features.Hardware.Constants;
 
 namespace Zs.Home.Application.Features.Hardware;
 
-[Obsolete("Надо делать команды CLI, которые возвращают точные данные." +
-          "Эти команды прописать в конфиге и дёргать их без лишних преобразований." +
-          "Тогда можно будет перенести весть функционал в HardwareMonitor," +
-          "сделать его простым и универсальным для всех платформ")]
-internal sealed class LinuxHardwareMonitor : HardwareMonitor
+internal sealed class LinuxHardwareMonitorOld : HardwareMonitorOld
 {
-    public LinuxHardwareMonitor(
+    public LinuxHardwareMonitorOld(
         IOptions<HardwareMonitorSettings> options,
-        ILogger<LinuxHardwareMonitor> logger)
+        ILogger<LinuxHardwareMonitorOld> logger)
         : base(options, logger)
     {
     }
 
-    protected override async Task<float> GetCpuTemperatureAsync()
+    protected override async Task<float> GetCpuTemperature()
     {
         // sudo apt install lm-sensors
-        var commandResult = await ShellLauncher.RunAsync(CliPath, "sensors -j");
+        const string getSensorsInfoCommand = "sensors -j";
+        var commandResult = await ShellLauncher.RunAsync(Options.ShellPath, getSensorsInfoCommand);
 
         EnsureResultSuccessful(commandResult);
 
@@ -37,9 +34,10 @@ internal sealed class LinuxHardwareMonitor : HardwareMonitor
         return jsonNode["cpu_thermal-virtual-0"]!["temp1"]!["temp1_input"]!.GetValue<float>();
     }
 
-    protected override async Task<float> GetMemoryUsagePercentAsync()
+    protected override async Task<double> GetMemoryUsagePercent()
     {
-        var commandResult = await ShellLauncher.RunAsync(CliPath, "egrep 'Mem|Cache|Swap' /proc/meminfo");
+        const string getMemoryUsageCommand = "egrep 'Mem|Cache|Swap' /proc/meminfo";
+        var commandResult = await ShellLauncher.RunAsync(Options.ShellPath, getMemoryUsageCommand);
         // Approximate result:
         // MemTotal:       16067104 kB
         // MemAvailable:   12935852 kB
@@ -63,32 +61,13 @@ internal sealed class LinuxHardwareMonitor : HardwareMonitor
         var total = memUsage.Single(static i => i.Name == MemTotal).Size;
         var available = memUsage.Single(static i => i.Name == MemAvailable).Size;
 
-        return 100 - available / (float)total * 100;
+        return 100 - available / (double)total * 100;
     }
 
-    protected override async Task<float> Get15MinAvgCpuUsageAsync()
+    protected override async Task<float> Get15MinAvgCpuUsage()
     {
-        var commandResult = await ShellLauncher.RunAsync(CliPath, "cat /proc/loadavg | awk '{print $3}'");
-
-        EnsureResultSuccessful(commandResult);
-
-        return float.Parse(commandResult.Value, CultureInfo.InvariantCulture);
-    }
-
-    protected override async Task<float> GetStorageTemperatureAsync()
-    {
-        throw new NotImplementedException();
-        var commandResult = await ShellLauncher.RunAsync(CliPath, "");
-
-        EnsureResultSuccessful(commandResult);
-
-        return float.Parse(commandResult.Value, CultureInfo.InvariantCulture);
-    }
-
-    protected override async Task<float> GetStorageUsagePercentAsync()
-    {
-        throw new NotImplementedException();
-        var commandResult = await ShellLauncher.RunAsync(CliPath, "");
+        const string get15MinCpuUsageCommand = "cat /proc/loadavg | awk '{print $3}'";
+        var commandResult = await ShellLauncher.RunAsync(Options.ShellPath, get15MinCpuUsageCommand);
 
         EnsureResultSuccessful(commandResult);
 
@@ -98,9 +77,13 @@ internal sealed class LinuxHardwareMonitor : HardwareMonitor
     private static void EnsureResultSuccessful(Result<string> result)
     {
         if (!result.Successful)
+        {
             throw new FaultException(result.Fault!);
+        }
 
         if (string.IsNullOrWhiteSpace(result.Value))
+        {
             throw new FaultException(Fault.Unknown.WithMessage("Empty result"));
+        }
     }
 }

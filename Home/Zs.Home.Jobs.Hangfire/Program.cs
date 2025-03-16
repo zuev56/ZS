@@ -11,18 +11,28 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Zs.Common.Extensions;
+using Zs.Home.Application.Features.VkUsers;
+using Zs.Home.Application.Features.Weather;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.Application.Features.Weather.Data.Models;
-using Zs.Home.Jobs.Hangfire;
+using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Home.Jobs.Hangfire.Hangfire;
+using Zs.Home.Jobs.Hangfire.Notification;
+using Zs.Home.Jobs.Hangfire.UserWatcher;
+using Zs.Home.Jobs.Hangfire.WeatherAnalyzer;
 using Zs.Home.Jobs.Hangfire.WeatherRegistrator;
 using Place = Zs.Home.Application.Features.Weather.Data.Models.Place;
+using UserWatcherSettings = Zs.Home.Jobs.Hangfire.UserWatcher.UserWatcherSettings;
+using WeatherAnalyzerSettings = Zs.Home.Jobs.Hangfire.WeatherAnalyzer.WeatherAnalyzerSettings;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddHangfire(builder.Configuration)
+    .AddWeatherAnalyzer<WeatherAnalyzerSettings>(builder.Configuration)
     .AddWeatherRegistrator(builder.Configuration)
+    .AddUserWatcher<UserWatcherSettings>(builder.Configuration)
+    .AddSingleton<Notifier>()
     .AddEndpointsApiExplorer()
     .AddSwaggerGen();
 
@@ -43,9 +53,25 @@ app.UseHttpsRedirection();
 app.UseHangfireDashboard();
 
 
-var jobSettings = app.Services.GetRequiredService<IOptions<WeatherRegistratorSettings>>().Value;
+var weatherAnalyzerSettings = app.Services.GetRequiredService<IOptions<WeatherAnalyzerSettings>>().Value;
+RecurringJob.AddOrUpdate<WeatherAnalyzerJob>(
+    nameof(WeatherAnalyzerJob),
+    job => job.ExecuteAsync(CancellationToken.None),
+    weatherAnalyzerSettings.CronExpression);
+
+var weatherRegistratorSettings = app.Services.GetRequiredService<IOptions<WeatherRegistratorSettings>>().Value;
 RecurringJob.AddOrUpdate<WeatherRegistratorJob>(
-    nameof(WeatherRegistratorJob), job => job.ExequteAsync(CancellationToken.None), jobSettings.CronExpression);
+    nameof(WeatherRegistratorJob),
+    job => job.ExecuteAsync(CancellationToken.None),
+    weatherRegistratorSettings.CronExpression);
+
+var userWatcherSettings = app.Services.GetRequiredService<IOptions<UserWatcherSettings>>().Value;
+RecurringJob.AddOrUpdate<UserWatcherJob>(
+    nameof(UserWatcherJob),
+    job => job.ExecuteAsync(CancellationToken.None),
+    userWatcherSettings.CronExpression);
+
+// TODO: Нужен джоб-хелсчекер. Если бот будет недоступен, то отправить уведомление на email
 
 app.Run();
 
