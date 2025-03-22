@@ -67,121 +67,73 @@ internal sealed class SystemStatusService
         }
 
         var nl = Environment.NewLine;
-        return $"Hardware:{nl}{getHardwareStatus.Result}{nl}{nl}" +
-               $"Users:{nl}{getUsersStatus.Result}{nl}{nl}" +
-               $"Weather:{nl}{getWeatherStatus.Result}{nl}{nl}" +
-               $"Ping:{nl}{getPingStatus.Result}{nl}{nl}" +
-               $"Seq:{nl}{getSeqStatus.Result}{nl}{nl}" +
+        return $"Hardware:{nl}{PrepareResult(getHardwareStatus)}{nl}{nl}" +
+               $"Users:{nl}{PrepareResult(getUsersStatus)}{nl}{nl}" +
+               $"Weather:{nl}{PrepareResult(getWeatherStatus)}{nl}{nl}" +
+               $"Ping:{nl}{PrepareResult(getPingStatus)}{nl}{nl}" +
+               $"Seq:{nl}{PrepareResult(getSeqStatus)}{nl}{nl}" +
                $"Request time: {sw.ElapsedMilliseconds} ms";
     }
 
-    public Task<string> GetHardwareStatusAsync()
-    {
-        try
-        {
-            return _hardwareMonitor.GetCurrentStateAsync(_defaultTimeout);
-        }
-        catch
-        {
-            // ignored
-        }
+    private static string PrepareResult(Task<string> task)
+        => task.IsCompletedSuccessfully ? task.Result : "ERROR!";
 
-        return Task.FromResult(Error());
-    }
+    public Task<string> GetHardwareStatusAsync()
+        => _hardwareMonitor.GetCurrentStateAsync(_defaultTimeout);
 
     public async Task<string> GetUsersStatusAsync(CancellationToken ct = default)
     {
-        try
-        {
-            var usersWithInactiveTime = await _userWatcher.GetUsersWithInactiveTimeAsync(_userWatcherSettings.TrackedIds, ct);
+        var usersWithInactiveTime = await _userWatcher.GetUsersWithInactiveTimeAsync(_userWatcherSettings.TrackedIds, ct);
 
-            var result = new StringBuilder();
-            foreach (var (user, inactiveTime) in usersWithInactiveTime)
-            {
-                result.AppendLine($@"User {user.FirstName} {user.LastName} is not active for {inactiveTime:hh\:mm\:ss}");
-            }
-
-            return result.ToString().Trim();
-        }
-        catch
+        var result = new StringBuilder();
+        foreach (var (user, inactiveTime) in usersWithInactiveTime)
         {
-            // ignored
+            result.AppendLine($@"User {user.FirstName} {user.LastName} is not active for {inactiveTime:hh\:mm\:ss}");
         }
 
-        return Error();
+        return result.ToString().Trim();
     }
 
     public async Task<string> GetWeatherStatusAsync(CancellationToken ct = default)
     {
-        try
+        var parseTasks = _weatherAnalyzerSettings.Devices
+            .Select(static d => d.Uri)
+            .Select(url => _espMeteoParser.ParseAsync(url, ct));
+
+        var espMeteos = await Task.WhenAll(parseTasks);
+
+        var weatherStatuses = espMeteos.SelectMany(espMeteo =>
         {
-            var parseTasks = _weatherAnalyzerSettings.Devices
-                .Select(static d => d.Uri)
-                .Select(url => _espMeteoParser.ParseAsync(url, ct));
-
-            var espMeteos = await Task.WhenAll(parseTasks);
-
-            var weatherStatuses = espMeteos.SelectMany(espMeteo =>
+            var deviceSettings = _weatherAnalyzerSettings.Devices.Single(s => s.Uri == espMeteo.Uri);
+            return espMeteo.Sensors.SelectMany(sensor =>
             {
-                var deviceSettings = _weatherAnalyzerSettings.Devices.Single(s => s.Uri == espMeteo.Uri);
-                return espMeteo.Sensors.SelectMany(sensor =>
-                {
-                    var sensorSettings = deviceSettings.Sensors.SingleOrDefault(s => s.Name == sensor.Name);
-                    return sensor.Parameters.Select(parameter => $"{sensorSettings?.Alias ?? sensor.Name}.{parameter.Name}: {parameter.Value}");
-                });
+                var sensorSettings = deviceSettings.Sensors.SingleOrDefault(s => s.Name == sensor.Name);
+                return sensor.Parameters.Select(parameter => $"{sensorSettings?.Alias ?? sensor.Name}.{parameter.Name}: {parameter.Value}");
             });
+        });
 
-            return string.Join(Environment.NewLine, weatherStatuses);
-        }
-        catch
-        {
-            // ignored
-        }
-
-        return Error();
+        return string.Join(Environment.NewLine, weatherStatuses);
     }
 
     public async Task<string> GetPingStatusAsync()
     {
-        try
-        {
-            if (_pingCheckerSettings.Targets.Length == 0)
-                return string.Empty;
+        if (_pingCheckerSettings.Targets.Length == 0)
+            return string.Empty;
 
-            var pingResults = new ConcurrentBag<string>();
-            await Parallel.ForEachAsync(_pingCheckerSettings.Targets, async (target, _) =>
+        var pingResults = new ConcurrentBag<string>();
+        await Parallel.ForEachAsync(_pingCheckerSettings.Targets, async (target, _) =>
             {
                 var sw = Stopwatch.StartNew();
                 var hostStatus = await _pingChecker.PingAsync(target, _pingCheckerSettings.Attempts, _pingCheckerSettings.Timeout);
                 var targetName = target.Description ?? target.Socket;
 
-               pingResults.Add($"{targetName}: {hostStatus} ({sw.ElapsedMilliseconds} ms)");
+                pingResults.Add($"{targetName}: {hostStatus} ({sw.ElapsedMilliseconds} ms)");
             })
             .ConfigureAwait(false);
 
-            return string.Join(Environment.NewLine, pingResults);
-        }
-        catch
-        {
-            // ignored
-        }
-
-        return Error();
+        return string.Join(Environment.NewLine, pingResults);
     }
 
     public Task<string> GetSeqStatusAsync()
-    {
-        try
-        {
-            return _seqEventsInformer.GetCurrentStateAsync(_defaultTimeout);
-        }
-        catch
-        {
-            // ignored
-        }
-
-        return Task.FromResult(Error());
-    }
-
-    private static string Error() => "ERROR!";
+        => _seqEventsInformer.GetCurrentStateAsync(_defaultTimeout);
 }

@@ -21,6 +21,7 @@ using Zs.Home.Application.Features.Hardware;
 using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
+using Zs.Home.Application.Features.Weather;
 using Zs.Home.Application.Models;
 using Zs.Home.Bot.Interaction;
 using Zs.Parser.EspMeteo;
@@ -59,6 +60,7 @@ public sealed class Program
                     .AddDbClient(configuration)
                     .AddUserWatcher(configuration)
                     .AddLinuxHardwareMonitor(configuration)
+                    .AddWeatherAnalyzer(configuration)
                     .AddInteractionServices(configuration)
                     .AddPingChecker(configuration)
                     .AddSingleton<EspMeteoParser>()

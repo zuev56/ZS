@@ -108,6 +108,7 @@ internal sealed class HomeBot : IHostedService
         _scheduler.Jobs.Add(seqEventsInformer.DayEventsInformerJob);
         _scheduler.Jobs.Add(seqEventsInformer.NightEventsInformerJob);
         _scheduler.Jobs.Add(LogProcessStateJob());
+
         _scheduler.SetDefaultExecutionCompletedHandler<string>(Job_ExecutionCompleted);
     }
 
