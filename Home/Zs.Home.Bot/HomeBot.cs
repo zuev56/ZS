@@ -15,7 +15,6 @@ using Zs.Common.Models;
 using Zs.Common.Services.Scheduling;
 using Zs.Common.Utilities;
 using Zs.Home.Application.Features.Hardware;
-using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.Bot.Interaction;
 using Zs.Home.Bot.Interaction.MessagePipeline;
@@ -104,12 +103,10 @@ internal sealed class HomeBot : IHostedService
         // TODO: Вынести из этого проекта
         var hardwareMonitor = _serviceProvider.GetRequiredService<IHardwareMonitor>();
         var seqEventsInformer = _serviceProvider.GetRequiredService<ISeqEventsInformer>();
-        var pingChecker = _serviceProvider.GetRequiredService<IPingChecker>();
 
         _scheduler.Jobs.Add(hardwareMonitor.Job);
         _scheduler.Jobs.Add(seqEventsInformer.DayEventsInformerJob);
         _scheduler.Jobs.Add(seqEventsInformer.NightEventsInformerJob);
-        _scheduler.Jobs.Add(pingChecker.Job);
         _scheduler.Jobs.Add(LogProcessStateJob());
         _scheduler.SetDefaultExecutionCompletedHandler<string>(Job_ExecutionCompleted);
     }

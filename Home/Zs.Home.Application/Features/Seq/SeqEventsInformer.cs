@@ -83,7 +83,7 @@ internal sealed class SeqEventsInformer : ISeqEventsInformer
     {
         var seqEvents = await _seqService.GetLastEventsAsync(_settings.RequestedEventsCount, _settings.ObservedSignals);
         var lastWeek = seqEvents.Count(e => e.Timestamp > DateTime.UtcNow.AddDays(-7));
-        var last24Hours = seqEvents.Count(e => e.Timestamp > DateTime.UtcNow.AddDays(-1));
+        var last24Hours = seqEvents.Count(e => e.Timestamp > DateTime.UtcNow.AddHours(-24));
         var last12Hours = seqEvents.Count(e => e.Timestamp > DateTime.UtcNow.AddHours(-12));
         var last6Hours = seqEvents.Count(e => e.Timestamp > DateTime.UtcNow.AddHours(-6));
         var lastHour = seqEvents.Count(e => e.Timestamp > DateTime.UtcNow.AddHours(-1));

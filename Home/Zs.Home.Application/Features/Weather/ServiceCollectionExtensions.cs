@@ -12,10 +12,13 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddWeatherAnalyzer<TSettings>(this IServiceCollection services, IConfiguration configuration)
         where TSettings : WeatherAnalyzerSettings
     {
+        // TODO: Настройки теперь не нужны для запуска сервиса,
+        //       надо вынести их определение в конкретные места или убрать их валидацию отсюда
         services.AddOptions<TSettings>()
             .Bind(configuration.GetSection(WeatherAnalyzerSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
         services.AddSingleton<EspMeteoParser>();
 
         services.AddSingleton<IWeatherAnalyzer, WeatherAnalyzer>();

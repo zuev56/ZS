@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,7 @@ internal sealed class SystemStatusService
     private readonly EspMeteoParser _espMeteoParser;
     private readonly IPingChecker _pingChecker;
     private readonly ISeqEventsInformer _seqEventsInformer;
+    private readonly PingCheckerSettings _pingCheckerSettings;
     private readonly UserWatcherSettings _userWatcherSettings;
     private readonly WeatherAnalyzerSettings _weatherAnalyzerSettings;
 
@@ -32,6 +34,7 @@ internal sealed class SystemStatusService
         EspMeteoParser espMeteoParser,
         IPingChecker pingChecker,
         ISeqEventsInformer seqEventsInformer,
+        IOptions<PingCheckerSettings> pingCheckerSettings,
         IOptions<UserWatcherSettings> userWatcherSettings,
         IOptions<WeatherAnalyzerSettings> weatherAnalyzerSettings)
     {
@@ -40,6 +43,7 @@ internal sealed class SystemStatusService
         _pingChecker = pingChecker;
         _seqEventsInformer = seqEventsInformer;
         _espMeteoParser = espMeteoParser;
+        _pingCheckerSettings = pingCheckerSettings.Value;
         _userWatcherSettings = userWatcherSettings.Value;
         _weatherAnalyzerSettings = weatherAnalyzerSettings.Value;
     }
@@ -53,7 +57,14 @@ internal sealed class SystemStatusService
         var getPingStatus = GetPingStatusAsync();
         var getSeqStatus = GetSeqStatusAsync();
 
-        await Task.WhenAll(getHardwareStatus, getUsersStatus, getWeatherStatus, getPingStatus, getSeqStatus);
+        try
+        {
+            await Task.WhenAll(getHardwareStatus, getUsersStatus, getWeatherStatus, getPingStatus, getSeqStatus);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
 
         var nl = Environment.NewLine;
         return $"Hardware:{nl}{getHardwareStatus.Result}{nl}{nl}" +
@@ -64,43 +75,113 @@ internal sealed class SystemStatusService
                $"Request time: {sw.ElapsedMilliseconds} ms";
     }
 
-    public Task<string> GetHardwareStatusAsync() => _hardwareMonitor.GetCurrentStateAsync(_defaultTimeout);
+    public Task<string> GetHardwareStatusAsync()
+    {
+        try
+        {
+            return _hardwareMonitor.GetCurrentStateAsync(_defaultTimeout);
+        }
+        catch
+        {
+            // ignored
+        }
+
+        return Task.FromResult(Error());
+    }
 
     public async Task<string> GetUsersStatusAsync(CancellationToken ct = default)
     {
-        var usersWithInactiveTime = await _userWatcher.GetUsersWithInactiveTimeAsync(_userWatcherSettings.TrackedIds, ct);
-
-        var result = new StringBuilder();
-        foreach (var (user, inactiveTime) in usersWithInactiveTime)
+        try
         {
-            result.AppendLine($@"User {user.FirstName} {user.LastName} is not active for {inactiveTime:hh\:mm\:ss}");
+            var usersWithInactiveTime = await _userWatcher.GetUsersWithInactiveTimeAsync(_userWatcherSettings.TrackedIds, ct);
+
+            var result = new StringBuilder();
+            foreach (var (user, inactiveTime) in usersWithInactiveTime)
+            {
+                result.AppendLine($@"User {user.FirstName} {user.LastName} is not active for {inactiveTime:hh\:mm\:ss}");
+            }
+
+            return result.ToString().Trim();
+        }
+        catch
+        {
+            // ignored
         }
 
-        return result.ToString().Trim();
+        return Error();
     }
 
     public async Task<string> GetWeatherStatusAsync(CancellationToken ct = default)
     {
-        var parseTasks = _weatherAnalyzerSettings.Devices
-            .Select(static d => d.Uri)
-            .Select(url => _espMeteoParser.ParseAsync(url, ct));
-
-        var espMeteos =  await Task.WhenAll(parseTasks);
-
-        var weatherStatuses = espMeteos.SelectMany(espMeteo =>
+        try
         {
-            var deviceSettings = _weatherAnalyzerSettings.Devices.Single(s => s.Uri == espMeteo.Uri);
-            return espMeteo.Sensors.SelectMany(sensor =>
-            {
-                var sensorSettings = deviceSettings.Sensors.SingleOrDefault(s => s.Name == sensor.Name);
-                return sensor.Parameters.Select(parameter => $"{sensorSettings?.Alias ?? sensor.Name}.{parameter.Name}: {parameter.Value}");
-            });
-        });
+            var parseTasks = _weatherAnalyzerSettings.Devices
+                .Select(static d => d.Uri)
+                .Select(url => _espMeteoParser.ParseAsync(url, ct));
 
-        return string.Join(Environment.NewLine, weatherStatuses);
+            var espMeteos = await Task.WhenAll(parseTasks);
+
+            var weatherStatuses = espMeteos.SelectMany(espMeteo =>
+            {
+                var deviceSettings = _weatherAnalyzerSettings.Devices.Single(s => s.Uri == espMeteo.Uri);
+                return espMeteo.Sensors.SelectMany(sensor =>
+                {
+                    var sensorSettings = deviceSettings.Sensors.SingleOrDefault(s => s.Name == sensor.Name);
+                    return sensor.Parameters.Select(parameter => $"{sensorSettings?.Alias ?? sensor.Name}.{parameter.Name}: {parameter.Value}");
+                });
+            });
+
+            return string.Join(Environment.NewLine, weatherStatuses);
+        }
+        catch
+        {
+            // ignored
+        }
+
+        return Error();
     }
 
-    public Task<string> GetPingStatusAsync() => _pingChecker.GetCurrentStateAsync(_defaultTimeout);
+    public async Task<string> GetPingStatusAsync()
+    {
+        try
+        {
+            if (_pingCheckerSettings.Targets.Length == 0)
+                return string.Empty;
 
-    public Task<string> GetSeqStatusAsync() => _seqEventsInformer.GetCurrentStateAsync(_defaultTimeout);
+            var pingResults = new ConcurrentBag<string>();
+            await Parallel.ForEachAsync(_pingCheckerSettings.Targets, async (target, _) =>
+            {
+                var sw = Stopwatch.StartNew();
+                var hostStatus = await _pingChecker.PingAsync(target, _pingCheckerSettings.Attempts, _pingCheckerSettings.Timeout);
+                var targetName = target.Description ?? target.Socket;
+
+               pingResults.Add($"{targetName}: {hostStatus} ({sw.ElapsedMilliseconds} ms)");
+            })
+            .ConfigureAwait(false);
+
+            return string.Join(Environment.NewLine, pingResults);
+        }
+        catch
+        {
+            // ignored
+        }
+
+        return Error();
+    }
+
+    public Task<string> GetSeqStatusAsync()
+    {
+        try
+        {
+            return _seqEventsInformer.GetCurrentStateAsync(_defaultTimeout);
+        }
+        catch
+        {
+            // ignored
+        }
+
+        return Task.FromResult(Error());
+    }
+
+    private static string Error() => "ERROR!";
 }
