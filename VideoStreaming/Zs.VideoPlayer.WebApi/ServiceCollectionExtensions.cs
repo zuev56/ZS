@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Nager.VideoStream;
 using Zs.VideoPlayer.WebApi.Features.Videos;
 
 namespace Zs.VideoPlayer.WebApi;
