@@ -12,12 +12,14 @@ using Microsoft.Extensions.Options;
 using Npgsql;
 using Zs.Common.Extensions;
 using Zs.Home.Application.Features.Ping;
+using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.Application.Features.Weather.Data.Models;
 using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Home.Jobs.Hangfire.Hangfire;
+using Zs.Home.Jobs.Hangfire.LogAnalyzer;
 using Zs.Home.Jobs.Hangfire.Notification;
 using Zs.Home.Jobs.Hangfire.Ping;
 using Zs.Home.Jobs.Hangfire.UserWatcher;
@@ -33,6 +35,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddHangfire(builder.Configuration)
     .AddPingChecker<PingCheckerSettings>(builder.Configuration)
+    .AddSeqLogAnalyzer<LogAnalyzerSettings>(builder.Configuration)
     .AddUserWatcher<UserWatcherSettings>(builder.Configuration)
     .AddWeatherAnalyzer<WeatherAnalyzerSettings>(builder.Configuration)
     .AddWeatherRegistrator(builder.Configuration)
@@ -62,6 +65,12 @@ RecurringJob.AddOrUpdate<PingCheckerJob>(
     nameof(PingCheckerJob),
     job => job.ExecuteAsync(CancellationToken.None),
     pingCheckerSettings.CronExpression);
+
+var logAnalyzerSettings = app.Services.GetRequiredService<IOptions<LogAnalyzerSettings>>().Value;
+RecurringJob.AddOrUpdate<LogAnalyzerJob>(
+    nameof(LogAnalyzerJob),
+    job => job.ExecuteAsync(CancellationToken.None),
+    logAnalyzerSettings.CronExpression);
 
 var userWatcherSettings = app.Services.GetRequiredService<IOptions<UserWatcherSettings>>().Value;
 RecurringJob.AddOrUpdate<UserWatcherJob>(

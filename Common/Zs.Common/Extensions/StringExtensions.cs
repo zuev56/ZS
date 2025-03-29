@@ -27,7 +27,7 @@ public static class StringExtensions
 
         return value.Length < maxStringLength
             ? value
-            : value[..(maxStringLength - 3)] + "...";
+            : value[..(maxStringLength - 3)].TrimEnd() + "...";
     }
 
     public static string FirstCharToUpper(this string value)

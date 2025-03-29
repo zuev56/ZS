@@ -56,7 +56,7 @@ public sealed class Program
                     .AddDatabase(configuration)
                     .AddConnectionAnalyzer()
                     .AddTelegramBot(configuration)
-                    .AddSeq(configuration)
+                    .AddSeqLogAnalyzer(configuration)
                     .AddDbClient(configuration)
                     .AddUserWatcher(configuration)
                     .AddLinuxHardwareMonitor(configuration)

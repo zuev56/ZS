@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using Zs.Common.Models;
 using Zs.Home.Application.Features.Hardware;
 using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Seq;
@@ -23,29 +24,32 @@ internal sealed class SystemStatusService
     private readonly IUserWatcher _userWatcher;
     private readonly EspMeteoParser _espMeteoParser;
     private readonly IPingChecker _pingChecker;
-    private readonly ISeqEventsInformer _seqEventsInformer;
+    private readonly ILogAnalyzer _logAnalyzer;
     private readonly PingCheckerSettings _pingCheckerSettings;
     private readonly UserWatcherSettings _userWatcherSettings;
     private readonly WeatherAnalyzerSettings _weatherAnalyzerSettings;
+    private readonly SeqSettings _seqSettings;
 
     public SystemStatusService(
         IHardwareMonitor hardwareMonitor,
         IUserWatcher userWatcher,
         EspMeteoParser espMeteoParser,
         IPingChecker pingChecker,
-        ISeqEventsInformer seqEventsInformer,
+        ILogAnalyzer logAnalyzer,
         IOptions<PingCheckerSettings> pingCheckerSettings,
         IOptions<UserWatcherSettings> userWatcherSettings,
-        IOptions<WeatherAnalyzerSettings> weatherAnalyzerSettings)
+        IOptions<WeatherAnalyzerSettings> weatherAnalyzerSettings,
+        IOptions<SeqSettings> seqSettings)
     {
         _hardwareMonitor = hardwareMonitor;
         _userWatcher = userWatcher;
         _pingChecker = pingChecker;
-        _seqEventsInformer = seqEventsInformer;
+        _logAnalyzer = logAnalyzer;
         _espMeteoParser = espMeteoParser;
         _pingCheckerSettings = pingCheckerSettings.Value;
         _userWatcherSettings = userWatcherSettings.Value;
         _weatherAnalyzerSettings = weatherAnalyzerSettings.Value;
+        _seqSettings = seqSettings.Value;
     }
 
     public async Task<string> GetFullStatus()
@@ -55,7 +59,7 @@ internal sealed class SystemStatusService
         var getUsersStatus = GetUsersStatusAsync();
         var getWeatherStatus = GetWeatherStatusAsync();
         var getPingStatus = GetPingStatusAsync();
-        var getSeqStatus = GetSeqStatusAsync();
+        var getSeqStatus = GetLogStatusAsync();
 
         try
         {
@@ -66,12 +70,12 @@ internal sealed class SystemStatusService
             Console.WriteLine(e);
         }
 
-        var nl = Environment.NewLine;
-        return $"Hardware:{nl}{PrepareResult(getHardwareStatus)}{nl}{nl}" +
-               $"Users:{nl}{PrepareResult(getUsersStatus)}{nl}{nl}" +
-               $"Weather:{nl}{PrepareResult(getWeatherStatus)}{nl}{nl}" +
-               $"Ping:{nl}{PrepareResult(getPingStatus)}{nl}{nl}" +
-               $"Seq:{nl}{PrepareResult(getSeqStatus)}{nl}{nl}" +
+        var line = Environment.NewLine;
+        return $"Hardware:{line}{PrepareResult(getHardwareStatus)}{line}{line}" +
+               $"Users:{line}{PrepareResult(getUsersStatus)}{line}{line}" +
+               $"Weather:{line}{PrepareResult(getWeatherStatus)}{line}{line}" +
+               $"Ping:{line}{PrepareResult(getPingStatus)}{line}{line}" +
+               $"Seq:{line}{PrepareResult(getSeqStatus)}{line}{line}" +
                $"Request time: {sw.ElapsedMilliseconds} ms";
     }
 
@@ -134,6 +138,25 @@ internal sealed class SystemStatusService
         return string.Join(Environment.NewLine, pingResults);
     }
 
-    public Task<string> GetSeqStatusAsync()
-        => _seqEventsInformer.GetCurrentStateAsync(_defaultTimeout);
+    public async Task<string> GetLogStatusAsync(CancellationToken ct = default)
+    {
+        var lastWeekSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.LastWeekUtc, ct);
+        var last24HoursSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.LastDayUtc, ct);
+        var last12HoursSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.Last12HoursUtc, ct);
+        var last6HoursSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.Last6HoursUtc, ct);
+        var lastHourSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.LastHourUtc, ct);
+
+        await Task.WhenAll(lastWeekSummary, last24HoursSummary, last12HoursSummary, last6HoursSummary, lastHourSummary)
+            .ConfigureAwait(false);
+
+        var signForWeek = _seqSettings.MaxEventsPerRequest == lastWeekSummary.Result.Count
+            ? "> " : string.Empty;
+
+        var line = Environment.NewLine;
+        return $"{signForWeek}{lastWeekSummary.Result.Count} events in last week{line}" +
+               $"{last24HoursSummary.Result.Count} events in 24 hours{line}" +
+               $"{last12HoursSummary.Result.Count} events in 12 hours{line}" +
+               $"{last6HoursSummary.Result.Count} events in 6 hours{line}" +
+               $"{lastHourSummary.Result.Count} events in last hour";
+    }
 }

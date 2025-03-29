@@ -98,15 +98,13 @@ internal sealed class HomeBot : IHostedService
 
     private void CreateJobs()
     {
-        // Наверное, тут стоит оставить джоб, который будет проверять работоспособность Hangfire (убеждаться, что там выполняются задачи)
+        // Наверное, тут стоит оставить джоб, который будет проверять работоспособность
+        // Hangfire (убеждаться, что там выполняются задачи)
 
         // TODO: Вынести из этого проекта
         var hardwareMonitor = _serviceProvider.GetRequiredService<IHardwareMonitor>();
-        var seqEventsInformer = _serviceProvider.GetRequiredService<ISeqEventsInformer>();
 
         _scheduler.Jobs.Add(hardwareMonitor.Job);
-        _scheduler.Jobs.Add(seqEventsInformer.DayEventsInformerJob);
-        _scheduler.Jobs.Add(seqEventsInformer.NightEventsInformerJob);
         _scheduler.Jobs.Add(LogProcessStateJob());
 
         _scheduler.SetDefaultExecutionCompletedHandler<string>(Job_ExecutionCompleted);

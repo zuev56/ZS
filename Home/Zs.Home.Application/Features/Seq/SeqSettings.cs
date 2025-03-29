@@ -1,9 +1,8 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Zs.Home.Application.Features.Seq;
 
-public sealed class SeqSettings2 // TODO: remove Zs.Common.Services.Logging.Seq.SeqSettings
+public class SeqSettings
 {
     public const string SectionName = "Seq";
 
@@ -11,11 +10,8 @@ public sealed class SeqSettings2 // TODO: remove Zs.Common.Services.Logging.Seq.
     public string Url { get; init; } = null!;
 
     [Required]
-    public string Token { get; init; } = null!;
+    public string ApiKey { get; init; } = null!;
 
     [Required]
-    public int[] ObservedSignals { get; init; } = Array.Empty<int>();
-
-    [Required]
-    public int RequestedEventsCount { get; init; }
+    public int MaxEventsPerRequest { get; init; }
 }
