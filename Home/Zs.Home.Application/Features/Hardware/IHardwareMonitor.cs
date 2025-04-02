@@ -1,3 +1,9 @@
-﻿namespace Zs.Home.Application.Features.Hardware;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
-public interface IHardwareMonitor : IHasJob, IHasCurrentState;
+namespace Zs.Home.Application.Features.Hardware;
+
+public interface IHardwareMonitor
+{
+    Task<HardwareStatus> GetHardwareStatusAsync(CancellationToken cancellationToken = default);
+}

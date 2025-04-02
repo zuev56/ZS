@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,8 +13,6 @@ using Zs.Common.Extensions;
 using Zs.Common.Models;
 using Zs.Common.Services.Scheduling;
 using Zs.Common.Utilities;
-using Zs.Home.Application.Features.Hardware;
-using Zs.Home.Application.Features.Seq;
 using Zs.Home.Bot.Interaction;
 using Zs.Home.Bot.Interaction.MessagePipeline;
 using static Zs.Home.Application.Features.VkUsers.Constants;
@@ -98,27 +95,16 @@ internal sealed class HomeBot : IHostedService
 
     private void CreateJobs()
     {
-        // Наверное, тут стоит оставить джоб, который будет проверять работоспособность
-        // Hangfire (убеждаться, что там выполняются задачи)
+        var hangfireHealthCheck = new ProgramJob(
+            period: 15.Minutes(),
+            method: () => Task.Run(() => { /* TODO */ }),
+            startUtcDate: DateTime.UtcNow + 1.Minutes(),
+            description: "HangfireHealthCheck"
+        );
 
-        // TODO: Вынести из этого проекта
-        var hardwareMonitor = _serviceProvider.GetRequiredService<IHardwareMonitor>();
-
-        _scheduler.Jobs.Add(hardwareMonitor.Job);
-        _scheduler.Jobs.Add(LogProcessStateJob());
+        _scheduler.Jobs.Add(hangfireHealthCheck);
 
         _scheduler.SetDefaultExecutionCompletedHandler<string>(Job_ExecutionCompleted);
-    }
-
-    private ProgramJob LogProcessStateJob()
-    {
-        var logProcessStateInfo = new ProgramJob(
-            period: 1.Days(),
-            method: () => Task.Run(() => _logger.LogProcessState(Process.GetCurrentProcess())),
-            startUtcDate: DateTime.UtcNow + 1.Minutes(),
-            description: "logProcessStateInfo"
-        );
-        return logProcessStateInfo;
     }
 
     // ReSharper disable once AsyncVoidMethod

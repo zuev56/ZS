@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Zs.Common.Extensions;
+using Zs.Home.Application.Features.Hardware;
 using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
@@ -19,6 +20,7 @@ using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.Application.Features.Weather.Data.Models;
 using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Home.Jobs.Hangfire.Hangfire;
+using Zs.Home.Jobs.Hangfire.HardwareAnalyzer;
 using Zs.Home.Jobs.Hangfire.LogAnalyzer;
 using Zs.Home.Jobs.Hangfire.Notification;
 using Zs.Home.Jobs.Hangfire.Ping;
@@ -34,8 +36,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddHangfire(builder.Configuration)
-    .AddPingChecker<PingCheckerSettings>(builder.Configuration)
     .AddSeqLogAnalyzer<LogAnalyzerSettings>(builder.Configuration)
+    .AddHardwareMonitor<HardwareAnalyzerSettings>(builder.Configuration)
+    .AddPingChecker<PingCheckerSettings>(builder.Configuration)
     .AddUserWatcher<UserWatcherSettings>(builder.Configuration)
     .AddWeatherAnalyzer<WeatherAnalyzerSettings>(builder.Configuration)
     .AddWeatherRegistrator(builder.Configuration)
@@ -60,17 +63,23 @@ app.UseHttpsRedirection();
 app.UseHangfireDashboard();
 
 
-var pingCheckerSettings = app.Services.GetRequiredService<IOptions<PingCheckerSettings>>().Value;
-RecurringJob.AddOrUpdate<PingCheckerJob>(
-    nameof(PingCheckerJob),
-    job => job.ExecuteAsync(CancellationToken.None),
-    pingCheckerSettings.CronExpression);
-
 var logAnalyzerSettings = app.Services.GetRequiredService<IOptions<LogAnalyzerSettings>>().Value;
 RecurringJob.AddOrUpdate<LogAnalyzerJob>(
     nameof(LogAnalyzerJob),
     job => job.ExecuteAsync(CancellationToken.None),
     logAnalyzerSettings.CronExpression);
+
+var hardwareAnalyzerSettings = app.Services.GetRequiredService<IOptions<HardwareAnalyzerSettings>>().Value;
+RecurringJob.AddOrUpdate<HardwareAnalyzerJob>(
+    nameof(HardwareAnalyzerJob),
+    job => job.ExecuteAsync(CancellationToken.None),
+    hardwareAnalyzerSettings.CronExpression);
+
+var pingCheckerSettings = app.Services.GetRequiredService<IOptions<PingCheckerSettings>>().Value;
+RecurringJob.AddOrUpdate<PingCheckerJob>(
+    nameof(PingCheckerJob),
+    job => job.ExecuteAsync(CancellationToken.None),
+    pingCheckerSettings.CronExpression);
 
 var userWatcherSettings = app.Services.GetRequiredService<IOptions<UserWatcherSettings>>().Value;
 RecurringJob.AddOrUpdate<UserWatcherJob>(
@@ -91,6 +100,9 @@ RecurringJob.AddOrUpdate<WeatherRegistratorJob>(
     weatherRegistratorSettings.CronExpression);
 
 // TODO: Нужен джоб-хелсчекер. Если бот будет недоступен, то отправить уведомление на email
+//       Этот же джоб будет проверять все остальные сервисы. А сам Hangfire будет проверяться ботом.
+//       Метод API должен возвращать Zs.Common.Models.HealthStatus и, например,
+//       когда было выполнено последнее действие сервисом (нужно реализовать такой функционал)
 
 app.Run();
 

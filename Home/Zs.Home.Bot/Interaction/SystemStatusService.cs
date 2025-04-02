@@ -82,8 +82,17 @@ internal sealed class SystemStatusService
     private static string PrepareResult(Task<string> task)
         => task.IsCompletedSuccessfully ? task.Result : "ERROR!";
 
-    public Task<string> GetHardwareStatusAsync()
-        => _hardwareMonitor.GetCurrentStateAsync(_defaultTimeout);
+    public async Task<string> GetHardwareStatusAsync()
+    {
+        var hardwareStatus = await _hardwareMonitor.GetHardwareStatusAsync();
+
+        var line = Environment.NewLine;
+        return $"CPU temp: {hardwareStatus.CpuTemperatureC:0.#} \u00b0C{line}" +
+               $"CPU usage: {hardwareStatus.Cpu15MinUsagePercent:0.#} %{line}" +
+               $"RAM usage: {hardwareStatus.MemoryUsagePercent:0.#} %{line}" +
+               $"SSD temp: {hardwareStatus.StorageTemperatureC:0.#} \u00b0C{line}" +
+               $"SSD usage: {hardwareStatus.StorageUsagePercent:0.#} %";
+    }
 
     public async Task<string> GetUsersStatusAsync(CancellationToken ct = default)
     {
@@ -101,7 +110,7 @@ internal sealed class SystemStatusService
     public async Task<string> GetWeatherStatusAsync(CancellationToken ct = default)
     {
         var parseTasks = _weatherAnalyzerSettings.Devices
-            .Select(static d => d.Uri)
+            .Select(d => d.Uri)
             .Select(url => _espMeteoParser.ParseAsync(url, ct));
 
         var espMeteos = await Task.WhenAll(parseTasks);

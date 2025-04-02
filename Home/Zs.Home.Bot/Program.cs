@@ -59,7 +59,7 @@ public sealed class Program
                     .AddSeqLogAnalyzer(configuration)
                     .AddDbClient(configuration)
                     .AddUserWatcher(configuration)
-                    .AddLinuxHardwareMonitor(configuration)
+                    .AddHardwareMonitor(configuration)
                     .AddWeatherAnalyzer(configuration)
                     .AddInteractionServices(configuration)
                     .AddPingChecker(configuration)
