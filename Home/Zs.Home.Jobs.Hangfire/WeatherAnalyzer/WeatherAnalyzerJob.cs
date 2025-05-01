@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
-using Zs.Home.Application.Features.Weather;
 using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Home.Jobs.Hangfire.Notification;
+using Zs.Home.WebApi;
 
 namespace Zs.Home.Jobs.Hangfire.WeatherAnalyzer;
 
@@ -17,20 +18,17 @@ public sealed class WeatherAnalyzerJob
     private static DateTime? _lastAlarmUtcDate = DateTime.UtcNow - 2.Hours();
     private static readonly TimeSpan _alarmInterval = 2.Hours();
 
-    private readonly IWeatherAnalyzer _weatherAnalyzer;
-    private readonly WeatherAnalyzerSettings _settings;
+    private readonly IWeatherClient _weatherClient;
     private readonly Notifier _notifier;
     private readonly ILogger<WeatherAnalyzerJob> _logger;
 
     public WeatherAnalyzerJob(
-        IWeatherAnalyzer weatherAnalyzer,
-        IOptions<WeatherAnalyzerSettings> settings,
+        IWeatherClient weatherClient,
         Notifier notifier,
         ILogger<WeatherAnalyzerJob> logger)
     {
-        _weatherAnalyzer = weatherAnalyzer;
+        _weatherClient = weatherClient;
         _notifier = notifier;
-        _settings = settings.Value;
         _logger = logger;
     }
 
@@ -42,15 +40,43 @@ public sealed class WeatherAnalyzerJob
         var sw = Stopwatch.StartNew();
         _logger.LogJobStart();
 
-        var weatherDeviations = await _weatherAnalyzer.GetDeviationInfosAsync(_settings.Devices, ct);
+        var fullAnalysisResponse = await _weatherClient.GetFullAnalysisAsync(ct);
 
-        await _notifier.SendNotificationAsync(weatherDeviations, ct);
+        var message = GetWeatherDeviationsMessage(fullAnalysisResponse.EspMeteoAnalysisResults);
+
+        await _notifier.SendNotificationAsync(message, ct);
 
         // TODO: Лучше возвращать и затем проверять результат отправки уведомления
-        if (!string.IsNullOrEmpty(weatherDeviations))
+        if (!string.IsNullOrEmpty(message))
             _lastAlarmUtcDate = DateTime.UtcNow;
 
         _logger.LogJobFinish(sw.Elapsed);
     }
 
+    private static string GetWeatherDeviationsMessage(IList<EspMeteoAnalysisResult> espMeteoAnalysisResults)
+    {
+        var message = new StringBuilder();
+        foreach (var analysisResult in espMeteoAnalysisResults)
+        {
+            foreach (var deviation in analysisResult.Deviations)
+            {
+                var parameter = deviation.Parameter;
+                var settings = deviation.Settings;
+                var comparison = deviation.Type switch
+                {
+                    DeviationType.HiHi => $"is higher than {settings.HiHi} {parameter.Unit} ({DeviationType.HiHi})",
+                    DeviationType.Hi => $"is higher than {settings.Hi} {parameter.Unit} ({DeviationType.Hi})",
+                    DeviationType.Lo => $"is lower than {settings.Lo} {parameter.Unit} ({DeviationType.Lo})",
+                    DeviationType.LoLo => $"is lower than {settings.LoLo} {parameter.Unit} ({DeviationType.LoLo})",
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+
+                message.AppendLine(
+                    $"{deviation.SensorAlias ?? deviation.SensorName}" +
+                    $".{parameter.Name}: {parameter.Value} {parameter.Unit} {comparison}");
+            }
+        }
+
+        return message.ToString();
+    }
 }

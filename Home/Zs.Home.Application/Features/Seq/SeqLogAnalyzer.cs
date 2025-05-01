@@ -16,6 +16,7 @@ namespace Zs.Home.Application.Features.Seq;
 
 internal sealed class SeqLogAnalyzer : ILogAnalyzer
 {
+    private const string Unknown = nameof(Unknown);
     private readonly SeqSettings _settings;
 
     public SeqLogAnalyzer(IOptions<SeqSettings> options)
@@ -23,7 +24,7 @@ internal sealed class SeqLogAnalyzer : ILogAnalyzer
         _settings = options.Value;
     }
 
-    public async Task<LogSummary> GetSummaryAsync(DateTimeRange dateTimeRange, CancellationToken ct = default)
+    public async Task<IReadOnlyList<LogEntry>> GetLogEntriesAsync(DateTimeRange dateTimeRange, CancellationToken ct = default)
     {
         var seq = new SeqConnection(_settings.Url, _settings.ApiKey);
 
@@ -34,7 +35,12 @@ internal sealed class SeqLogAnalyzer : ILogAnalyzer
                 cancellationToken: ct)
             .ConfigureAwait(false);
 
-        var logEntries = events.Select(ToLogEntry).ToList();
+        return events.Select(ToLogEntry).ToList();
+    }
+
+    public async Task<LogSummary> GetSummaryAsync(DateTimeRange dateTimeRange, CancellationToken ct = default)
+    {
+        var logEntries = await GetLogEntriesAsync(dateTimeRange, ct).ConfigureAwait(false);
 
         int EntriesCount(string logLevel) => logEntries.Count(e => e.Level.Equals(logLevel, InvariantCultureIgnoreCase));
 
@@ -53,15 +59,17 @@ internal sealed class SeqLogAnalyzer : ILogAnalyzer
 
             ApplicationToCountMap = logEntries
                 .GroupBy(e => e.ApplicationName)
-                .ToDictionary(k => k.Key ?? "Unknown", v => v.Count()),
+                .ToDictionary(k => k.Key ?? Unknown, v => v.Count()),
 
-            // TODO: Научиться группировать сообщения, где различаются только параметры, а остальной текст общий
             MessageInfos = logEntries
-                .GroupBy(e => e.Message)
+                .GroupBy(e => new { ApplicationName = e.ApplicationName ?? Unknown, e.MessagePattern })
                 .Select(g =>
                 {
+                    var count = g.Count();
                     var last = g.MaxBy(e => e.Timestamp)!;
-                    return new LogMessageInfo(g.Key, last.Level, g.Count(), last.Timestamp);
+                    var message = (count > 1 ? "=[SIMILAR MESSAGE]= " : string.Empty)
+                        + logEntries.Last(e => e.MessagePattern == g.Key.MessagePattern).Message;
+                    return new LogMessageInfo(g.Key.ApplicationName, message, last.Level, count, last.Timestamp);
                 })
                 .ToList()
         };
@@ -70,15 +78,20 @@ internal sealed class SeqLogAnalyzer : ILogAnalyzer
     private static LogEntry ToLogEntry(EventEntity seqEvent)
     {
         var messageParts = seqEvent.MessageTemplateTokens.Select(t =>
-        {
-            if (!HasOnlyOnePropertySet(t))
-                return $"[Text: {t.Text}, RawText: {t.RawText}, PropertyName: {t.PropertyName}, FormattedValue: {t.FormattedValue}]";
+            {
+                if (!HasOnlyOnePropertySet(t))
+                    return ($"[Text: {t.Text}, RawText: {t.RawText}, PropertyName: {t.PropertyName}, FormattedValue: {t.FormattedValue}]", null);
 
-            var propertyValue = seqEvent.Properties.SingleOrDefault(p => p.Name == t.PropertyName)?.Value?.ToString() ?? "null";
-            return t.Text ?? propertyValue
-                + (!string.IsNullOrEmpty(t.RawText) ? $"{NewLine}{NewLine}[RawText: {t.RawText}]" : string.Empty)
-                + (!string.IsNullOrEmpty(t.FormattedValue) ? $"{NewLine}{NewLine}[FormattedValue: {t.FormattedValue}]" : string.Empty);
-        });
+                var propertyValue = seqEvent.Properties.SingleOrDefault(p => p.Name == t.PropertyName)?.Value?.ToString();
+                var messagePatternPart = t.Text ?? "X";
+                var messagePart = t.Text ?? propertyValue
+                    + (!string.IsNullOrEmpty(t.RawText) ? $"{NewLine}{NewLine}[RawText: {t.RawText}]" : string.Empty)
+                    + (!string.IsNullOrEmpty(t.FormattedValue) ? $"{NewLine}{NewLine}[FormattedValue: {t.FormattedValue}]" : string.Empty);
+
+                return (messagePart, messagePatternPart);
+            })
+            .ToList();
+
 
         return new LogEntry
         {
@@ -86,7 +99,8 @@ internal sealed class SeqLogAnalyzer : ILogAnalyzer
             Timestamp = DateTime.Parse(seqEvent.Timestamp),
             Level = seqEvent.Level,
             ApplicationName = seqEvent.Properties.SingleOrDefault(p => p.Name == ApplicationName)?.Value.ToString(),
-            Message = string.Join(' ', messageParts)
+            Message = string.Join(' ', messageParts.Select(p => p.messagePart)),
+            MessagePattern = string.Join(' ', messageParts.Select(p => p.messagePatternPart)),
         };
     }
 

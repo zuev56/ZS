@@ -1,37 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Zs.Home.Application.Features.Ping;
 using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Home.Jobs.Hangfire.Notification;
+using Zs.Home.WebApi;
+using IPStatus = System.Net.NetworkInformation.IPStatus;
 
 namespace Zs.Home.Jobs.Hangfire.Ping;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class PingCheckerJob
 {
+    private sealed record Target(string Host, short? Port);
+
     private static readonly Dictionary<Target, IPStatus> _targetToIpStatusMap = new();
-    private readonly IPingChecker _pingChecker;
-    private readonly PingCheckerSettings _settings;
+    private readonly IPingClient _pingClient;
     private readonly Notifier _notifier;
     private readonly ILogger<PingCheckerJob> _logger;
 
-
     public PingCheckerJob(
-        IPingChecker userWatcher,
-        IOptions<PingCheckerSettings> settings,
+        IPingClient pingClient,
         Notifier notifier,
         ILogger<PingCheckerJob> logger)
     {
-        _pingChecker = userWatcher;
+        _pingClient = pingClient;
         _notifier = notifier;
-        _settings = settings.Value;
         _logger = logger;
     }
 
@@ -49,13 +46,13 @@ public sealed class PingCheckerJob
 
     private async Task<string> DetectConnectionLosesAsync(CancellationToken ct)
     {
-        if (_settings.Targets.Length == 0)
-            return string.Empty;
+        var pingResponse = await _pingClient.PingAsync(ct);
 
         var message = new StringBuilder();
-        foreach (var target in _settings.Targets)
+        foreach (var pingResult in pingResponse.PingResults)
         {
-            var ipStatus = await _pingChecker.PingAsync(target, _settings.Attempts, _settings.Timeout);
+            var target = new Target(pingResult.Host, (short?)pingResult.Port);
+            var ipStatus = (IPStatus)pingResult.Status;
 
             if (_targetToIpStatusMap.TryGetValue(target, out var lastIpStatus))
             {
@@ -67,7 +64,7 @@ public sealed class PingCheckerJob
                 if (message.Length > 0)
                     message.Append(Environment.NewLine);
 
-                message.Append($"Connection to '{target.Description}' {(ipStatus == IPStatus.Success ? "restored" : "lost")}.");
+                message.Append($"Connection to '{pingResult.Description}' {(ipStatus == IPStatus.Success ? "restored" : "lost")}.");
             }
             else
                 _targetToIpStatusMap.Add(target, ipStatus);

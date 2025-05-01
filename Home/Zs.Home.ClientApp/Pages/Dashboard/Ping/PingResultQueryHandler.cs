@@ -36,10 +36,10 @@ public sealed class PingResultQueryHandler : IRequestHandler<PingResultQuery, Pi
         var targetClientModels = new ConcurrentBag<Target>();
         await Parallel.ForEachAsync(_settings.Targets, async (target, _) =>
         {
-            var hostStatus = await _pingChecker.PingAsync(target, _settings.Attempts, _settings.Timeout);
+            var pingResult = await _pingChecker.PingAsync(target, _settings.Attempts, _settings.Timeout);
             var targetName = target.Description ?? target.Socket;
 
-            targetClientModels.Add(new Target(targetName, hostStatus == IPStatus.Success));
+            targetClientModels.Add(new Target(targetName, pingResult.Status == IPStatus.Success));
         });
 
         return targetClientModels

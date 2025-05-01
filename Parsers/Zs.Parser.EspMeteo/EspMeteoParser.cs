@@ -14,7 +14,7 @@ using static Zs.Parser.EspMeteo.Models.FaultCodes;
 
 namespace Zs.Parser.EspMeteo;
 
-public class EspMeteoParser
+public sealed class EspMeteoParser
 {
     private const StringSplitOptions SplitOptions = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
 
@@ -31,7 +31,7 @@ public class EspMeteoParser
         return espMeteo;
     }
 
-    protected void EnsureHtmlIsValid(string? espMeteoPageHtml)
+    private void EnsureHtmlIsValid(string? espMeteoPageHtml)
     {
         // TODO: improve validation
         var isValidHtml = espMeteoPageHtml?.Contains("<title>ESPMETEO</title>") == true;
@@ -43,7 +43,7 @@ public class EspMeteoParser
         throw new FaultException(fault);
     }
 
-    protected internal IReadOnlyList<Sensor> GetSensors(string html)
+    internal IReadOnlyList<Sensor> GetSensors(string html)
     {
         var xml = html.RepairXml();
 
@@ -97,7 +97,7 @@ public class EspMeteoParser
             .SelectMany(r => r.Split(". ", SplitOptions)
                 .Select(ToFloatParameter));
 
-        return new Sensor(sensorName, parameters);
+        return new Sensor { Name = sensorName, Parameters = parameters.ToList() };
     }
 
     private static Parameter ToFloatParameter(string parameter)

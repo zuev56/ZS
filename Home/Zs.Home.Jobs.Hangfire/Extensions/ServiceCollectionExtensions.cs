@@ -5,6 +5,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.Jobs.Hangfire.Hangfire;
+using Zs.Home.Jobs.Hangfire.HardwareAnalyzer;
+using Zs.Home.Jobs.Hangfire.LogAnalyzer;
+using Zs.Home.Jobs.Hangfire.Ping;
+using Zs.Home.Jobs.Hangfire.WeatherAnalyzer;
 using Zs.Home.Jobs.Hangfire.WeatherRegistrator;
 using Zs.Parser.EspMeteo;
 using static Zs.Home.Jobs.Hangfire.Constants;
@@ -46,5 +50,30 @@ internal static class ServiceCollectionExtensions
             options => options.UseNpgsql(connectionString));
 
         return services.AddHangfireServer();
+    }
+
+    internal static IServiceCollection AddJobConfigurations(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<LogAnalyzerSettings>()
+            .Bind(configuration.GetSection(LogAnalyzerSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<HardwareAnalyzerSettings>()
+            .Bind(configuration.GetSection(HardwareAnalyzerSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<PingCheckerSettings>()
+            .Bind(configuration.GetSection(PingCheckerSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<WeatherAnalyzerSettings>()
+            .Bind(configuration.GetSection(WeatherAnalyzerSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        return services;
     }
 }

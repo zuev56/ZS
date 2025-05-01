@@ -22,7 +22,7 @@ public sealed class DelayedLogger<TSourceContext> : IDelayedLogger<TSourceContex
     private readonly Timer _timer;
     private readonly ILoggerFactory _loggerFactory;
 
-    public TimeSpan DefaultLogWriteInterval { get; set; } = TimeSpan.FromMinutes(1);
+    public TimeSpan DefaultLogWriteInterval { get; set; } = TimeSpan.FromMinutes(3);
 
     public DelayedLogger(ILoggerFactory loggerFactory, int analyzeIntervalMs = 5)
     {
@@ -44,22 +44,26 @@ public sealed class DelayedLogger<TSourceContext> : IDelayedLogger<TSourceContex
 
         foreach (var messageInfo in expiredMessageInfos)
         {
-            var summaryMessage = $"{messageInfo.Message.LogLevel} '{messageInfo.Message.Text}' "
-                + $"occured {messageInfo.Count} times since {messageInfo.Message.CreateAt.ToLocalTime()}";
+            var logLevel = messageInfo.Message.LogLevel;
+            var text = messageInfo.Message.Text;
+            var count = messageInfo.Count;
+            var date = messageInfo.Message.CreateAt.ToLocalTime();
+
+            var summaryMessage = $"{logLevel} '{text}' occured {{Count}} times since {{Date}}";
 
             var logger = _loggerFactory.CreateLogger(messageInfo.Message.SourceContextType);
 
-            switch (messageInfo.Message.LogLevel)
+            switch (logLevel)
             {
-                case LogLevel.Trace: logger.LogTraceIfNeed(summaryMessage); break;
-                case LogLevel.Debug: logger.LogDebugIfNeed(summaryMessage); break;
-                case LogLevel.Information: logger.LogInformationIfNeed(summaryMessage); break;
-                case LogLevel.Warning: logger.LogWarningIfNeed(summaryMessage); break;
-                case LogLevel.Error: logger.LogErrorIfNeed(summaryMessage); break;
-                case LogLevel.Critical: logger.LogCriticalIfNeed(summaryMessage); break;
+                case LogLevel.Trace: logger.LogTraceIfNeed(summaryMessage, count, date); break;
+                case LogLevel.Debug: logger.LogDebugIfNeed(summaryMessage, count, date); break;
+                case LogLevel.Information: logger.LogInformationIfNeed(summaryMessage, count, date); break;
+                case LogLevel.Warning: logger.LogWarningIfNeed(summaryMessage, count, date); break;
+                case LogLevel.Error: logger.LogErrorIfNeed(summaryMessage, count, date); break;
+                case LogLevel.Critical: logger.LogCriticalIfNeed(summaryMessage, count, date); break;
             }
 
-            _messages = _messages.RemoveAll(m => m.Text == messageInfo.Message.Text);
+            _messages = _messages.RemoveAll(m => m.Text == text);
         }
     }
 

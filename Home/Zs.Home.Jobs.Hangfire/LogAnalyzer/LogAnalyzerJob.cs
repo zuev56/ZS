@@ -5,26 +5,25 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zs.Common.Extensions;
-using Zs.Common.Models;
-using Zs.Home.Application.Features.Seq;
 using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Home.Jobs.Hangfire.Notification;
+using Zs.Home.WebApi;
 
 namespace Zs.Home.Jobs.Hangfire.LogAnalyzer;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class LogAnalyzerJob
 {
-    private readonly ILogAnalyzer _logAnalyzer;
+    private readonly IAppLogMonitorClient _appLogMonitorClient;
     private readonly Notifier _notifier;
     private readonly ILogger<LogAnalyzerJob> _logger;
 
     public LogAnalyzerJob(
-        ILogAnalyzer logAnalyzer,
+        IAppLogMonitorClient appLogMonitorClient,
         Notifier notifier,
         ILogger<LogAnalyzerJob> logger)
     {
-        _logAnalyzer = logAnalyzer;
+        _appLogMonitorClient = appLogMonitorClient;
         _notifier = notifier;
         _logger = logger;
     }
@@ -34,12 +33,9 @@ public sealed class LogAnalyzerJob
         var sw = Stopwatch.StartNew();
         _logger.LogJobStart();
 
-        // TODO: DateTime.UtcNow.AddDays(-?)
-        var dateTimeRange = new DateTimeRange(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow);
+        var response = await _appLogMonitorClient.GetLogSummaryAsync(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow, ct);
 
-        var logSummary = await _logAnalyzer.GetSummaryAsync(dateTimeRange, ct);
-
-        var notification = CreateNotification(logSummary);
+        var notification = CreateNotification(response.LogSummary);
 
         await _notifier.SendNotificationAsync(notification, ct);
 

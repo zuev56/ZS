@@ -27,6 +27,7 @@ using Zs.Home.Jobs.Hangfire.Ping;
 using Zs.Home.Jobs.Hangfire.UserWatcher;
 using Zs.Home.Jobs.Hangfire.WeatherAnalyzer;
 using Zs.Home.Jobs.Hangfire.WeatherRegistrator;
+using Zs.Home.WebApi.Client.Bootstrap;
 using PingCheckerSettings = Zs.Home.Jobs.Hangfire.Ping.PingCheckerSettings;
 using Place = Zs.Home.Application.Features.Weather.Data.Models.Place;
 using UserWatcherSettings = Zs.Home.Jobs.Hangfire.UserWatcher.UserWatcherSettings;
@@ -36,13 +37,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddHangfire(builder.Configuration)
-    .AddSeqLogAnalyzer<LogAnalyzerSettings>(builder.Configuration)
-    .AddHardwareMonitor<HardwareAnalyzerSettings>(builder.Configuration)
-    .AddPingChecker<PingCheckerSettings>(builder.Configuration)
-    .AddUserWatcher<UserWatcherSettings>(builder.Configuration)
-    .AddWeatherAnalyzer<WeatherAnalyzerSettings>(builder.Configuration)
-    .AddWeatherRegistrator(builder.Configuration)
+    .AddHomeClient(builder.Configuration)
     .AddSingleton<Notifier>()
+    .AddJobConfigurations(builder.Configuration)
+    // TODO: Получать настройки из API
+    .AddUserWatcher<UserWatcherSettings>(builder.Configuration)
+    // TODO: Попробовать объединить с настройками из API и брать их оттуда
+    .AddWeatherRegistrator(builder.Configuration)
     .AddEndpointsApiExplorer()
     .AddSwaggerGen();
 

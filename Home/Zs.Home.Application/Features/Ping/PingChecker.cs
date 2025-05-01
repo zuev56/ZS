@@ -17,7 +17,7 @@ internal sealed class PingChecker : IPingChecker
         _logger = logger;
     }
 
-    public async Task<IPStatus> PingAsync(Target target, TimeSpan? timeout)
+    public async Task<PingResult> PingAsync(Target target, TimeSpan? timeout)
     {
         var sw = Stopwatch.StartNew();
 
@@ -32,9 +32,9 @@ internal sealed class PingChecker : IPingChecker
 
             return pingTask switch
             {
-                {IsCompletedSuccessfully: true} => pingTask.Result,
-                {IsCompleted: false, IsFaulted: false} => IPStatus.TimedOut,
-                _ => IPStatus.Unknown
+                {IsCompletedSuccessfully: true} => CreatePingResult(target, pingTask.Result, sw.Elapsed),
+                {IsCompleted: false, IsFaulted: false} => CreatePingResult(target, IPStatus.TimedOut, sw.Elapsed),
+                _ => CreatePingResult(target, IPStatus.Unknown, sw.Elapsed)
             };
         }
 
@@ -42,18 +42,21 @@ internal sealed class PingChecker : IPingChecker
 
         _logger.LogTraceIfNeed("Ping {Target}. Result: {Result}, Elapsed: {Elapsed} ms]", target, result, sw.ElapsedMilliseconds);
 
-        return result;
+        return CreatePingResult(target, result, sw.Elapsed);
     }
 
-    public async Task<IPStatus> PingAsync(Target target, int attempts, TimeSpan timeoutForAttempt)
+    private static PingResult CreatePingResult(Target target, IPStatus status, TimeSpan? time)
+        => new() { Host = target.Host, Port = target.Port, Description = target.Description, Status = status, Time = time };
+
+    public async Task<PingResult> PingAsync(Target target, int attempts, TimeSpan timeoutForAttempt)
     {
         var sw = Stopwatch.StartNew();
         var attempt = 0;
-        var pingStatus = IPStatus.Unknown;
+        var pingResult = new PingResult { Host = target.Host, Port = target.Port, Description = target.Description, Status = IPStatus.Unknown };
         while (attempt++ < attempts)
         {
-            pingStatus = await PingAsync(target, timeoutForAttempt).ConfigureAwait(false);
-            if (pingStatus == IPStatus.Success)
+            pingResult = await PingAsync(target, timeoutForAttempt).ConfigureAwait(false);
+            if (pingResult.Status == IPStatus.Success)
                 break;
 
             await Task.Delay(timeoutForAttempt * attempt);
@@ -61,7 +64,7 @@ internal sealed class PingChecker : IPingChecker
 
         _logger.LogTraceIfNeed("Ping {Target}. Attempts: {Attempts}, Elapsed: {Elapsed} ms]", target,  attempt, sw.ElapsedMilliseconds);
 
-        return pingStatus;
+        return pingResult;
     }
 
     private static async Task<IPStatus> PingAsync(string host, TimeSpan? timeout)

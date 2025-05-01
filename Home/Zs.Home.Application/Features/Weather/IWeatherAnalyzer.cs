@@ -6,5 +6,5 @@ namespace Zs.Home.Application.Features.Weather;
 
 public interface IWeatherAnalyzer
 {
-    Task<string> GetDeviationInfosAsync(IReadOnlyList<DeviceSettings> deviceSettings, CancellationToken ct);
+    Task<IReadOnlyList<EspMeteoAnalysisResult>> AnalyseAsync(IReadOnlyList<DeviceSettings> deviceSettings, CancellationToken ct);
 }

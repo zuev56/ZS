@@ -67,7 +67,7 @@ public sealed class ActivityLogger : IActivityLogger
         catch (Exception ex)
         {
             _logger.LogTraceIfNeed("Code: {Code}, Exception: {ExceptionType}, Message: {ExceptionMessage}", SaveUsersActivityError, ex.GetType().Name, ex.Message);
-            _delayedLogger.LogError(SaveUsersActivityError);
+            _delayedLogger.LogError($"Code: {SaveUsersActivityError}, Exception: {ex.GetType().Name}, Message: {ex.Message}");
 
             await ChangeAllUserActivitiesToUndefinedAsync().ConfigureAwait(false);
 

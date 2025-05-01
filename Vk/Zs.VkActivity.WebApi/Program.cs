@@ -49,8 +49,8 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
         {
             config.PostProcess = document =>
             {
-                document.Info.Title = "VkActivity API";
-                document.Info.Version = "v1";
+                document.Info.Title = context.Configuration[AppSettings.Swagger.ApiTitle];
+                document.Info.Version = context.Configuration[AppSettings.Swagger.ApiVersion];
             };
         });
 
@@ -97,10 +97,14 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
 
         app.UseForwardedHeaders();
         app.UseSwagger();
-        app.UseSwaggerUI(c => c.SwaggerEndpoint(
-            context.Configuration[AppSettings.Swagger.EndpointUrl],
-            context.Configuration[AppSettings.Swagger.ApiTitle] + " " + context.Configuration[AppSettings.Swagger.ApiVersion])
-        );
+        app.UseSwaggerUI(options =>
+        {
+            options.EnableTryItOutByDefault();
+            options.DisplayRequestDuration();
+            options.SwaggerEndpoint(
+                context.Configuration[AppSettings.Swagger.EndpointUrl],
+                context.Configuration[AppSettings.Swagger.ApiTitle] + " " + context.Configuration[AppSettings.Swagger.ApiVersion]);
+        });
         app.UseOpenApi();
 
         app.UseRouting();

@@ -13,4 +13,4 @@ public sealed record LogSummary
     public required IReadOnlyList<LogMessageInfo> MessageInfos { get; init; }
 }
 
-public sealed record LogMessageInfo(string Message, string Level, int Count, DateTime LastTimestamp);
+public sealed record LogMessageInfo(string ApplicationName, string Message, string Level, int Count, DateTime LastTimestamp);

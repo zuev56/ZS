@@ -17,6 +17,12 @@ public sealed class DateTimeRange
     {
         End = end;
     }
+
+    public void Deconstruct(out DateTime start, out DateTime end)
+    {
+        start = Start;
+        end = End;
+    }
 }
 
 public static class DateTimeRangeExtensions

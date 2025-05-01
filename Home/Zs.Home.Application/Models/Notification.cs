@@ -3,4 +3,4 @@
 /// <summary>
 /// Notification from services
 /// </summary>
-public record Notification(string Text);
+public sealed record Notification(string Text);

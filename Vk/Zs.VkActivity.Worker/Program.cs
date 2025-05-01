@@ -57,7 +57,7 @@ static void ConfigureServices(HostBuilderContext context, IServiceCollection ser
     using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>()!.CreateScope())
     {
         var dbContext = serviceScope.ServiceProvider.GetRequiredService<VkActivityContext>();
-        dbContext.Database.Migrate();
+        dbContext.Database.EnsureCreated();
     }
 
     services.AddSerilog();

@@ -54,7 +54,10 @@ public sealed class UserWatcherJob
                 continue;
 
             var userName = $"{user.FirstName} {user.LastName}";
-            result.AppendLine($@"User {userName} is not active for {inactiveTime:hh\:mm\:ss}");
+            var inactiveTimeString = inactiveTime.TotalDays > 0
+                ? $@"{(int)inactiveTime.TotalDays} {(inactiveTime.TotalDays > 2 ? "days" : "day")} {inactiveTime:hh\:mm}"
+                : $@"{inactiveTime:hh\:mm\:ss}";
+            result.AppendLine($"{userName} is not active for {inactiveTimeString}");
         }
 
         return result.ToString().Trim();

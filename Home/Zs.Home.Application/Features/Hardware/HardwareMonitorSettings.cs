@@ -11,6 +11,9 @@ public class HardwareMonitorSettings
 
     [Required]
     public required Scripts Scripts { get; init; }
+
+    [Required]
+    public required Limits Limits { get; init; }
 }
 
 public sealed record Scripts
@@ -31,4 +34,22 @@ public sealed record Scripts
     public required string StorageAmountGb { get; init; }
     [Required]
     public required string StorageAvailableGb { get; init; }
+}
+
+public sealed record Limits
+{
+    [Required]
+    public float CpuUsagePercent { get; init; }
+
+    [Required]
+    public float CpuTemperatureC { get; init; }
+
+    [Required]
+    public float MemoryUsagePercent { get; init; }
+
+    [Required]
+    public float StorageTemperatureC { get; init; }
+
+    [Required]
+    public float StorageUsagePercent { get; init; }
 }
