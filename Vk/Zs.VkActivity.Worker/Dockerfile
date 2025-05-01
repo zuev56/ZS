@@ -3,11 +3,11 @@
 # sudo docker buildx build --platform linux/arm64 --no-cache -t zs-vk-activity-worker -f Vk/Zs.VkActivity.Worker/Dockerfile .
 # docker run --name vk-activity-worker --restart unless-stopped -it zs-vk-activity-worker
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
 USER $APP_UID
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Vk/Zs.VkActivity.Worker/Zs.VkActivity.Worker.csproj", "Vk/Zs.VkActivity.Worker/"]
