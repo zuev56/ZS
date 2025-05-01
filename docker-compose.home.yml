@@ -1,0 +1,34 @@
+﻿services:
+
+  bot:
+    build:
+      context: ./Zs.Home.Bot
+    restart: always
+    ports:
+      - "6022:80"
+
+  clientapp:
+    image: zs.home.clientapp
+    build:
+      context: .
+      dockerfile: Home/Zs.Home.ClientApp/Dockerfile
+
+  jobs:
+    image: zs.home.jobs
+    build:
+      context: .
+      dockerfile: Home/Zs.Home.Jobs/Dockerfile
+    ports:
+      - "6023:80"
+    restart: always
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"
+
+  client-app:
+    build:
+      context: ./Zs.Home.ClientApp
+    ports:
+      - "6021:80"
+    restart: always
+    volumes:
+      - "/opt/configs:/opt/configs/:ro" # for external configurations

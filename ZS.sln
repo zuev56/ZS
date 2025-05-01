@@ -55,9 +55,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Parser.EspMeteo.UnitTests", "Parsers\Zs.Parser.EspMeteo.UnitTests\Zs.Parser.EspMeteo.UnitTests.csproj", "{90F81649-3810-4968-92B7-2A91D278F9B1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VideoStreaming", "VideoStreaming", "{84844DC8-0C51-4436-B8A3-1EFC2058C14D}"
-	ProjectSection(SolutionItems) = preProject
-		VideoStreaming\docker-compose.yml = VideoStreaming\docker-compose.yml
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.RtspToHlsConverter", "VideoStreaming\Zs.RtspToHlsConverter\Zs.RtspToHlsConverter.csproj", "{5236DEA9-7A79-47CE-98BD-D1C1F81BAC9E}"
 EndProject
@@ -87,8 +84,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Home.Application", "Home
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{34D42050-A376-4010-BE02-552A2A137350}"
 	ProjectSection(SolutionItems) = preProject
-		docker-compose.yml = docker-compose.yml
 		docker-compose.vk.yml = docker-compose.vk.yml
+		docker-compose.home.yml = docker-compose.home.yml
+		docker-compose.video-streaming.yml = docker-compose.video-streaming.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Home.Jobs.Quartz", "Home\Zs.Home.Jobs.Quartz\Zs.Home.Jobs.Quartz.csproj", "{3CB09435-5413-49D8-98E5-BF43110F8293}"

@@ -31,3 +31,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Zs.VkActivity.WebApi.dll"]
+ # command-line args (global configuration path)
+CMD ["/opt/configs/"]

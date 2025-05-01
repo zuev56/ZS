@@ -1,0 +1,28 @@
+﻿services:
+
+  rtsp-to-hls-converter:
+    build:
+      context: ./Zs.RtspToHlsConverter
+    restart: always
+    volumes:
+      - "/var/lib/videos:/var/lib/videos"
+
+  web-api:
+    build:
+      context: ./Zs.VideoPlayer.WebApi
+    ports:
+      - "6001:80"
+    depends_on:
+      - rtsp-to-hls-converter
+    restart: always
+    volumes:
+      - "/var/lib/videos:/var/lib/videos"
+
+  client-app:
+    build:
+      context: ./Zs.VideoPlayer.ClientApp
+    ports:
+      - "6002:80"
+    depends_on:
+      - web-api
+    restart: always
