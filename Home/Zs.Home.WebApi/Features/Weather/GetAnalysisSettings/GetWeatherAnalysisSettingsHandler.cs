@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Options;
-using Zs.Home.Application.Features.Weather;
 
 namespace Zs.Home.WebApi.Features.Weather.GetAnalysisSettings;
 

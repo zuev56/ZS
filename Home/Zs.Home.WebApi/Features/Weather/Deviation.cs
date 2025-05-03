@@ -1,7 +1,6 @@
-﻿using Zs.Home.Application.Models;
-using Zs.Parser.EspMeteo.Models;
+﻿using Zs.Parser.EspMeteo.Models;
 
-namespace Zs.Home.Application.Features.Weather;
+namespace Zs.Home.WebApi.Features.Weather;
 
 /// <summary>
 /// Содержит информацию об отклонении значений от нормы

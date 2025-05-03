@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Zs.Home.Application.Features.Weather;
+﻿namespace Zs.Home.WebApi.Features.Weather;
 
 public interface IWeatherAnalyzer
 {

@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Parsers\Zs.Parser.EspMeteo\Zs.Parser.EspMeteo.csproj" />
       <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
     </ItemGroup>
 

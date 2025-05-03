@@ -1,9 +1,9 @@
 using System.Reflection;
 using Zs.Home.Application.Features.Hardware;
 using Zs.Home.Application.Features.Seq;
-using Zs.Home.Application.Features.Weather;
 using Zs.Home.WebApi;
 using Zs.Home.WebApi.Features.Ping;
+using Zs.Home.WebApi.Features.Weather;
 
 var builder = WebApplication.CreateBuilder(args);
 

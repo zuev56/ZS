@@ -46,7 +46,7 @@ public sealed class PingCheckerJob
 
     private async Task<string> DetectConnectionLosesAsync(CancellationToken ct)
     {
-        var pingResponse = await _pingClient.PingAsync(ct);
+        var pingResponse = await _pingClient.PingAllAsync(ct);
 
         var message = new StringBuilder();
         foreach (var pingResult in pingResponse.PingResults)

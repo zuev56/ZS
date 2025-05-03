@@ -1,12 +1,7 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Zs.Parser.EspMeteo;
 using Zs.Parser.EspMeteo.Models;
 
-namespace Zs.Home.Application.Features.Weather;
+namespace Zs.Home.WebApi.Features.Weather;
 
 internal sealed class WeatherAnalyzer : IWeatherAnalyzer
 {

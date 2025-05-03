@@ -14,6 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Parsers\Zs.Parser.EspMeteo\Zs.Parser.EspMeteo.csproj" />
       <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
       <ProjectReference Include="..\Zs.Home.WebApi.Client\Zs.Home.WebApi.Client.csproj" />
     </ItemGroup>

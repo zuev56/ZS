@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Zs.Home.Application.Models;
-using Zs.Parser.EspMeteo.Models;
+﻿using Zs.Parser.EspMeteo.Models;
 
-namespace Zs.Home.Application.Features.Weather;
+namespace Zs.Home.WebApi.Features.Weather;
 
 /// <summary>
 /// Содержит все данные ESP Meteo + соответствующие настройки + отклонения.

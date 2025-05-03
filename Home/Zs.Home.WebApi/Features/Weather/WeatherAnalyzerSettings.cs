@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Zs.Home.Application.Features.Weather;
+namespace Zs.Home.WebApi.Features.Weather;
 
-public class WeatherAnalyzerSettings
+public sealed class WeatherAnalyzerSettings
 {
     public const string SectionName = "WeatherAnalyzer";
+
     [Required]
     public DeviceSettings[] Devices { get; init; } = [];
 }

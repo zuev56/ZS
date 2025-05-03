@@ -9,9 +9,7 @@ using Zs.Common.Models;
 using Zs.Home.Application.Features.Hardware;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
-using Zs.Home.Application.Features.Weather;
 using Zs.Home.WebApi;
-using Zs.Parser.EspMeteo;
 
 namespace Zs.Home.Bot.Interaction;
 
@@ -21,30 +19,27 @@ internal sealed class SystemStatusService
 
     private readonly IHardwareMonitor _hardwareMonitor;
     private readonly IUserWatcher _userWatcher;
-    private readonly EspMeteoParser _espMeteoParser;
     private readonly IPingClient _pingClient;
+    private readonly IWeatherClient _weatherClient;
     private readonly ILogAnalyzer _logAnalyzer;
     private readonly UserWatcherSettings _userWatcherSettings;
-    private readonly WeatherAnalyzerSettings _weatherAnalyzerSettings;
     private readonly SeqSettings _seqSettings;
 
     public SystemStatusService(
         IHardwareMonitor hardwareMonitor,
         IUserWatcher userWatcher,
-        EspMeteoParser espMeteoParser,
         IPingClient pingClient,
+        IWeatherClient weatherClient,
         ILogAnalyzer logAnalyzer,
         IOptions<UserWatcherSettings> userWatcherSettings,
-        IOptions<WeatherAnalyzerSettings> weatherAnalyzerSettings,
         IOptions<SeqSettings> seqSettings)
     {
         _hardwareMonitor = hardwareMonitor;
         _userWatcher = userWatcher;
         _pingClient = pingClient;
+        _weatherClient = weatherClient;
         _logAnalyzer = logAnalyzer;
-        _espMeteoParser = espMeteoParser;
         _userWatcherSettings = userWatcherSettings.Value;
-        _weatherAnalyzerSettings = weatherAnalyzerSettings.Value;
         _seqSettings = seqSettings.Value;
     }
 
@@ -105,15 +100,12 @@ internal sealed class SystemStatusService
 
     public async Task<string> GetWeatherStatusAsync(CancellationToken ct = default)
     {
-        var parseTasks = _weatherAnalyzerSettings.Devices
-            .Select(d => d.Uri)
-            .Select(url => _espMeteoParser.ParseAsync(url, ct));
+        var weatherAnalysisResponse = await _weatherClient.GetCurrentAsync(ct);
+        var settingsResponse = await _weatherClient.GetAllSettingsAsync(ct);
 
-        var espMeteos = await Task.WhenAll(parseTasks);
-
-        var weatherStatuses = espMeteos.SelectMany(espMeteo =>
+        var weatherStatuses = weatherAnalysisResponse.Devices.SelectMany(espMeteo =>
         {
-            var deviceSettings = _weatherAnalyzerSettings.Devices.Single(s => s.Uri == espMeteo.Uri);
+            var deviceSettings = settingsResponse.DeviceSettings.Single(s => s.Uri.ToString() == espMeteo.Uri);
             return espMeteo.Sensors.SelectMany(sensor =>
             {
                 var sensorSettings = deviceSettings.Sensors.SingleOrDefault(s => s.Name == sensor.Name);
@@ -126,7 +118,7 @@ internal sealed class SystemStatusService
 
     public async Task<string> GetPingStatusAsync()
     {
-        var pingAllResponse = await _pingClient.PingAsync();
+        var pingAllResponse = await _pingClient.PingAllAsync();
 
         var pingResults = pingAllResponse.PingResults
             .Select(r =>

@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Options;
-using Zs.Home.Application.Features.Weather;
 using Zs.Parser.EspMeteo;
 
 namespace Zs.Home.WebApi.Features.Weather.GetCurrent;
@@ -19,10 +18,11 @@ public sealed class GetCurrentWeatherHandler : IRequestHandler<GetCurrentWeather
     public async Task<GetCurrentWeatherResponse> Handle(GetCurrentWeatherRequest request, CancellationToken cancellationToken)
     {
         var urls = request.DeviceUri != null
-                   ? [request.DeviceUri]
-                   : _settings.Devices.Select(d => d.Uri);
+            ? [request.DeviceUri]
+            : _settings.Devices.Select(d => d.Uri);
 
-        var espMeteos = await Task.WhenAll(urls.Select(url => _espMeteoParser.ParseAsync(url, cancellationToken)));
+        var espMeteos = await Task
+            .WhenAll(urls.Select(url => _espMeteoParser.ParseAsync(url, cancellationToken)));
 
         return new GetCurrentWeatherResponse(espMeteos);
     }

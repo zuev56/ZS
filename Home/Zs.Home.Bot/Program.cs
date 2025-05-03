@@ -20,10 +20,9 @@ using Zs.Common.Services.Scheduling;
 using Zs.Home.Application.Features.Hardware;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
-using Zs.Home.Application.Features.Weather;
 using Zs.Home.Application.Models;
 using Zs.Home.Bot.Interaction;
-using Zs.Parser.EspMeteo;
+using Zs.Home.WebApi.Client.Bootstrap;
 
 namespace Zs.Home.Bot;
 
@@ -57,11 +56,10 @@ public sealed class Program
                     .AddTelegramBot(configuration)
                     .AddSeqLogAnalyzer(configuration)
                     .AddDbClient(configuration)
+                    .AddHomeClient(configuration)
                     .AddUserWatcher(configuration)
                     .AddHardwareMonitor(configuration)
-                    .AddWeatherAnalyzer(configuration)
                     .AddInteractionServices(configuration)
-                    .AddSingleton<EspMeteoParser>()
                     .AddSingleton<IScheduler, Scheduler>()
                     .AddSerilog(loggerConfig => loggerConfig.ReadFrom.Configuration(configuration))
                     .AddHostedService<HomeBot>();

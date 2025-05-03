@@ -18,7 +18,7 @@ public sealed class PingResultQueryHandler : IRequestHandler<PingResultQuery, Pi
 
     public async Task<PingResult> Handle(PingResultQuery request, CancellationToken cancellationToken)
     {
-        var pingResponse = await _pingClient.PingAsync(cancellationToken);
+        var pingResponse = await _pingClient.PingAllAsync(cancellationToken);
         var targets = pingResponse.PingResults
             .Select(r =>
             {

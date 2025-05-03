@@ -18,13 +18,24 @@ public class WeatherController : ControllerBase
     }
 
     /// <summary>
-    /// Get the current weather.
+    /// Get the current weather from all devices.
     /// </summary>
     [HttpGet("current")]
     [ProducesResponseType<GetCurrentWeatherResponse>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetCurrent(string? deviceUri, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCurrent(CancellationToken cancellationToken)
     {
-        if (!IsEmptyOrCorrectUri(deviceUri))
+        var response = await _mediator.Send(new GetCurrentWeatherRequest(), cancellationToken);
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get the current weather from specific device.
+    /// </summary>
+    [HttpGet("current/{deviceUri}")]
+    [ProducesResponseType<GetCurrentWeatherResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCurrentFrom(string deviceUri, CancellationToken cancellationToken)
+    {
+        if (!Uri.IsWellFormedUriString(deviceUri, UriKind.Absolute))
             return BadRequest();
 
         var response = await _mediator.Send(new GetCurrentWeatherRequest(deviceUri), cancellationToken);
