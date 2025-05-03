@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using static System.StringComparison;
 
 namespace Zs.Common.Extensions;
@@ -58,4 +59,33 @@ public static class ConfigurationExtensions
             .Select(s => ((FileConfigurationSource)s).Path)
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .ToList()!;
+
+    public static string ToFormattedString(this IConfiguration configuration)
+    {
+        var sb = new StringBuilder();
+        BuildConfigurationTree(sb, configuration, string.Empty);
+        return sb.ToString();
+
+        static void BuildConfigurationTree(StringBuilder sb, IConfiguration config, string indent)
+        {
+            foreach (var child in config.GetChildren())
+            {
+                sb.Append(indent);
+                sb.Append(child.Key);
+
+                var value = child.Value;
+                if (value != null)
+                {
+                    sb.Append(" = ");
+                    sb.AppendLine(value);
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+
+                BuildConfigurationTree(sb, child, indent + "  ");
+            }
+        }
+    }
 }

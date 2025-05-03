@@ -5,7 +5,7 @@ using Zs.Common.Models;
 namespace Zs.Home.WebApi.Features;
 
 [Route("api/[controller]")]
-public sealed class HealthCheckController : Controller
+public sealed class HealthCheckController : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetHealthInfo()

@@ -6,17 +6,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "Dashboard",
-      "applicationUrl": "http://localhost:5106",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "https": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "launchUrl": "Dashboard",
-      "applicationUrl": "https://localhost:7275;http://localhost:5106",
+      "applicationUrl": "http://localhost:6021",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

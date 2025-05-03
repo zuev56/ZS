@@ -34,9 +34,9 @@ app.UseSwaggerUI(options =>
 {
     options.EnableTryItOutByDefault();
     options.DisplayRequestDuration();
-    //options.SwaggerEndpoint(
-    //    builder.Configuration[SwaggerSettings.EndpointUrl],
-    //    builder.Configuration[SwaggerSettings.ApiTitle] + " " + builder.Configuration[SwaggerSettings.ApiVersion]);
+    options.SwaggerEndpoint(
+        builder.Configuration[SwaggerSettings.EndpointUrl],
+        builder.Configuration[SwaggerSettings.ApiTitle] + " " + builder.Configuration[SwaggerSettings.ApiVersion]);
 });
 app.UseOpenApi();
 app.UseRouting();
