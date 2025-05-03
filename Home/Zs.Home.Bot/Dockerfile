@@ -36,6 +36,8 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Zs.Home.Bot.dll"]
+ # command-line args (global configuration path)
+CMD ["/opt/configs/"]
 
 # install iputils-ping, lm-sensors
 USER root

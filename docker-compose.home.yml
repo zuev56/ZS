@@ -1,34 +1,60 @@
-﻿services:
+﻿name: "home"
+services:
+
+  web-api:
+    image: home.web-api
+    container_name: home-api
+    build:
+      context: .
+      dockerfile: Home/Zs.Home.WebApi/Dockerfile
+      platforms:
+        - linux/arm64
+    ports:
+      - "6024:80"
+    restart: unless-stopped
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"
 
   bot:
+    image: home.bot
+    container_name: home-bot
     build:
-      context: ./Zs.Home.Bot
-    restart: always
+      context: .
+      dockerfile: Home/Zs.Home.Bot/Dockerfile
+      platforms:
+        - linux/arm64
     ports:
       - "6022:80"
-
-  clientapp:
-    image: zs.home.clientapp
-    build:
-      context: .
-      dockerfile: Home/Zs.Home.ClientApp/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"
 
   jobs:
-    image: zs.home.jobs
+    image: home.jobs
+    container_name: home-jobs
     build:
       context: .
-      dockerfile: Home/Zs.Home.Jobs/Dockerfile
+      dockerfile: Home/Zs.Home.Jobs.Hangfire/Dockerfile
+      platforms:
+        - linux/arm64
     ports:
       - "6023:80"
-    restart: always
+    depends_on:
+      - web-api
+    restart: unless-stopped
     volumes:
       - "/opt/configs:/opt/configs/:ro"
 
   client-app:
+    image: home.client-app
+    container_name: home-client-app
     build:
-      context: ./Zs.Home.ClientApp
+      context: .
+      dockerfile: Home/Zs.Home.ClientApp/Dockerfile
+      platforms:
+        - linux/arm64
     ports:
       - "6021:80"
-    restart: always
+    restart: unless-stopped
     volumes:
-      - "/opt/configs:/opt/configs/:ro" # for external configurations
+      - "/opt/configs:/opt/configs/:ro"
