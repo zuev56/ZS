@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Zs.Home.Application.Features.Ping;
+using Zs.Home.WebApi.Features.Ping.Models;
 
 namespace Zs.Home.WebApi.Features.Ping;
 
@@ -16,11 +16,11 @@ public class PingController : ControllerBase
     }
 
     /// <summary>
-    /// Ping
+    /// Ping all hosts from API settings
     /// </summary>
     [HttpGet]
     [ProducesResponseType<PingResponse>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> PingAsync(CancellationToken cancellationToken)
+    public async Task<IActionResult> PingAllAsync(CancellationToken cancellationToken)
     {
         var response = await _mediator.Send(new PingRequest(), cancellationToken);
         return Ok(response);

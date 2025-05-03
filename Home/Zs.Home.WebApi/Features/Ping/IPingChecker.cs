@@ -1,7 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Zs.Home.WebApi.Features.Ping.Models;
 
-namespace Zs.Home.Application.Features.Ping;
+namespace Zs.Home.WebApi.Features.Ping;
 
 public interface IPingChecker
 {

@@ -1,7 +1,6 @@
-﻿using System;
-using System.Net.NetworkInformation;
+﻿using System.Net.NetworkInformation;
 
-namespace Zs.Home.Application.Features.Ping;
+namespace Zs.Home.WebApi.Features.Ping.Models;
 
 public sealed record PingResult
 {

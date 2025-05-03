@@ -1,6 +1,4 @@
-﻿using Zs.Home.Application.Features.Ping;
-
-namespace Zs.Home.WebApi.Features.Ping;
+﻿namespace Zs.Home.WebApi.Features.Ping.Models;
 
 public sealed record PingResponse(IReadOnlyList<PingResult> PingResults)
 {

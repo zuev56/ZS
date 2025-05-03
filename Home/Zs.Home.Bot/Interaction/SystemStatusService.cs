@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -8,10 +7,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Zs.Common.Models;
 using Zs.Home.Application.Features.Hardware;
-using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather;
+using Zs.Home.WebApi;
 using Zs.Parser.EspMeteo;
 
 namespace Zs.Home.Bot.Interaction;
@@ -23,9 +22,8 @@ internal sealed class SystemStatusService
     private readonly IHardwareMonitor _hardwareMonitor;
     private readonly IUserWatcher _userWatcher;
     private readonly EspMeteoParser _espMeteoParser;
-    private readonly IPingChecker _pingChecker;
+    private readonly IPingClient _pingClient;
     private readonly ILogAnalyzer _logAnalyzer;
-    private readonly PingCheckerSettings _pingCheckerSettings;
     private readonly UserWatcherSettings _userWatcherSettings;
     private readonly WeatherAnalyzerSettings _weatherAnalyzerSettings;
     private readonly SeqSettings _seqSettings;
@@ -34,19 +32,17 @@ internal sealed class SystemStatusService
         IHardwareMonitor hardwareMonitor,
         IUserWatcher userWatcher,
         EspMeteoParser espMeteoParser,
-        IPingChecker pingChecker,
+        IPingClient pingClient,
         ILogAnalyzer logAnalyzer,
-        IOptions<PingCheckerSettings> pingCheckerSettings,
         IOptions<UserWatcherSettings> userWatcherSettings,
         IOptions<WeatherAnalyzerSettings> weatherAnalyzerSettings,
         IOptions<SeqSettings> seqSettings)
     {
         _hardwareMonitor = hardwareMonitor;
         _userWatcher = userWatcher;
-        _pingChecker = pingChecker;
+        _pingClient = pingClient;
         _logAnalyzer = logAnalyzer;
         _espMeteoParser = espMeteoParser;
-        _pingCheckerSettings = pingCheckerSettings.Value;
         _userWatcherSettings = userWatcherSettings.Value;
         _weatherAnalyzerSettings = weatherAnalyzerSettings.Value;
         _seqSettings = seqSettings.Value;
@@ -130,19 +126,14 @@ internal sealed class SystemStatusService
 
     public async Task<string> GetPingStatusAsync()
     {
-        if (_pingCheckerSettings.Targets.Length == 0)
-            return string.Empty;
+        var pingAllResponse = await _pingClient.PingAsync();
 
-        var pingResults = new ConcurrentBag<string>();
-        await Parallel.ForEachAsync(_pingCheckerSettings.Targets, async (target, _) =>
+        var pingResults = pingAllResponse.PingResults
+            .Select(r =>
             {
-                var sw = Stopwatch.StartNew();
-                var hostStatus = await _pingChecker.PingAsync(target, _pingCheckerSettings.Attempts, _pingCheckerSettings.Timeout);
-                var targetName = target.Description ?? target.Socket;
-
-                pingResults.Add($"{targetName}: {hostStatus} ({sw.ElapsedMilliseconds} ms)");
-            })
-            .ConfigureAwait(false);
+                var targetName = r.Description ?? r.Host + (r.Port.HasValue ? $":{r.Port}" : string.Empty);
+                return $"{targetName}: {r.Status} {(r.Time.HasValue ? $"({r.Time.Value.Milliseconds} ms)" : string.Empty)}";
+            });
 
         return string.Join(Environment.NewLine, pingResults);
     }

@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Options;
-using Zs.Home.Application.Features.Ping;
+using Zs.Home.WebApi.Features.Ping.Models;
 
 namespace Zs.Home.WebApi.Features.Ping;
 

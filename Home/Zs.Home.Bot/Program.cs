@@ -18,7 +18,6 @@ using Zs.Common.Models;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Scheduling;
 using Zs.Home.Application.Features.Hardware;
-using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather;
@@ -62,7 +61,6 @@ public sealed class Program
                     .AddHardwareMonitor(configuration)
                     .AddWeatherAnalyzer(configuration)
                     .AddInteractionServices(configuration)
-                    .AddPingChecker(configuration)
                     .AddSingleton<EspMeteoParser>()
                     .AddSingleton<IScheduler, Scheduler>()
                     .AddSerilog(loggerConfig => loggerConfig.ReadFrom.Configuration(configuration))

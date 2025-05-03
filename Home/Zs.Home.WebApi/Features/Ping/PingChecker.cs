@@ -1,12 +1,10 @@
-using System;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Zs.Common.Extensions;
+using Zs.Home.WebApi.Features.Ping.Models;
 
-namespace Zs.Home.Application.Features.Ping;
+namespace Zs.Home.WebApi.Features.Ping;
 
 internal sealed class PingChecker : IPingChecker
 {
