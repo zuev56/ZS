@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -82,10 +83,21 @@ public static class LoggerExtensions
         logger.LogError(exception, message, args);
     }
 
+    public static void LogErrorIfNeed(this ILogger logger, Exception exception)
+        => logger.LogErrorIfNeed(exception, null);
+
     public static void LogCriticalIfNeed(this ILogger logger, string? message, params object?[] args)
     {
         if (logger.IsEnabled(LogLevel.Critical))
             logger.LogCritical(message, args);
     }
+
+    public static void TraceMethod(this ILogger logger,
+        [CallerFilePath] string? callerFilePath = null,
+        [CallerMemberName] string? callerName = null)
+    {
+        logger.LogTraceIfNeed($"{callerFilePath}.{callerName}");
+    }
+
     #endregion
 }
