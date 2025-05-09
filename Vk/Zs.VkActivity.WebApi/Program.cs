@@ -30,10 +30,15 @@ using static Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders;
 [assembly: InternalsVisibleTo("Api.IntegrationTests")]
 
 var host = Host.CreateDefaultBuilder(args)
+    .UseSerilog()
     .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
     .ConfigureWebHostDefaults(ConfigureWebHostDefaults)
     .ConfigureServices(ConfigureServices)
     .Build();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(host.Services.GetRequiredService<IConfiguration>())
+    .CreateLogger();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 logger.LogProgramStartup();
@@ -105,7 +110,7 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
                 context.Configuration[AppSettings.Swagger.EndpointUrl],
                 context.Configuration[AppSettings.Swagger.ApiTitle] + " " + context.Configuration[AppSettings.Swagger.ApiVersion]);
         });
-        app.UseOpenApi();
+        // app.UseOpenApi(); Что-то вдруг стал тут ругаться
 
         app.UseRouting();
 
@@ -165,6 +170,4 @@ static void ConfigureServices(HostBuilderContext context, IServiceCollection ser
 
     services.AddScoped<IActivityLogItemsRepository, ActivityLogItemsRepository>();
     services.AddScoped<IUsersRepository, UsersRepository>();
-
-    services.AddSerilog();
 }

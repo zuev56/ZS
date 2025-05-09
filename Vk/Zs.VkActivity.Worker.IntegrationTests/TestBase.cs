@@ -79,7 +79,7 @@ public abstract class TestBase : IDisposable
     {
         using var scope = ServiceProvider.CreateScope();
         var scopedServices = scope.ServiceProvider;
-        var context = scopedServices.GetRequiredService<VkActivityContext>();
+        using var context = scopedServices.GetRequiredService<VkActivityContext>();
 
         context.Database.EnsureCreated();
     }

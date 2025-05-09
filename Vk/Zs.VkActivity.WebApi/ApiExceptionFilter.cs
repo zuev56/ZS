@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using Zs.Common.Exceptions;
 using Zs.Common.Extensions;
 
 namespace Zs.VkActivity.WebApi;
@@ -20,11 +22,10 @@ public sealed class ApiExceptionFilter : Attribute, IExceptionFilter
     {
         _logger.LogErrorIfNeed(context.Exception, $"Action {context.ActionDescriptor.DisplayName} error");
 
-        context.Result = new ContentResult
-        {
-            StatusCode = 500,
-            Content = "Internal Server Error"
-        };
+        context.Result = context.Exception is FaultException faultException
+            // TODO: разобраться с кодами ошибок
+            ? new ContentResult {StatusCode = 500, Content = JsonSerializer.Serialize(faultException.Fault)}
+            : new ContentResult {StatusCode = 500, Content = "Internal Server Error"};
 
         context.ExceptionHandled = true;
     }

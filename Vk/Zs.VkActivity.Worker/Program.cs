@@ -24,9 +24,14 @@ using Zs.VkActivity.Worker.Services;
 
 
 var host = Host.CreateDefaultBuilder(args)
+    .UseSerilog()
     .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
     .ConfigureServices(ConfigureServices)
     .Build();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(host.Services.GetRequiredService<IConfiguration>())
+    .CreateLogger();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 logger.LogProgramStartup();
@@ -56,11 +61,9 @@ static void ConfigureServices(HostBuilderContext context, IServiceCollection ser
 
     using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>()!.CreateScope())
     {
-        var dbContext = serviceScope.ServiceProvider.GetRequiredService<VkActivityContext>();
+        using var dbContext = serviceScope.ServiceProvider.GetRequiredService<VkActivityContext>();
         dbContext.Database.EnsureCreated();
     }
-
-    services.AddSerilog();
 
     services.AddHostedService<WorkerService>();
 }

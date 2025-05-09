@@ -73,7 +73,7 @@ public static class ConfigurationExtensions
                 sb.Append(indent);
                 sb.Append(child.Key);
 
-                var value = child.Value;
+                var value = PrepareValue(child);
                 if (value != null)
                 {
                     sb.Append(" = ");
@@ -87,5 +87,29 @@ public static class ConfigurationExtensions
                 BuildConfigurationTree(sb, child, indent + "  ");
             }
         }
+    }
+
+    private static string? PrepareValue(IConfigurationSection section)
+    {
+        var secretIdentifiers = new [] { "secret", "key", "token", "password" };
+
+        if (section.Value.IsConnectionString() && section.Value!.Contains("password=", InvariantCultureIgnoreCase))
+        {
+            var passwordStart = section.Value.IndexOf("password=", InvariantCultureIgnoreCase) + 9;
+            var passwordEnd = passwordStart + section.Value[passwordStart..].IndexOf(';');
+            var hiddenPassword = new string('*', passwordEnd - passwordStart + Random.Shared.Next(-1, 5));
+            return section.Value[..passwordStart] + hiddenPassword + section.Value[passwordEnd..];
+        }
+
+        foreach (var secret in secretIdentifiers)
+        {
+            if (section.Value != null && section.Key.Contains(secret, InvariantCultureIgnoreCase))
+            {
+                var length = section.Value.Length + Random.Shared.Next(-3, 3);
+                return new string('*', length);
+            }
+        }
+
+        return section.Value;
     }
 }
