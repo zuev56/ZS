@@ -1,7 +1,7 @@
 ﻿# cd git/ZS/ChatAdmin/Zs.ChatAdmin.Bot
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-chat-admin-bot -f Dockerfile .
-# sudo docker run --name zima-leto-admin-bot --restart unless-stopped -it zs-chat-admin-bot
+# sudo docker run --name zima-leto-admin-bot --restart unless-stopped -v /opt/configs:/opt/configs/:ro -it zs-chat-admin-bot
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG TARGETARCH
@@ -21,3 +21,5 @@ WORKDIR /app
 COPY --from=build /app .
 ADD /Data /app/Data
 ENTRYPOINT ["dotnet", "ChatAdmin.Bot.dll"]
+ # command-line args (global configuration path)
+CMD ["/opt/configs/"]
