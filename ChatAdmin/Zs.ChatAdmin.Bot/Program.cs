@@ -8,7 +8,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -30,6 +29,7 @@ using Zs.Common.Services.Connection;
 using Zs.Common.Services.Logging.Seq;
 using Zs.Common.Services.Scheduler;
 using Zs.Common.Services.Shell;
+using Zs.Common.TempExtensions;
 using Path = System.IO.Path;
 
 namespace ChatAdmin.Bot;
@@ -38,15 +38,12 @@ internal sealed class Program
 {
     public static async Task Main(string[] args)
     {
-        var host = CreateHostBuilder(args).Build();
+        var host = CreateHostBuilder(args)
+            .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
+            .Build();
 
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
-            Process.GetCurrentProcess().MainModule?.ModuleName,
-            Environment.MachineName,
-            Environment.OSVersion,
-            Environment.UserName,
-            Environment.ProcessId);
+        logger.LogProgramStartup();
 
         await host.RunAsync();
     }
