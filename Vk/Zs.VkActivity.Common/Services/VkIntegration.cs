@@ -32,47 +32,53 @@ public sealed class VkIntegration : IVkIntegration
         _getFriendsUrl = $"{BaseUrl}friends.get?access_token={token}&v={version}&lang=ru";
     }
 
-    public async Task<List<VkApiUser>> GetUsersWithActivityInfoAsync(string[] userScreenNames)
+    public async Task<List<UserResponse>> GetUsersWithActivityInfoAsync(string[] userScreenNames)
     {
         ArgumentNullException.ThrowIfNull(userScreenNames);
 
         if (userScreenNames.Length == 0)
-        {
             throw new ArgumentException("UserIds array couldn't be empty", nameof(userScreenNames));
-        }
 
         var url = $"{_getUsersUrl}&fields={FieldsForGettingUserActivity}&user_ids={string.Join(',', userScreenNames)}";
 
         return await GetVkUsersAsync(url);
     }
 
-    private async Task<List<VkApiUser>> GetVkUsersAsync(string url)
+    private async Task<List<UserResponse>> GetVkUsersAsync(string url)
     {
-        var responseResult = await GetResponseAsync<UsersApiResponse>(url, _httpClient).ConfigureAwait(false);
+        var responseResult = await GetResponseAsync<UsersResponse>(url, _httpClient).ConfigureAwait(false);
 
         if (!responseResult.Successful || responseResult.Value!.Users == null)
-        {
-            throw new InvalidOperationException("Unable to get correct response from Vk API");
-        }
+            throw new InvalidOperationException("GetVkUsersAsync error");
 
         return responseResult.Value.Users;
     }
 
     private static async Task<Result<TResponse?>> GetResponseAsync<TResponse>(string url, HttpClient httpClient)
+        where TResponse : VkApiResponse
     {
         if (await _semaphore.WaitAsync(_apiAccessTimeout))
         {
             try
             {
                 if (DateTime.UtcNow.Subtract(_lastApiAccessTime) < ApiAccessMinInterval)
-                {
                     await Task.Delay(ApiAccessMinInterval).ConfigureAwait(false);
-                }
 
                 _lastApiAccessTime = DateTime.UtcNow;
-                var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+                var httpResponseMessage = await httpClient.GetAsync(url).ConfigureAwait(false);
 
-                return await response.Content.ReadFromJsonAsync<TResponse>();
+                var response = await httpResponseMessage.Content.ReadFromJsonAsync<TResponse>();
+
+                if (response is not { Error: null })
+                {
+                    throw new InvalidOperationException(
+                        "Unable to get correct response from Vk API"
+                        + response?.Error != null
+                            ? $": {response!.Error.Message} (Code: {response.Error.Code})"
+                            : string.Empty);
+                }
+
+                return response;
             }
             finally
             {
@@ -83,14 +89,12 @@ public sealed class VkIntegration : IVkIntegration
         return Result.Fail<TResponse?>("VK API access timeout error");
     }
 
-    public async Task<List<VkApiUser>> GetUsersWithFullInfoAsync(string[] userScreenNames)
+    public async Task<List<UserResponse>> GetUsersWithFullInfoAsync(string[] userScreenNames)
     {
         ArgumentNullException.ThrowIfNull(userScreenNames);
 
         if (userScreenNames.Length == 0)
-        {
             throw new ArgumentException("UserIds array couldn't be empty", nameof(userScreenNames));
-        }
 
         var url = $"{_getUsersUrl}&fields={FieldsForGettingFullUserInfo}&user_ids={string.Join(',', userScreenNames)}";
 
@@ -101,12 +105,10 @@ public sealed class VkIntegration : IVkIntegration
     {
         var url = $"{_getFriendsUrl}&user_id={userId}";
 
-        var responseResult = await GetResponseAsync<FriendsApiResponse>(url, _httpClient).ConfigureAwait(false);
+        var responseResult = await GetResponseAsync<FriendsResponse>(url, _httpClient).ConfigureAwait(false);
 
         if (!responseResult.Successful || responseResult.Value!.Data?.FriendIds == null)
-        {
-            throw new InvalidOperationException("Unable to get correct response from Vk API");
-        }
+            throw new InvalidOperationException("GetFriendIds error");
 
         return responseResult.Value.Data.FriendIds;
     }

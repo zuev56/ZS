@@ -2,8 +2,8 @@
 
 namespace Zs.VkActivity.Common.Models.VkApi;
 
-public sealed class UsersApiResponse
+public sealed class UsersResponse : VkApiResponse
 {
     [JsonPropertyName("response")]
-    public List<VkApiUser>? Users { get; init; }
+    public List<UserResponse>? Users { get; init; }
 }

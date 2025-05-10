@@ -4,7 +4,7 @@ using Zs.VkActivity.Data.Models;
 namespace Zs.VkActivity.Common.Models.VkApi;
 
 // https://dev.vk.com/reference/objects/user#last_seen
-public sealed class VkApiLastSeen
+public sealed class LastSeenResponse : VkApiResponse
 {
     [JsonPropertyName("time")]
     public int UnixTime { get; init; }

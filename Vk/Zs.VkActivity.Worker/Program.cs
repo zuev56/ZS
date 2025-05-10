@@ -22,7 +22,6 @@ using Zs.VkActivity.Worker.Services;
 [assembly: InternalsVisibleTo("Worker.UnitTests")]
 [assembly: InternalsVisibleTo("Worker.IntegrationTests")]
 
-
 var host = Host.CreateDefaultBuilder(args)
     .UseSerilog()
     .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
@@ -62,7 +61,7 @@ static void ConfigureServices(HostBuilderContext context, IServiceCollection ser
     using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>()!.CreateScope())
     {
         using var dbContext = serviceScope.ServiceProvider.GetRequiredService<VkActivityContext>();
-        dbContext.Database.EnsureCreated();
+        // dbContext.Database.EnsureCreated();
     }
 
     services.AddHostedService<WorkerService>();

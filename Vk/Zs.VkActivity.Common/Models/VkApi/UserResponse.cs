@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Zs.VkActivity.Common.Models.VkApi;
 
-public sealed class VkApiUser
+public sealed class UserResponse : VkApiResponse
 {
     [JsonPropertyName("id")]
     public int Id { get; init; }
@@ -27,9 +27,8 @@ public sealed class VkApiUser
     public int? Deleted { get; init; }
 
     [JsonPropertyName("last_seen")]
-    public VkApiLastSeen? LastSeen { get; init; }
+    public LastSeenResponse? LastSeen { get; init; }
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? RawData { get; init; }
-
 }

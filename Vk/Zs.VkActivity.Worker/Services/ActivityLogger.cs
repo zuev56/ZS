@@ -111,7 +111,7 @@ public sealed class ActivityLogger : IActivityLogger
     /// <summary>Save user activities to database</summary>
     /// <param name="apiUsers">All users current state from VK API</param>
     /// <returns>Logged <see cref="ActivityLogItem"/>s count</returns>
-    private async Task<int> LogVkUsersActivityAsync(List<VkApiUser> apiUsers)
+    private async Task<int> LogVkUsersActivityAsync(List<UserResponse> apiUsers)
     {
         // TODO: Add user activity info (range) - ???
         var lastActivityLogItems = await _activityLogRepo.FindLastUsersActivityAsync();

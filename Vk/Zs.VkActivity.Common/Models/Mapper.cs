@@ -17,7 +17,7 @@ public static class Mapper
         Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
     };
 
-    public static DbUser ToUser(VkApiUser apiVkUser)
+    public static DbUser ToUser(UserResponse apiVkUser)
     {
         ArgumentNullException.ThrowIfNull(nameof(apiVkUser));
 
