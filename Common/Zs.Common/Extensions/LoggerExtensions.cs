@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Zs.Common.Models;
 
 namespace Zs.Common.Extensions;
 
@@ -85,6 +86,12 @@ public static class LoggerExtensions
 
     public static void LogErrorIfNeed(this ILogger logger, Exception exception)
         => logger.LogErrorIfNeed(exception, null);
+
+    public static void LogErrorIfNeed(this ILogger logger, Fault fault)
+    {
+        if (logger.IsEnabled(LogLevel.Error))
+            logger.LogError("Code: {Code}, Message: {Message}", fault.Code, fault.Message);
+    }
 
     public static void LogCriticalIfNeed(this ILogger logger, string? message, params object?[] args)
     {

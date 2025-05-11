@@ -55,7 +55,7 @@ internal sealed class WorkerService : BackgroundService
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _connectionAnalyzer.ConnectionStatusChanged += ConnectionAnalyzer_StatusChanged;
-        _connectionAnalyzer.Start(2.Seconds(), 3.Seconds());
+        _connectionAnalyzer.Start(2.Seconds(), 60.Seconds());
 
         _scheduler.Start(3.Seconds(), 1.Seconds());
 
@@ -126,14 +126,12 @@ internal sealed class WorkerService : BackgroundService
         }
 
         if (_userActivityLoggerJob.IdleStepsCount > 0)
-        {
             _userActivityLoggerJob.IdleStepsCount = 0;
-        }
 
         var result = await SaveUsersActivityAsync();
         if (!result.Successful)
         {
-            _logger.LogErrorIfNeed(result.Fault!.Code);
+            _logger.LogErrorIfNeed(result.Fault!);
         }
 
         _logger.LogTraceIfNeed("Finish SaveVkUsersActivityAsync. Elapsed: {Elapsed}", sw.Elapsed);
@@ -155,7 +153,7 @@ internal sealed class WorkerService : BackgroundService
         var setUndefinedActivityResult = await activityLoggerService.ChangeAllUserActivitiesToUndefinedAsync();
 
         if (!setUndefinedActivityResult.Successful)
-            _logger.LogError(string.Join(Environment.NewLine, setUndefinedActivityResult.Fault!.Code));
+            _logger.LogErrorIfNeed(setUndefinedActivityResult.Fault!);
     }
     private async Task AddUsersFullInfoAsync()
     {
@@ -167,7 +165,7 @@ internal sealed class WorkerService : BackgroundService
         var addResult = await userManager.AddUsersAsync(initialUserIds ?? []);
 
         if (!addResult.Successful)
-            _logger.LogError(string.Join(Environment.NewLine, addResult.Fault!.Code), new { UserIds = initialUserIds });
+            _logger.LogErrorIfNeed(addResult.Fault!);
     }
 
     private async Task UpdateUsersDataAsync()
@@ -181,7 +179,7 @@ internal sealed class WorkerService : BackgroundService
         var updateResult = await userManager.UpdateUsersAsync(userIds);
 
         if (!updateResult.Successful)
-            _logger.LogError(string.Join(Environment.NewLine, updateResult.Fault!.Code), new { UserIds = userIds });
+            _logger.LogErrorIfNeed(updateResult.Fault!);
 
         _logger.LogTraceIfNeed("Finish UpdateUsersDataAsync");
     }

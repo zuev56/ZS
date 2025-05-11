@@ -61,7 +61,7 @@ static void ConfigureServices(HostBuilderContext context, IServiceCollection ser
     using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>()!.CreateScope())
     {
         using var dbContext = serviceScope.ServiceProvider.GetRequiredService<VkActivityContext>();
-        // dbContext.Database.EnsureCreated();
+        dbContext.Database.EnsureCreated();
     }
 
     services.AddHostedService<WorkerService>();
