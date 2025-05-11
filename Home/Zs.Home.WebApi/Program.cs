@@ -1,4 +1,6 @@
 using System.Reflection;
+using Serilog;
+using Zs.Common.Extensions;
 using Zs.Home.Application.Features.Hardware;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.WebApi;
@@ -8,6 +10,13 @@ using Zs.Home.WebApi.Features.Weather;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
+builder.Host.UseSerilog();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
 
 builder.Services.AddHardwareMonitor(builder.Configuration);
 builder.Services.AddSeqLogAnalyzer(builder.Configuration);
@@ -29,6 +38,8 @@ builder.Services.AddSwaggerDocument(config =>
 
 var app = builder.Build();
 
+app.Logger.LogProgramStartup();
+
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
@@ -38,7 +49,7 @@ app.UseSwaggerUI(options =>
         builder.Configuration[SwaggerSettings.EndpointUrl],
         builder.Configuration[SwaggerSettings.ApiTitle] + " " + builder.Configuration[SwaggerSettings.ApiVersion]);
 });
-app.UseOpenApi();
+// app.UseOpenApi();
 app.UseRouting();
 
 app.UseHttpsRedirection();
