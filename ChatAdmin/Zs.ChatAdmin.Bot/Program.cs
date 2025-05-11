@@ -8,11 +8,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Telegram.Bot;
 using Zs.Bot.Data.Abstractions;
 using Zs.Bot.Data.PostgreSQL;
@@ -23,7 +27,9 @@ using Zs.Bot.Services.Commands;
 using Zs.Bot.Services.DataSavers;
 using Zs.Bot.Services.Messaging;
 using Zs.Common.Abstractions;
+using Zs.Common.Data.Postgres.Services;
 using Zs.Common.Extensions;
+using Zs.Common.Models;
 using Zs.Common.Services.Abstractions;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Logging.Seq;
@@ -137,12 +143,34 @@ internal sealed class Program
                 using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>().CreateScope())
                 {
                     var chatAdminContext = serviceScope.ServiceProvider.GetRequiredService<ChatAdminContext>();
-                    //chatAdminContext.Database.Migrate();
+                    chatAdminContext.Database.Migrate();
                     var botContext = serviceScope.ServiceProvider.GetRequiredService<PostgreSqlBotContext>();
-                    //botContext.Database.Migrate();
+                    botContext.Database.Migrate();
                 }
 
                 services.AddHostedService<ChatAdmin>();
+            })
+            .ConfigureWebHostDefaults(webHostBuilder =>
+            {
+                webHostBuilder.Configure(app =>
+                {
+                    app.UseRouting();
+
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapGet("/healthcheck", async (HttpContext context) =>
+                        {
+                            var connectionString = context.RequestServices
+                                .GetRequiredService<IConfiguration>()
+                                .GetConnectionString("Default")!;
+                            var currentProcess = Process.GetCurrentProcess();
+                            var dbTables = await DbInfoService.GetInfoAsync(connectionString, "bot");
+                            var healthStatus = HealthStatus.Get(currentProcess, dbTables);
+
+                            return Results.Ok(healthStatus);
+                        });
+                    });
+                });
             });
     }
 }
