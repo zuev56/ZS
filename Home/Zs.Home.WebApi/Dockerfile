@@ -1,7 +1,7 @@
 ﻿# cd git/ZS
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-home-api -f Home/Zs.Home.WebApi/Dockerfile .
-# sudo docker run --name home-api --restart unless-stopped -p 6024:80 -it zs-home-api
+# sudo docker run --name home-api --restart unless-stopped -p 6024:80 -v /opt/configs:/opt/configs/:ro -it zs-home-api
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID

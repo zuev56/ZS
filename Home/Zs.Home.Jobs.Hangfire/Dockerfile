@@ -1,7 +1,7 @@
 ﻿# cd git/ZS
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-home-jobs-hangfire -f Home/Zs.Home.Jobs.Hangfire/Dockerfile .
-# sudo docker run --name home-jobs-hangfire --restart unless-stopped -p 6023:80 -it zs-home-jobs-hangfire
+# sudo docker run --name home-jobs-hangfire --restart unless-stopped -p 6023:80 -v /opt/configs:/opt/configs/:ro -it zs-home-jobs-hangfire
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
