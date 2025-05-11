@@ -42,6 +42,10 @@ internal sealed class Program
             .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
             .Build();
 
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(host.Services.GetRequiredService<IConfiguration>())
+            .CreateLogger();
+
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
         logger.LogProgramStartup();
 
@@ -133,9 +137,9 @@ internal sealed class Program
                 using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>().CreateScope())
                 {
                     var chatAdminContext = serviceScope.ServiceProvider.GetRequiredService<ChatAdminContext>();
-                    chatAdminContext.Database.Migrate();
+                    //chatAdminContext.Database.Migrate();
                     var botContext = serviceScope.ServiceProvider.GetRequiredService<PostgreSqlBotContext>();
-                    botContext.Database.Migrate();
+                    //botContext.Database.Migrate();
                 }
 
                 services.AddHostedService<ChatAdmin>();
