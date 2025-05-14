@@ -5,11 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using Zs.Common.Models;
-using Zs.Home.Application.Features.Hardware;
-using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.WebApi;
+using static System.DateTimeOffset;
 
 namespace Zs.Home.Bot.Interaction;
 
@@ -17,30 +15,27 @@ internal sealed class SystemStatusService
 {
     private static readonly TimeSpan _defaultTimeout = TimeSpan.FromSeconds(1);
 
-    private readonly IHardwareMonitor _hardwareMonitor;
+    private readonly IHardwareClient _hardwareClient;
     private readonly IUserWatcher _userWatcher;
     private readonly IPingClient _pingClient;
     private readonly IWeatherClient _weatherClient;
-    private readonly ILogAnalyzer _logAnalyzer;
+    private readonly IAppLogMonitorClient _appLogMonitorClient;
     private readonly UserWatcherSettings _userWatcherSettings;
-    private readonly SeqSettings _seqSettings;
 
     public SystemStatusService(
-        IHardwareMonitor hardwareMonitor,
+        IHardwareClient hardwareClient,
         IUserWatcher userWatcher,
         IPingClient pingClient,
         IWeatherClient weatherClient,
-        ILogAnalyzer logAnalyzer,
-        IOptions<UserWatcherSettings> userWatcherSettings,
-        IOptions<SeqSettings> seqSettings)
+        IAppLogMonitorClient appLogMonitorClient,
+        IOptions<UserWatcherSettings> userWatcherSettings)
     {
-        _hardwareMonitor = hardwareMonitor;
+        _hardwareClient = hardwareClient;
         _userWatcher = userWatcher;
         _pingClient = pingClient;
         _weatherClient = weatherClient;
-        _logAnalyzer = logAnalyzer;
+        _appLogMonitorClient = appLogMonitorClient;
         _userWatcherSettings = userWatcherSettings.Value;
-        _seqSettings = seqSettings.Value;
     }
 
     public async Task<string> GetFullStatus()
@@ -75,14 +70,15 @@ internal sealed class SystemStatusService
 
     public async Task<string> GetHardwareStatusAsync()
     {
-        var hardwareStatus = await _hardwareMonitor.GetHardwareStatusAsync();
+        var hardwareStatusResponse = await _hardwareClient.GetCurrentHardwareStatusAsync();
+        var status = hardwareStatusResponse.HardwareStatus;
 
         var line = Environment.NewLine;
-        return $"CPU temp: {hardwareStatus.CpuTemperatureC:0.#} \u00b0C{line}" +
-               $"CPU usage: {hardwareStatus.Cpu15MinUsagePercent:0.#} %{line}" +
-               $"RAM usage: {hardwareStatus.MemoryUsagePercent:0.#} %{line}" +
-               $"SSD temp: {hardwareStatus.StorageTemperatureC:0.#} \u00b0C{line}" +
-               $"SSD usage: {hardwareStatus.StorageUsagePercent:0.#} %";
+        return $"CPU temp: {status.CpuTemperatureC:0.#} \u00b0C{line}" +
+               $"CPU usage: {status.Cpu15MinUsagePercent:0.#} %{line}" +
+               $"RAM usage: {status.MemoryUsagePercent:0.#} %{line}" +
+               $"SSD temp: {status.StorageTemperatureC:0.#} \u00b0C{line}" +
+               $"SSD usage: {status.StorageUsagePercent:0.#} %";
     }
 
     public async Task<string> GetUsersStatusAsync(CancellationToken ct = default)
@@ -132,23 +128,20 @@ internal sealed class SystemStatusService
 
     public async Task<string> GetLogStatusAsync(CancellationToken ct = default)
     {
-        var lastWeekSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.LastWeekUtc, ct);
-        var last24HoursSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.LastDayUtc, ct);
-        var last12HoursSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.Last12HoursUtc, ct);
-        var last6HoursSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.Last6HoursUtc, ct);
-        var lastHourSummary = _logAnalyzer.GetSummaryAsync(DateTimeRangeExtensions.LastHourUtc, ct);
+        var lastWeekSummary = _appLogMonitorClient.GetLogSummaryAsync(Now.AddDays(-7), Now, ct);
+        var last24HoursSummary = _appLogMonitorClient.GetLogSummaryAsync(Now.AddHours(-24), Now, ct);
+        var last12HoursSummary = _appLogMonitorClient.GetLogSummaryAsync(Now.AddHours(-12), Now, ct);
+        var last6HoursSummary = _appLogMonitorClient.GetLogSummaryAsync(Now.AddHours(-6), Now, ct);
+        var lastHourSummary = _appLogMonitorClient.GetLogSummaryAsync(Now.AddHours(-1), Now, ct);
 
         await Task.WhenAll(lastWeekSummary, last24HoursSummary, last12HoursSummary, last6HoursSummary, lastHourSummary)
             .ConfigureAwait(false);
 
-        var signForWeek = _seqSettings.MaxEventsPerRequest == lastWeekSummary.Result.Count
-            ? "> " : string.Empty;
-
-        var line = Environment.NewLine;
-        return $"{signForWeek}{lastWeekSummary.Result.Count} events in last week{line}" +
-               $"{last24HoursSummary.Result.Count} events in 24 hours{line}" +
-               $"{last12HoursSummary.Result.Count} events in 12 hours{line}" +
-               $"{last6HoursSummary.Result.Count} events in 6 hours{line}" +
-               $"{lastHourSummary.Result.Count} events in last hour";
+        return $"{lastWeekSummary.Result.LogSummary.Count} week, " +
+               $"{last24HoursSummary.Result.LogSummary.Count} 24h, " +
+               $"{last12HoursSummary.Result.LogSummary.Count} 12h, " +
+               $"{last6HoursSummary.Result.LogSummary.Count} 6h, " +
+               $"{lastHourSummary.Result.LogSummary.Count} 1h{Environment.NewLine}" +
+               $"Last 24h: TODO";
     }
 }
