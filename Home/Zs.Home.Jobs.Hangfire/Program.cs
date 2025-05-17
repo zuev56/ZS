@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using Serilog;
 using Zs.Common.Extensions;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather.Data;
@@ -31,6 +33,13 @@ using WeatherAnalyzerSettings = Zs.Home.Jobs.Hangfire.WeatherAnalyzer.WeatherAna
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
+builder.Host.UseSerilog();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
 builder.Services
     .AddHangfire(builder.Configuration)
     .AddHomeClient(builder.Configuration)
@@ -44,6 +53,8 @@ builder.Services
     .AddSwaggerGen();
 
 var app = builder.Build();
+
+app.Logger.LogProgramStartup();
 
 await InitializeWeatherRegistratorDatabaseAsync(app.Services);
 await DeleteHangfireLocksAsync(app.Services);

@@ -15,8 +15,8 @@ namespace Zs.Home.Jobs.Hangfire.WeatherAnalyzer;
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class WeatherAnalyzerJob
 {
-    private static DateTime? _lastAlarmUtcDate = DateTime.UtcNow - 2.Hours();
     private static readonly TimeSpan _alarmInterval = 2.Hours();
+    private static DateTime? _lastAlarmUtcDate = DateTime.UtcNow - _alarmInterval;
 
     private readonly IWeatherClient _weatherClient;
     private readonly Notifier _notifier;
@@ -47,6 +47,7 @@ public sealed class WeatherAnalyzerJob
         await _notifier.SendNotificationAsync(message, ct);
 
         // TODO: Лучше возвращать и затем проверять результат отправки уведомления
+        //       (Что возвращать?)
         if (!string.IsNullOrEmpty(message))
             _lastAlarmUtcDate = DateTime.UtcNow;
 

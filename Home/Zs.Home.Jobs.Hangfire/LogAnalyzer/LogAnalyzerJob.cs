@@ -12,6 +12,10 @@ using Zs.Home.WebApi;
 namespace Zs.Home.Jobs.Hangfire.LogAnalyzer;
 
 // ReSharper disable once ClassNeverInstantiated.Global
+
+/// <summary>
+/// Джоб рассчитан на выполнение раз в сутки.
+/// </summary>
 public sealed class LogAnalyzerJob
 {
     private readonly IAppLogMonitorClient _appLogMonitorClient;

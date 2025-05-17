@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +16,10 @@ namespace Zs.Home.Jobs.Hangfire.UserWatcher;
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class UserWatcherJob
 {
+    private static readonly TimeSpan _alarmInterval = 3.Hours();
+    private static DateTime? _lastAlarmUtcDate = DateTime.UtcNow - _alarmInterval;
+    private static readonly Dictionary<int, bool> _userIdToIsInactive = [];
+
     private readonly IUserWatcher _userWatcher;
     private readonly UserWatcherSettings _settings;
     private readonly Notifier _notifier;
@@ -51,15 +57,30 @@ public sealed class UserWatcherJob
         foreach (var (user, inactiveTime) in usersWithInactiveTime)
         {
             if (inactiveTime < _settings.InactiveHoursLimit.Hours())
+            {
+                if (_userIdToIsInactive[user.Id] == true)
+                    result.AppendLine($"{user.GetFullName()} is back online!");
+
+                _userIdToIsInactive[user.Id] = false;
+                continue;
+            }
+
+            if (DateTime.UtcNow < _lastAlarmUtcDate + _alarmInterval)
                 continue;
 
-            var userName = $"{user.FirstName} {user.LastName}";
-            var inactiveTimeString = inactiveTime.TotalDays > 0
+            _lastAlarmUtcDate = DateTime.UtcNow;
+            _userIdToIsInactive[user.Id] = true;
+            var inactiveTimeString = inactiveTime.TotalDays >= 1
                 ? $@"{(int)inactiveTime.TotalDays} {(inactiveTime.TotalDays > 2 ? "days" : "day")} {inactiveTime:hh\:mm}"
                 : $@"{inactiveTime:hh\:mm\:ss}";
-            result.AppendLine($"{userName} is not active for {inactiveTimeString}");
+            result.AppendLine($"{user.GetFullName()} is not active for {inactiveTimeString}");
         }
 
         return result.ToString().Trim();
     }
+}
+
+static class UserExtensions
+{
+    internal static string GetFullName(this User user) => $"{user.FirstName} {user.LastName}";
 }

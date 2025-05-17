@@ -1,8 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Zs.Common.Extensions;
 using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Home.Jobs.Hangfire.Notification;
 using Zs.Home.WebApi;
@@ -12,6 +14,9 @@ namespace Zs.Home.Jobs.Hangfire.HardwareAnalyzer;
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class HardwareAnalyzerJob
 {
+    private static readonly TimeSpan _alarmInterval = 3.Hours();
+    private static DateTime? _lastAlarmUtcDate = DateTime.UtcNow - _alarmInterval;
+
     private readonly IHardwareClient _hardwareClient;
     private readonly Notifier _notifier;
     private readonly ILogger<HardwareAnalyzerJob> _logger;
@@ -41,8 +46,13 @@ public sealed class HardwareAnalyzerJob
         _logger.LogJobFinish(sw.Elapsed);
     }
 
-    private string CreateNotification(HardwareStatus hardwareStatus, Limits limits)
+    private static string CreateNotification(HardwareStatus hardwareStatus, Limits limits)
     {
+        if (DateTime.UtcNow < _lastAlarmUtcDate + _alarmInterval)
+            return string.Empty;
+
+        _lastAlarmUtcDate = DateTime.UtcNow;
+
         var notification = new StringBuilder();
         if (hardwareStatus.CpuTemperatureC > limits.CpuTemperatureC)
             notification.AppendLine($"CPU temperature: {hardwareStatus.CpuTemperatureC:0.#} \u00b0C");
