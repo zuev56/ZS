@@ -67,7 +67,7 @@ internal sealed class SeqLogAnalyzer : ILogAnalyzer
                 {
                     var count = g.Count();
                     var last = g.MaxBy(e => e.Timestamp)!;
-                    var message = (count > 1 ? "=[SIMILAR MESSAGE]= " : string.Empty)
+                    var message = (count > 1 ? " [-Similar-] " : string.Empty)
                         + logEntries.Last(e => e.MessagePattern == g.Key.MessagePattern).Message;
                     return new LogMessageInfo(g.Key.ApplicationName, message, last.Level, count, last.Timestamp);
                 })

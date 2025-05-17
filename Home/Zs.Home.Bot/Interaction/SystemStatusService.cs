@@ -74,11 +74,9 @@ internal sealed class SystemStatusService
         var status = hardwareStatusResponse.HardwareStatus;
 
         var line = Environment.NewLine;
-        return $"CPU temp: {status.CpuTemperatureC:0.#} \u00b0C{line}" +
-               $"CPU usage: {status.Cpu15MinUsagePercent:0.#} %{line}" +
-               $"RAM usage: {status.MemoryUsagePercent:0.#} %{line}" +
-               $"SSD temp: {status.StorageTemperatureC:0.#} \u00b0C{line}" +
-               $"SSD usage: {status.StorageUsagePercent:0.#} %";
+        return $"CPU: {status.Cpu15MinUsagePercent:0} %, {status.CpuTemperatureC:0.#} \u00b0C{line}" +
+               $"RAM: {status.MemoryUsagePercent:0} %{line}" +
+               $"SSD: {status.StorageUsagePercent:0} %, {status.StorageTemperatureC:0.#} \u00b0C";
     }
 
     public async Task<string> GetUsersStatusAsync(CancellationToken ct = default)
@@ -88,7 +86,7 @@ internal sealed class SystemStatusService
         var result = new StringBuilder();
         foreach (var (user, inactiveTime) in usersWithInactiveTime)
         {
-            result.AppendLine($@"User {user.FirstName} {user.LastName} is not active for {inactiveTime:hh\:mm\:ss}");
+            result.AppendLine($@"{user.FirstName} {user.LastName} is not active for {inactiveTime:hh\:mm\:ss}");
         }
 
         return result.ToString().Trim();
@@ -105,7 +103,7 @@ internal sealed class SystemStatusService
             return espMeteo.Sensors.SelectMany(sensor =>
             {
                 var sensorSettings = deviceSettings.Sensors.SingleOrDefault(s => s.Name == sensor.Name);
-                return sensor.Parameters.Select(parameter => $"{sensorSettings?.Alias ?? sensor.Name}.{parameter.Name}: {parameter.Value}");
+                return sensor.Parameters.Select(parameter => $"{sensorSettings?.Alias ?? sensor.Name}.{parameter.Name}: {parameter.Value} {parameter.Unit}");
             });
         });
 
@@ -137,11 +135,10 @@ internal sealed class SystemStatusService
         await Task.WhenAll(lastWeekSummary, last24HoursSummary, last12HoursSummary, last6HoursSummary, lastHourSummary)
             .ConfigureAwait(false);
 
-        return $"{lastWeekSummary.Result.LogSummary.Count} week, " +
-               $"{last24HoursSummary.Result.LogSummary.Count} 24h, " +
-               $"{last12HoursSummary.Result.LogSummary.Count} 12h, " +
-               $"{last6HoursSummary.Result.LogSummary.Count} 6h, " +
-               $"{lastHourSummary.Result.LogSummary.Count} 1h{Environment.NewLine}" +
-               $"Last 24h: TODO";
+        return $"{lastWeekSummary.Result.LogSummary.Count}/week, " +
+               $"{last24HoursSummary.Result.LogSummary.Count}/24h, " +
+               $"{last12HoursSummary.Result.LogSummary.Count}/12h, " +
+               $"{last6HoursSummary.Result.LogSummary.Count}/6h, " +
+               $"{lastHourSummary.Result.LogSummary.Count}/1h{Environment.NewLine}";
     }
 }
