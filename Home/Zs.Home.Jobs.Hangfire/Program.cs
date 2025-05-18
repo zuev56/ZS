@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire;
+using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,6 +70,11 @@ app.UseHttpsRedirection();
 // app.UseAuthorization();
 
 app.UseHangfireDashboard();
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    // Отключить аутентификацию (только для тестирования!)
+    Authorization = new[] { new HangfireAllowAllAuthorizationFilter() }
+});
 
 
 var logAnalyzerSettings = app.Services.GetRequiredService<IOptions<LogAnalyzerSettings>>().Value;
@@ -175,4 +181,9 @@ static async Task DeleteHangfireLocksAsync(IServiceProvider serviceProvider)
     {
         logger.LogInformationIfNeed("Hangfire tables have not been created yet.");
     }
+}
+
+public sealed class HangfireAllowAllAuthorizationFilter : IDashboardAuthorizationFilter
+{
+    public bool Authorize(DashboardContext context) => true;
 }

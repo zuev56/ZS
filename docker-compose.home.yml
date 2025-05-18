@@ -21,8 +21,7 @@ services:
       - /usr/sbin/smartctl:/usr/sbin/smartctl:ro
     pid: host
     privileged: true
-    #stdin_open: true  # аналог `-it` (интерактивный режим)
-    #tty: true         # тоже часть `-it`
+    user: "0:0"
 
   bot:
     image: home.bot
@@ -39,7 +38,7 @@ services:
       - "/opt/configs:/opt/configs/:ro"
 
   jobs:
-    image: home.jobs
+    image: home.jobs-hangfire
     container_name: home-jobs
     build:
       context: .

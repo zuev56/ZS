@@ -1,14 +1,14 @@
 ﻿# cd git/ZS
 # git pull
-# sudo docker buildx build --platform linux/arm64 -t zs-home-web-api -f Home/Zs.Home.WebApi/Dockerfile .
-# sudo docker run home-web-api --restart unless-stopped -p 6024:80 \
-#    -v /opt/configs:/opt/configs/:ro \
+# sudo docker buildx build --platform linux/arm64 -t home.web-api -f Home/Zs.Home.WebApi/Dockerfile .
+# sudo docker run --name home-web-api --restart unless-stopped -p 6024:80 \
+#    -v /opt/configs:/opt/configs:ro \
 #    -v /proc:/host/proc:ro \
 #    -v /sys:/host/sys:ro \
 #    -v /dev:/host/dev:ro \
 #    -v /run:/host/run:ro \
 #    -v /usr/sbin/smartctl:/usr/sbin/smartctl:ro \
-#    --pid=host --privileged -it zs-home-web-api
+#    --pid host --privileged --user 0:0 -it home.web-api
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
