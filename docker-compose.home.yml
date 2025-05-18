@@ -3,7 +3,7 @@ services:
 
   web-api:
     image: home.web-api
-    container_name: home-api
+    container_name: home-web-api
     build:
       context: .
       dockerfile: Home/Zs.Home.WebApi/Dockerfile
@@ -13,7 +13,16 @@ services:
       - "6024:80"
     restart: unless-stopped
     volumes:
-      - "/opt/configs:/opt/configs/:ro"
+      - /opt/configs:/opt/configs:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /dev:/host/dev:ro
+      - /run:/host/run:ro
+      - /usr/sbin/smartctl:/usr/sbin/smartctl:ro
+    pid: host
+    privileged: true
+    #stdin_open: true  # аналог `-it` (интерактивный режим)
+    #tty: true         # тоже часть `-it`
 
   bot:
     image: home.bot
@@ -40,7 +49,7 @@ services:
     ports:
       - "6023:80"
     depends_on:
-      - web-api
+      - home-web-api
     restart: unless-stopped
     volumes:
       - "/opt/configs:/opt/configs/:ro"
