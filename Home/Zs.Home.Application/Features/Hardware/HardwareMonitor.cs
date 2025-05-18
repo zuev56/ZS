@@ -73,7 +73,7 @@ internal sealed class HardwareMonitor : IHardwareMonitor
             throw new FaultException(commandResult.Fault!);
 
         if (string.IsNullOrWhiteSpace(commandResult.Value))
-            throw new FaultException(Fault.Unknown.WithMessage("Empty result"));
+            throw new FaultException(Fault.Unknown.WithMessage($"Empty result for command '{command}'"));
 
         return (TResult)Convert.ChangeType(commandResult.Value, typeof(TResult));
     }
