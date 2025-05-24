@@ -72,10 +72,8 @@ app.UseHttpsRedirection();
 app.UseHangfireDashboard();
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    // Отключить аутентификацию (только для тестирования!)
-    Authorization = new[] { new HangfireAllowAllAuthorizationFilter() }
+    Authorization = Array.Empty<IDashboardAuthorizationFilter>()
 });
-
 
 var logAnalyzerSettings = app.Services.GetRequiredService<IOptions<LogAnalyzerSettings>>().Value;
 RecurringJob.AddOrUpdate<LogAnalyzerJob>(
@@ -181,9 +179,4 @@ static async Task DeleteHangfireLocksAsync(IServiceProvider serviceProvider)
     {
         logger.LogInformationIfNeed("Hangfire tables have not been created yet.");
     }
-}
-
-public sealed class HangfireAllowAllAuthorizationFilter : IDashboardAuthorizationFilter
-{
-    public bool Authorize(DashboardContext context) => true;
 }
