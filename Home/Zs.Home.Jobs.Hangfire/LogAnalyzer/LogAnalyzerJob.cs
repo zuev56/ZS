@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zs.Common.Extensions;
 using Zs.Home.Jobs.Hangfire.Extensions;
+using Zs.Home.Jobs.Hangfire.Hangfire;
 using Zs.Home.Jobs.Hangfire.Notification;
 using Zs.Home.WebApi;
 
@@ -16,7 +17,7 @@ namespace Zs.Home.Jobs.Hangfire.LogAnalyzer;
 /// <summary>
 /// Джоб рассчитан на выполнение раз в сутки.
 /// </summary>
-public sealed class LogAnalyzerJob
+public sealed class LogAnalyzerJob : IJob
 {
     private readonly IAppLogMonitorClient _appLogMonitorClient;
     private readonly Notifier _notifier;

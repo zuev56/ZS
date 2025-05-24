@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.Application.Features.Weather.Data.Models;
 using Zs.Home.Jobs.Hangfire.Extensions;
+using Zs.Home.Jobs.Hangfire.Hangfire;
 using Zs.Parser.EspMeteo;
 using Zs.Parser.EspMeteo.Models;
 using static Zs.Home.Jobs.Hangfire.Constants;
@@ -18,7 +19,7 @@ using static Zs.Home.Jobs.Hangfire.Constants;
 namespace Zs.Home.Jobs.Hangfire.WeatherRegistrator;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class WeatherRegistratorJob
+public sealed class WeatherRegistratorJob : IJob
 {
     private readonly EspMeteoParser _espMeteoParser;
     private readonly WeatherRegistratorSettings _settings;

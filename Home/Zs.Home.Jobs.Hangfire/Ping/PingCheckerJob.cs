@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zs.Home.Jobs.Hangfire.Extensions;
+using Zs.Home.Jobs.Hangfire.Hangfire;
 using Zs.Home.Jobs.Hangfire.Notification;
 using Zs.Home.WebApi;
 using IPStatus = System.Net.NetworkInformation.IPStatus;
@@ -13,7 +14,7 @@ using IPStatus = System.Net.NetworkInformation.IPStatus;
 namespace Zs.Home.Jobs.Hangfire.Ping;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class PingCheckerJob
+public sealed class PingCheckerJob : IJob
 {
     private sealed record Target(string Host, short? Port);
 

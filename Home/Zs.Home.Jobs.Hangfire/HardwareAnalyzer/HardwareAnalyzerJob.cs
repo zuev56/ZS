@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zs.Common.Extensions;
 using Zs.Home.Jobs.Hangfire.Extensions;
+using Zs.Home.Jobs.Hangfire.Hangfire;
 using Zs.Home.Jobs.Hangfire.Notification;
 using Zs.Home.WebApi;
 
 namespace Zs.Home.Jobs.Hangfire.HardwareAnalyzer;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class HardwareAnalyzerJob
+public sealed class HardwareAnalyzerJob : IJob
 {
     private static readonly TimeSpan _alarmInterval = 3.Hours();
     private static DateTime? _lastAlarmUtcDate = DateTime.UtcNow - _alarmInterval;
