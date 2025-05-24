@@ -59,7 +59,7 @@ public sealed class UserWatcherJob : IJob
         {
             if (inactiveTime < _settings.InactiveHoursLimit.Hours())
             {
-                if (_userIdToIsInactive.TryGetValue(user.Id, out _))
+                if (_userIdToIsInactive.TryGetValue(user.Id, out var isInactive) && isInactive)
                     result.AppendLine($"{user.GetFullName()} is back online!");
 
                 _userIdToIsInactive[user.Id] = false;
