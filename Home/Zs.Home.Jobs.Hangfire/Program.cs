@@ -69,7 +69,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 // app.UseAuthorization();
 
-app.UseHangfireDashboard();
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization = Array.Empty<IDashboardAuthorizationFilter>()
