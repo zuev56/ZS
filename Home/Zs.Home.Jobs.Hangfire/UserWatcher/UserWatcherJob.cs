@@ -9,12 +9,13 @@ using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Jobs.Hangfire.Extensions;
+using Zs.Home.Jobs.Hangfire.Hangfire;
 using Zs.Home.Jobs.Hangfire.Notification;
 
 namespace Zs.Home.Jobs.Hangfire.UserWatcher;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class UserWatcherJob
+public sealed class UserWatcherJob : IJob
 {
     private static readonly TimeSpan _alarmInterval = 3.Hours();
     private static DateTime? _lastAlarmUtcDate = DateTime.UtcNow - _alarmInterval;
@@ -58,7 +59,7 @@ public sealed class UserWatcherJob
         {
             if (inactiveTime < _settings.InactiveHoursLimit.Hours())
             {
-                if (_userIdToIsInactive[user.Id] == true)
+                if (_userIdToIsInactive.TryGetValue(user.Id, out _))
                     result.AppendLine($"{user.GetFullName()} is back online!");
 
                 _userIdToIsInactive[user.Id] = false;
