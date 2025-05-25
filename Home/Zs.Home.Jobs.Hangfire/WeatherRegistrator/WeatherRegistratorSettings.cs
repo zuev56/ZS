@@ -1,20 +1,21 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Zs.Home.Jobs.Hangfire.Hangfire;
 
 namespace Zs.Home.Jobs.Hangfire.WeatherRegistrator;
 
-public sealed class WeatherRegistratorSettings
+public sealed class WeatherRegistratorSettings : ICronSettings
 {
-    public const string SectionName = "WeatherRegistrator";
+    internal const string SectionName = "WeatherRegistrator";
 
     [Required]
-    public required string CronExpression { get; set; }
+    public required string CronExpression { get; init; }
 
     [Required]
-    public required IReadOnlyList<Place> Places { get; set; }
+    public required IReadOnlyList<Place> Places { get; init; }
 
     [Required]
-    public required IReadOnlyList<Sensor> Sensors { get; set; }
+    public required IReadOnlyList<Sensor> Sensors { get; init; }
 }
 
 // ReSharper disable once ClassNeverInstantiated.Global

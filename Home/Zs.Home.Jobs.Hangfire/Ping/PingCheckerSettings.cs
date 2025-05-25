@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using Zs.Home.Jobs.Hangfire.Hangfire;
 
 namespace Zs.Home.Jobs.Hangfire.Ping;
 
-public sealed class PingCheckerSettings
+public sealed class PingCheckerSettings : ICronSettings
 {
-    public const string SectionName = "PingChecker";
+    internal const string SectionName = "PingChecker";
 
     [Required]
-    public required string CronExpression { get; set; }
+    public required string CronExpression { get; init; }
 }

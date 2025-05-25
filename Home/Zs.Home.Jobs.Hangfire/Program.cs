@@ -74,23 +74,12 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
     Authorization = Array.Empty<IDashboardAuthorizationFilter>()
 });
 
-var logAnalyzerSettings = app.Services.GetRequiredService<IOptions<LogAnalyzerSettings>>().Value;
-AddRecurringJob<LogAnalyzerJob>(logAnalyzerSettings.CronExpression);
-
-var hardwareAnalyzerSettings = app.Services.GetRequiredService<IOptions<HardwareAnalyzerSettings>>().Value;
-AddRecurringJob<HardwareAnalyzerJob>(hardwareAnalyzerSettings.CronExpression);
-
-var pingCheckerSettings = app.Services.GetRequiredService<IOptions<PingCheckerSettings>>().Value;
-AddRecurringJob<PingCheckerJob>(pingCheckerSettings.CronExpression);
-
-var userWatcherSettings = app.Services.GetRequiredService<IOptions<UserWatcherSettings>>().Value;
-AddRecurringJob<UserWatcherJob>(userWatcherSettings.CronExpression);
-
-var weatherAnalyzerSettings = app.Services.GetRequiredService<IOptions<WeatherAnalyzerSettings>>().Value;
-AddRecurringJob<WeatherAnalyzerJob>(weatherAnalyzerSettings.CronExpression);
-
-var weatherRegistratorSettings = app.Services.GetRequiredService<IOptions<WeatherRegistratorSettings>>().Value;
-AddRecurringJob<WeatherRegistratorJob>(weatherRegistratorSettings.CronExpression);
+AddRecurringJob<LogAnalyzerJob, LogAnalyzerSettings>(app);
+AddRecurringJob<HardwareAnalyzerJob, HardwareAnalyzerSettings>(app);
+AddRecurringJob<PingCheckerJob, PingCheckerSettings>(app);
+AddRecurringJob<UserWatcherJob, UserWatcherSettings>(app);
+AddRecurringJob<WeatherAnalyzerJob, WeatherAnalyzerSettings>(app);
+AddRecurringJob<WeatherRegistratorJob, WeatherRegistratorSettings>(app);
 
 // TODO: Нужен джоб-хелсчекер. Если бот будет недоступен, то отправить уведомление на email
 //       Этот же джоб будет проверять все остальные сервисы. А сам Hangfire будет проверяться ботом.
@@ -100,14 +89,16 @@ AddRecurringJob<WeatherRegistratorJob>(weatherRegistratorSettings.CronExpression
 app.Run();
 return;
 
-
-static void AddRecurringJob<T>(string cronExpression)
-    where T: IJob
+static void AddRecurringJob<TJob, TSettings>(WebApplication app)
+    where TJob: IJob
+    where TSettings : class, ICronSettings
 {
-    RecurringJob.AddOrUpdate<T>(
-        nameof(T),
+    var jobSettings = app.Services.GetRequiredService<IOptions<TSettings>>().Value;
+
+    RecurringJob.AddOrUpdate<TJob>(
+        nameof(TJob),
         job => job.ExecuteAsync(CancellationToken.None),
-        cronExpression);
+        jobSettings.CronExpression);
 }
 
 static async Task InitializeWeatherRegistratorDatabaseAsync(IServiceProvider serviceProvider)
