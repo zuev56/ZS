@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Zs.Common.Models;
+using static System.Environment;
 
 namespace Zs.Common.Extensions;
 
@@ -13,12 +14,15 @@ public static class LoggerExtensions
 {
     public static void LogProgramStartup(this ILogger logger)
     {
+        var evHostName = GetEnvironmentVariable("HOSTNAME");
         logger.LogWarning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
             Assembly.GetEntryAssembly()?.GetName().Name ?? "Unknown",
-            Environment.MachineName,
-            Environment.OSVersion,
-            Environment.UserName,
-            Environment.ProcessId);
+            evHostName != null
+                ? $"{evHostName} (Docker: {MachineName})"
+                : MachineName,
+            OSVersion,
+            UserName,
+            ProcessId);
     }
 
     public static void LogAppliedConfigurationFiles(this ILogger logger, IConfigurationBuilder configuration)
