@@ -1,7 +1,7 @@
 ﻿# cd git/ZS
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t home.web-api -f Home/Zs.Home.WebApi/Dockerfile .
-# sudo docker run --name home-web-api --restart unless-stopped -p 6024:80 \
+# sudo docker run -e HOSTNAME=$(hostname) --name home-web-api --restart unless-stopped -p 6024:80 \
 #    -v /opt/configs:/opt/configs:ro \
 #    -v /proc:/host/proc:ro \
 #    -v /sys:/host/sys:ro \

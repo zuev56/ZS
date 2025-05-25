@@ -4,6 +4,8 @@ services:
   worker:
     image: vk-activity.worker
     container_name: vk-activity-worker
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: .
       dockerfile: Vk/Zs.VkActivity.Worker/Dockerfile
@@ -16,6 +18,8 @@ services:
   web-api:
     image: vk-activity.web-api
     container_name: vk-activity-api
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: .
       dockerfile: Vk/Zs.VkActivity.WebApi/Dockerfile

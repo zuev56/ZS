@@ -1,7 +1,7 @@
 ﻿# cd git/ZS
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-vk-activity-api -f Vk/Zs.VkActivity.WebApi/Dockerfile .
-# sudo docker run --name vk-activity-api --restart unless-stopped -p 6011:80 -v /opt/configs:/opt/configs/:ro -it zs-vk-activity-api
+# sudo docker run -e HOSTNAME=$(hostname) --name vk-activity-api --restart unless-stopped -p 6011:80 -v /opt/configs:/opt/configs/:ro -it zs-vk-activity-api
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID

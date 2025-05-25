@@ -4,6 +4,8 @@ services:
   web-api:
     image: home.web-api
     container_name: home-web-api
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: .
       dockerfile: Home/Zs.Home.WebApi/Dockerfile
@@ -26,6 +28,8 @@ services:
   bot:
     image: home.bot
     container_name: home-bot
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: .
       dockerfile: Home/Zs.Home.Bot/Dockerfile
@@ -40,6 +44,8 @@ services:
   jobs:
     image: home.jobs-hangfire
     container_name: home-jobs
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: .
       dockerfile: Home/Zs.Home.Jobs.Hangfire/Dockerfile
@@ -56,6 +62,8 @@ services:
   client-app:
     image: home.client-app
     container_name: home-client-app
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: .
       dockerfile: Home/Zs.Home.ClientApp/Dockerfile

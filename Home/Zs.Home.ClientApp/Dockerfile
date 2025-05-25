@@ -1,7 +1,7 @@
 ﻿# cd git/ZS (FROM SOLUTION DIRECTORY!!!)
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-home-client-app -f Home/Zs.Home.ClientApp/Dockerfile .
-# sudo docker run --name home-client-app -p 6021:80 --restart unless-stopped -v /opt/configs:/opt/configs/:ro -it zs-home-client-app
+# sudo docker run -e HOSTNAME=$(hostname) --name home-client-app -p 6021:80 --restart unless-stopped -v /opt/configs:/opt/configs/:ro -it zs-home-client-app
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID

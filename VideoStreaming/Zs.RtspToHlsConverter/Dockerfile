@@ -1,7 +1,7 @@
 ﻿# cd git/ZS/VideoStreaming/Zs.RtspToHlsConverter
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-rtsp-to-hls-converter -f Dockerfile .
-# docker run --name rtsp-to-hls-converter --mount type=bind,source=/var/lib/videos,target=/var/lib/videos -it zs-rtsp-to-hls-converter
+# docker run -e HOSTNAME=$(hostname) --name rtsp-to-hls-converter --mount type=bind,source=/var/lib/videos,target=/var/lib/videos -it zs-rtsp-to-hls-converter
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG TARGETARCH

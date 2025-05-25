@@ -1,6 +1,8 @@
 ﻿services:
 
   rtsp-to-hls-converter:
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: ./Zs.RtspToHlsConverter
     restart: always
@@ -8,6 +10,8 @@
       - "/var/lib/videos:/var/lib/videos"
 
   web-api:
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: ./Zs.VideoPlayer.WebApi
     ports:
@@ -19,6 +23,8 @@
       - "/var/lib/videos:/var/lib/videos"
 
   client-app:
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
       context: ./Zs.VideoPlayer.ClientApp
     ports:
