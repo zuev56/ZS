@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,7 @@ public static class LoggerExtensions
     public static void LogProgramStartup(this ILogger logger)
     {
         logger.LogWarning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
-            Process.GetCurrentProcess().MainModule?.ModuleName,
+            Assembly.GetEntryAssembly()?.GetName().Name ?? "Unknown",
             Environment.MachineName,
             Environment.OSVersion,
             Environment.UserName,
