@@ -91,12 +91,12 @@ return;
 
 static void AddRecurringJob<TJob, TSettings>(WebApplication app)
     where TJob: IJob
-    where TSettings : class, ICronSettings
+    where TSettings: class, ICronSettings
 {
     var jobSettings = app.Services.GetRequiredService<IOptions<TSettings>>().Value;
 
     RecurringJob.AddOrUpdate<TJob>(
-        nameof(TJob),
+        typeof(TJob).Name,
         job => job.ExecuteAsync(CancellationToken.None),
         jobSettings.CronExpression);
 }
