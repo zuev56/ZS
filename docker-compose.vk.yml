@@ -5,7 +5,7 @@ services:
     image: vk-activity.worker
     container_name: vk-activity-worker
     environment:
-      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
+      - HOSTNAME=${HOSTNAME}  # Предварительно выполнить на хосте: echo "HOSTNAME=$(hostname)" > .env
     build:
       context: .
       dockerfile: Vk/Zs.VkActivity.Worker/Dockerfile

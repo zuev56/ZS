@@ -5,7 +5,7 @@ services:
     image: home.web-api
     container_name: home-web-api
     environment:
-      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
+      - HOSTNAME=${HOSTNAME}  # Предварительно выполнить на хосте: echo "HOSTNAME=$(hostname)" > .env
     build:
       context: .
       dockerfile: Home/Zs.Home.WebApi/Dockerfile
@@ -29,7 +29,7 @@ services:
     image: home.bot
     container_name: home-bot
     environment:
-      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
+      - HOSTNAME=${HOSTNAME}  # Предварительно выполнить на хосте: echo "HOSTNAME=$(hostname)" > .env
     build:
       context: .
       dockerfile: Home/Zs.Home.Bot/Dockerfile
@@ -37,6 +37,8 @@ services:
         - linux/arm64
     ports:
       - "6022:80"
+    depends_on:
+      - web-api
     restart: unless-stopped
     volumes:
       - "/opt/configs:/opt/configs/:ro"
@@ -45,7 +47,7 @@ services:
     image: home.jobs-hangfire
     container_name: home-jobs
     environment:
-      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
+      - HOSTNAME=${HOSTNAME}  # Предварительно выполнить на хосте: echo "HOSTNAME=$(hostname)" > .env
     build:
       context: .
       dockerfile: Home/Zs.Home.Jobs.Hangfire/Dockerfile
@@ -63,7 +65,7 @@ services:
     image: home.client-app
     container_name: home-client-app
     environment:
-      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
+      - HOSTNAME=${HOSTNAME}  # Предварительно выполнить на хосте: echo "HOSTNAME=$(hostname)" > .env
     build:
       context: .
       dockerfile: Home/Zs.Home.ClientApp/Dockerfile

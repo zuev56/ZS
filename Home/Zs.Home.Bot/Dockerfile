@@ -3,7 +3,7 @@
 # sudo docker buildx build --platform linux/arm64 -t zs-home-bot -f Home/Zs.Home.Bot/Dockerfile .
 # sudo docker run -e HOSTNAME=$(hostname) --name home-bot -p 6022:80 --restart unless-stopped -v /opt/configs:/opt/configs/:ro -it zs-home-bot
 
-FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
 WORKDIR /app
 
