@@ -66,19 +66,28 @@ public sealed class WeatherAnalyzerJob : IJob
                 var settings = deviation.Settings;
                 var comparison = deviation.Type switch
                 {
-                    DeviationType.HiHi => $"is higher than {settings.HiHi} {parameter.Unit} ({DeviationType.HiHi})",
-                    DeviationType.Hi => $"is higher than {settings.Hi} {parameter.Unit} ({DeviationType.Hi})",
-                    DeviationType.Lo => $"is lower than {settings.Lo} {parameter.Unit} ({DeviationType.Lo})",
-                    DeviationType.LoLo => $"is lower than {settings.LoLo} {parameter.Unit} ({DeviationType.LoLo})",
+                    DeviationType.HiHi => $"> {settings.HiHi} ({DeviationType.HiHi})",
+                    DeviationType.Hi => $"> {settings.Hi} ({DeviationType.Hi})",
+                    DeviationType.Lo => $"< {settings.Lo} ({DeviationType.Lo})",
+                    DeviationType.LoLo => $"< {settings.LoLo} ({DeviationType.LoLo})",
                     _ => throw new ArgumentOutOfRangeException()
                 };
 
                 message.AppendLine(
                     $"{deviation.SensorAlias ?? deviation.SensorName}" +
-                    $".{parameter.Name}: {parameter.Value} {parameter.Unit} {comparison}");
+                    $" {GetParameterLetterOrName(parameter.Name)} {parameter.Value} {parameter.Unit} {comparison}");
             }
         }
 
         return message.ToString();
     }
+
+    private static string GetParameterLetterOrName(string parameter)
+        => parameter.ToLowerInvariant() switch
+        {
+            "temperature" => "T =",
+            "humidity" => "\ud835\udf11 =",
+            "pressure" => "p =",
+            _ => $"{parameter}:"
+        };
 }
