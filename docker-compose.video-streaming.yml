@@ -7,7 +7,7 @@ services:
     environment:
       - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
-      context: ./Zs.RtspToHlsConverter
+      context: VideoStreaming/Zs.RtspToHlsConverter
     restart: always
     volumes:
       - "/opt/videos:/opt/videos/"
@@ -16,7 +16,7 @@ services:
     environment:
       - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
-      context: ./Zs.VideoPlayer.WebApi
+      context: VideoStreaming/Zs.VideoPlayer.WebApi
     ports:
       - "6001:80"
     depends_on:
@@ -27,9 +27,9 @@ services:
 
   client-app:
     environment:
-      - HOSTNAME=${HOSTNAME}  # Предварительно выполнить на хосте: echo "HOSTNAME=$(hostname)" > .env
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
-      context: ./Zs.VideoPlayer.ClientApp
+      context: VideoStreaming/Zs.VideoPlayer.ClientApp
     ports:
       - "6002:80"
     depends_on:
