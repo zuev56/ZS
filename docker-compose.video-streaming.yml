@@ -15,7 +15,9 @@ services:
         - linux/arm64
     restart: unless-stopped
     volumes:
+      - "/opt/configs:/opt/configs/:ro"
       - "/opt/videos:/opt/videos/"
+      - "/usr/bin:/usr/bin/:ro"
 
   web-api:
     image: video-streaming.web-api
@@ -33,7 +35,8 @@ services:
       - rtsp-to-hls-converter
     restart: unless-stopped
     volumes:
-      - "/opt/videos:/opt/videos/"
+      - "/opt/configs:/opt/configs/:ro"
+      - "/opt/videos:/opt/videos/:ro"
 
   client-app:
     image: video-streaming.client-app
@@ -50,3 +53,5 @@ services:
     depends_on:
       - web-api
     restart: unless-stopped
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"

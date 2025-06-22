@@ -1,7 +1,7 @@
 ﻿# cd git/ZS/VideoStreaming/Zs.RtspToHlsConverter
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-rtsp-to-hls-converter -f Dockerfile .
-# docker run -e HOSTNAME=$(hostname) --name rtsp-to-hls-converter -v /opt/configs:/opt/configs/:ro -v /opt/videos:/opt/videos/ -it zs-rtsp-to-hls-converter
+# docker run -e HOSTNAME=$(hostname) --name rtsp-to-hls-converter -v /opt/configs:/opt/configs/:ro -v /usr/bin:/usr/bin/:ro -v /opt/videos:/opt/videos/ -it zs-rtsp-to-hls-converter
 
 FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
 USER $APP_UID
