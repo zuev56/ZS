@@ -17,7 +17,7 @@ services:
     volumes:
       - "/opt/configs:/opt/configs/:ro"
       - "/opt/videos:/opt/videos/"
-#     - "/usr/bin:/usr/bin/:ro" - таким образом будет потерян dotnet и не получится запуститься. Перенёс ffmpeg в /opt/videos/
+#     - "/usr/bin:/usr/bin/:ro" - таким образом будет потерян dotnet и не получится запуститься. Надо ставить ffmpeg в контейнер
 
   web-api:
     image: video-streaming.web-api

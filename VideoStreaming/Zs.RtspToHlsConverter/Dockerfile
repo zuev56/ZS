@@ -28,4 +28,5 @@ ENTRYPOINT ["dotnet", "Zs.RtspToHlsConverter.dll"]
  # command-line args (global configuration path)
 CMD ["/opt/configs/"]
 
+RUN apt update && apt install -y ffmpeg mc && rm -rf /var/lib/apt/lists/*
 #RUN mkdir /opt/videos
