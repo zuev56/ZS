@@ -4,6 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 <!--    <PublishTrimmed>true</PublishTrimmed>-->
 <!--    <PublishSingleFile>true</PublishSingleFile>-->
 <!--    <SelfContained>true</SelfContained>-->
@@ -29,7 +30,6 @@
   <ItemGroup>
     <Content Include="..\..\.dockerignore">
       <Link>.dockerignore</Link>
-      <DependentUpon>Dockerfile</DependentUpon>
     </Content>
   </ItemGroup>
 
