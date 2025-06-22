@@ -1,4 +1,7 @@
-﻿services:
+﻿# sudo docker compose -f docker-compose.video-streaming.yml up -d
+
+name: "video-streaming"
+services:
 
   rtsp-to-hls-converter:
     environment:
@@ -7,7 +10,7 @@
       context: ./Zs.RtspToHlsConverter
     restart: always
     volumes:
-      - "/var/lib/videos:/var/lib/videos"
+      - "/opt/videos:/opt/videos/"
 
   web-api:
     environment:
@@ -20,7 +23,7 @@
       - rtsp-to-hls-converter
     restart: always
     volumes:
-      - "/var/lib/videos:/var/lib/videos"
+      - "/opt/videos:/opt/videos/"
 
   client-app:
     environment:

@@ -1,4 +1,6 @@
-﻿name: "home"
+﻿# sudo docker compose -f docker-compose.home.yml up -d
+
+name: "home"
 services:
 
   web-api:

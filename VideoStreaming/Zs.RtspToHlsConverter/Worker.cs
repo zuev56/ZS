@@ -56,15 +56,13 @@ public sealed class Worker : BackgroundService
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            var bashPath = "/bin/bash";
-            await RunFfmpeg(bashPath, ct);
+            await RunFfmpeg("/bin/bash", ct);
             return;
         }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            var powerShellPath = "powershell.exe";
-            await RunFfmpeg(powerShellPath, ct);
+            await RunFfmpeg("powershell.exe", ct);
             return;
         }
 

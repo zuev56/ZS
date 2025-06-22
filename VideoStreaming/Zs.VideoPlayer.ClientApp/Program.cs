@@ -1,14 +1,22 @@
 using System.Reflection;
+using Serilog;
 using Zs.Common.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
+builder.Host.UseSerilog();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
+
+app.Logger.LogProgramStartup();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

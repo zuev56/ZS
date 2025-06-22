@@ -1,4 +1,6 @@
-﻿name: "vk-activity"
+﻿# sudo docker compose -f docker-compose.vk.yml up -d
+
+name: "vk-activity"
 services:
 
   worker:
