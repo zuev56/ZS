@@ -4,34 +4,49 @@ name: "video-streaming"
 services:
 
   rtsp-to-hls-converter:
+    image: video-streaming.converter
+    container_name: video-streaming-converter
     environment:
       - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
-      context: VideoStreaming/Zs.RtspToHlsConverter
-    restart: always
+      context: .
+      dockerfile: VideoStreaming/Zs.RtspToHlsConverter/Dockerfile
+      platforms:
+        - linux/arm64
+    restart: unless-stopped
     volumes:
       - "/opt/videos:/opt/videos/"
 
   web-api:
+    image: video-streaming.web-api
+    container_name: video-streaming-web-api
     environment:
       - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
-      context: VideoStreaming/Zs.VideoPlayer.WebApi
+      context: .
+      dockerfile: VideoStreaming/Zs.VideoPlayer.WebApi/Dockerfile
+      platforms:
+        - linux/arm64
     ports:
       - "6001:80"
     depends_on:
       - rtsp-to-hls-converter
-    restart: always
+    restart: unless-stopped
     volumes:
       - "/opt/videos:/opt/videos/"
 
   client-app:
+    image: video-streaming.client-app
+    container_name: video-streaming-client-app
     environment:
       - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
-      context: VideoStreaming/Zs.VideoPlayer.ClientApp
+      context: .
+      dockerfile: VideoStreaming/Zs.VideoPlayer.ClientApp/Dockerfile
+      platforms:
+        - linux/arm64
     ports:
       - "6002:80"
     depends_on:
       - web-api
-    restart: always
+    restart: unless-stopped

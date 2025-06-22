@@ -28,4 +28,4 @@ ENTRYPOINT ["dotnet", "Zs.RtspToHlsConverter.dll"]
  # command-line args (global configuration path)
 CMD ["/opt/configs/"]
 
-RUN mkdir /opt/videos
+#RUN mkdir /opt/videos
