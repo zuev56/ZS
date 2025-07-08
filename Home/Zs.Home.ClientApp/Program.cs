@@ -12,6 +12,7 @@ using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.ClientApp.Data;
 using Zs.Home.ClientApp.Pages.Dashboard.Weather;
+using Zs.Home.WebApi.Client.Bootstrap;
 
 namespace Zs.Home.ClientApp;
 
@@ -43,7 +44,9 @@ public static class Program
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        builder.Services.AddUserWatcher(builder.Configuration);
+        builder.Services
+            .AddHomeClient(builder.Configuration)
+            .AddUserWatcher(builder.Configuration);
 
         builder.Services
             .AddMediatR(config=> config.RegisterServicesFromAssemblies(typeof(Program).Assembly))
