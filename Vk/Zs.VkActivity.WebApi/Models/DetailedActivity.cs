@@ -40,7 +40,7 @@ public sealed class DetailedActivity
     {
         UserId = user.Id;
         UserName = $"{user.FirstName} {user.LastName}";
-        Url = $"https://vk.com/id{JsonDocument.Parse(user.RawData).RootElement.GetProperty("id")}";
+        Url = $"https://vk.ru/id{JsonDocument.Parse(user.RawData).RootElement.GetProperty("id")}";
     }
 }
 

@@ -7,8 +7,8 @@ namespace Zs.VkActivity.Common.Services;
 
 public sealed class VkIntegration : IVkIntegration
 {
-    // https://dev.vk.com/reference/objects/user
-    private const string BaseUrl = "https://api.vk.com/method/";
+    // https://dev.vk.ru/reference/objects/user
+    private const string BaseUrl = "https://api.vk.ru/method/";
     private readonly string _getUsersUrl;
     private readonly string _getFriendsUrl;
     private const string FieldsForGettingUserActivity = "online,last_seen";

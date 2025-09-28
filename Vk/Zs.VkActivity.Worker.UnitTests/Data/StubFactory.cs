@@ -53,7 +53,7 @@ internal class StubFactory
                 ""is_closed"": false,
                 ""sex"": {Random.Shared.Next(1, 2)},
                 ""screen_name"": ""id{userId}"",
-                ""photo_50"": ""https://vk.com/images/camera_50.png"",
+                ""photo_50"": ""https://vk.ru/images/camera_50.png"",
                 ""verified"": {Random.Shared.Next(0, 1)},
                 ""nickname"": """",
                 ""domain"": ""id{userId}"",

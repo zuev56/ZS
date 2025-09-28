@@ -3,7 +3,7 @@ using Zs.VkActivity.Data.Models;
 
 namespace Zs.VkActivity.Common.Models.VkApi;
 
-// https://dev.vk.com/reference/objects/user#last_seen
+// https://dev.vk.ru/reference/objects/user#last_seen
 public sealed class LastSeenResponse : VkApiResponse
 {
     [JsonPropertyName("time")]
