@@ -29,4 +29,6 @@ public sealed class Fault
     {
         return new Fault(nameof(Unknown), message);
     }
+
+    public override string ToString() => $"Code: {Code}, Message: {Message}";
 }

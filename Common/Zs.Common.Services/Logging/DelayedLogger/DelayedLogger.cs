@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
 
 namespace Zs.Common.Services.Logging.DelayedLogger;
@@ -22,16 +23,18 @@ public sealed class DelayedLogger<TSourceContext> : IDelayedLogger<TSourceContex
     private readonly Timer _timer;
     private readonly ILoggerFactory _loggerFactory;
 
-    public TimeSpan DefaultLogWriteInterval { get; set; } = TimeSpan.FromMinutes(1);
+    // TODO: rename to LogWriteInterval or allow to use alternative value
+    public TimeSpan DefaultLogWriteInterval { get; set; }
 
-    public DelayedLogger(ILoggerFactory loggerFactory, int analyzeIntervalMs = 5)
+    public DelayedLogger(IOptions<DelayedLoggerSettings> settings, ILoggerFactory loggerFactory)
     {
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-        _timer = new Timer(DoWork, null, 0, analyzeIntervalMs);
+        DefaultLogWriteInterval = settings.Value.DefaultLogWriteIntervalMs.Milliseconds();
+        _timer = new Timer(ProcessLogMessages, null, 0, settings.Value.ProcessIntervalMs);
     }
 
-    private void DoWork(object? state)
+    private void ProcessLogMessages(object? state)
     {
         var expiredMessageInfos = _messages
             .GroupBy(m => m.Text)
