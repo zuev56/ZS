@@ -1,6 +1,6 @@
 ﻿using System;
 using Zs.Common.Exceptions;
-#nullable enable
+
 namespace Zs.Common.Models;
 
 public class Result

@@ -1,11 +1,12 @@
-using System;
-using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog;
+using Zs.Common.Extensions;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Logging.DelayedLogger;
 using Zs.Common.Services.Scheduling;
@@ -21,24 +22,23 @@ using Zs.VkActivity.Worker.Services;
 [assembly: InternalsVisibleTo("Worker.UnitTests")]
 [assembly: InternalsVisibleTo("Worker.IntegrationTests")]
 
-
 var host = Host.CreateDefaultBuilder(args)
     .UseSerilog()
+    .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
     .ConfigureServices(ConfigureServices)
     .Build();
 
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(host.Services.GetService<IConfiguration>())
+    .ReadFrom.Configuration(host.Services.GetRequiredService<IConfiguration>())
     .CreateLogger();
 
-Log.Warning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
-    Process.GetCurrentProcess().MainModule?.ModuleName, Environment.MachineName,
-    Environment.OSVersion, Environment.UserName, Environment.ProcessId);
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
+logger.LogProgramStartup();
 
 await host.RunAsync();
 
 
-void ConfigureServices(HostBuilderContext context, IServiceCollection services)
+static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
 {
     services.AddDbContext<VkActivityContext>(options =>
         options.UseNpgsql(context.Configuration.GetConnectionString(AppSettings.ConnectionStrings.Default)));
@@ -65,8 +65,8 @@ void ConfigureServices(HostBuilderContext context, IServiceCollection services)
 
     using (var serviceScope = services.BuildServiceProvider().GetService<IServiceScopeFactory>()!.CreateScope())
     {
-        var dbContext = serviceScope.ServiceProvider.GetRequiredService<VkActivityContext>();
-        dbContext.Database.Migrate();
+        using var dbContext = serviceScope.ServiceProvider.GetRequiredService<VkActivityContext>();
+        dbContext.Database.EnsureCreated();
     }
 
     services.AddHostedService<WorkerService>();

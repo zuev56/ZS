@@ -1,29 +1,26 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Zs.Common.Services.Logging.Seq;
 
 namespace Zs.Home.Application.Features.Seq;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSeq(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddSeqLogAnalyzer(this IServiceCollection services, IConfiguration configuration)
+        => AddSeqLogAnalyzer<SeqSettings>(services, configuration);
+
+    public static IServiceCollection AddSeqLogAnalyzer<TSettings>(this IServiceCollection services, IConfiguration configuration)
+        where TSettings : SeqSettings
     {
-        services.AddOptions<SeqSettings2>()
-            .Bind(configuration.GetSection(SeqSettings2.SectionName))
+        services.AddOptions<TSettings>()
+            .Bind(configuration.GetSection(SeqSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<SeqSettings>()
+            .Bind(configuration.GetSection(SeqSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddSingleton<ISeqService, SeqService>(static provider =>
-        {
-            var options = provider.GetRequiredService<IOptions<SeqSettings2>>().Value;
-            var logger = provider.GetRequiredService<ILogger<SeqService>>();
-
-            return new SeqService(options.Url, options.Token, logger);
-        });
-
-        services.AddSingleton<ISeqEventsInformer, SeqEventsInformer>();
+        services.AddSingleton<ILogAnalyzer, SeqLogAnalyzer>();
 
         return services;
     }

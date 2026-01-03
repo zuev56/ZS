@@ -1,20 +1,56 @@
+using System.Reflection;
+using Serilog;
+using Zs.Common.Extensions;
+using Zs.Home.Application.Features.Hardware;
+using Zs.Home.Application.Features.Seq;
+using Zs.Home.WebApi;
+using Zs.Home.WebApi.Features.Ping;
+using Zs.Home.WebApi.Features.Weather;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
+builder.Host.UseSerilog();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Services.AddHardwareMonitor(builder.Configuration);
+builder.Services.AddSeqLogAnalyzer(builder.Configuration);
+builder.Services.AddPingChecker(builder.Configuration);
+builder.Services.AddWeatherAnalyzer(builder.Configuration);
+builder.Services.AddMediatR(
+    config => config.RegisterServicesFromAssemblies(typeof(Program).GetTypeInfo().Assembly));
+
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerDocument(config =>
+{
+    config.PostProcess = document =>
+    {
+        document.Info.Title = builder.Configuration[SwaggerSettings.ApiTitle];
+        document.Info.Version = builder.Configuration[SwaggerSettings.ApiVersion];
+    };
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.Logger.LogProgramStartup();
+
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.EnableTryItOutByDefault();
+    options.DisplayRequestDuration();
+    options.SwaggerEndpoint(
+        builder.Configuration[SwaggerSettings.EndpointUrl],
+        builder.Configuration[SwaggerSettings.ApiTitle] + " " + builder.Configuration[SwaggerSettings.ApiVersion]);
+});
+// app.UseOpenApi();
+app.UseRouting();
 
 app.UseHttpsRedirection();
 

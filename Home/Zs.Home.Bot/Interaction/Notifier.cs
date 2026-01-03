@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Zs.Bot.Data.Repositories;
 using Zs.Bot.Services.Messaging;
@@ -16,19 +17,22 @@ internal sealed class Notifier
     private readonly IMessagesRepository _messagesRepository;
     private readonly NotifierSettings _notifierSettings;
     private readonly BotSettings _botSettings;
+    private readonly ILogger<Notifier> _logger;
 
     public Notifier(
         IBotClient botClient,
         IChatsRepository chatsRepository,
         IMessagesRepository messagesRepository,
         IOptions<NotifierSettings> notifierOptions,
-        IOptions<BotSettings> botOptions)
+        IOptions<BotSettings> botOptions,
+        ILogger<Notifier> logger)
     {
         _botClient = botClient;
         _chatsRepository = chatsRepository;
         _messagesRepository = messagesRepository;
         _botSettings = botOptions.Value;
         _notifierSettings = notifierOptions.Value;
+        _logger = logger;
     }
 
     public Task ForceNotifyAsync(string notification)
@@ -47,13 +51,16 @@ internal sealed class Notifier
     private static string GetPreparedMessage(string message)
         => message.ReplaceEndingWithThreeDots(4000);
 
-    public async Task NotifyAsync(string jobResult)
+    public async Task NotifyAsync(string message)
     {
         var curHour = DateTime.Now.Hour;
-        if (string.IsNullOrWhiteSpace(jobResult) || curHour < _notifierSettings.FromHour || curHour >= _notifierSettings.ToHour)
+        if (string.IsNullOrWhiteSpace(message) || curHour < _notifierSettings.FromHour || curHour >= _notifierSettings.ToHour)
+        {
+            _logger.LogInformationIfNeed($"Quiet hours, message not sent: {message}");
             return;
+        }
 
-        var preparedMessage = GetPreparedMessage(jobResult);
+        var preparedMessage = GetPreparedMessage(message);
         await ForceNotifyAsync(preparedMessage);
     }
 

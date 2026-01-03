@@ -1,6 +1,6 @@
 ﻿namespace Zs.VkActivity.Data.Models;
 
-// https://dev.vk.com/reference/objects/user#last_seen
+// https://dev.vk.ru/reference/objects/user#last_seen
 
 public enum Platform
 {

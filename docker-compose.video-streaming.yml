@@ -1,0 +1,57 @@
+﻿# sudo docker compose -f docker-compose.video-streaming.yml up -d
+
+name: "video-streaming"
+services:
+
+  rtsp-to-hls-converter:
+    image: video-streaming.converter
+    container_name: video-streaming-converter
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
+    build:
+      context: .
+      dockerfile: VideoStreaming/Zs.RtspToHlsConverter/Dockerfile
+      platforms:
+        - linux/arm64
+    restart: unless-stopped
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"
+      - "/opt/videos:/opt/videos/"
+#     - "/usr/bin:/usr/bin/:ro" - таким образом будет потерян dotnet и не получится запуститься. Надо ставить ffmpeg в контейнер
+
+  web-api:
+    image: video-streaming.web-api
+    container_name: video-streaming-web-api
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
+    build:
+      context: .
+      dockerfile: VideoStreaming/Zs.VideoPlayer.WebApi/Dockerfile
+      platforms:
+        - linux/arm64
+    ports:
+      - "6001:80"
+    depends_on:
+      - rtsp-to-hls-converter
+    restart: unless-stopped
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"
+      - "/opt/videos:/opt/videos/:ro"
+
+  client-app:
+    image: video-streaming.client-app
+    container_name: video-streaming-client-app
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
+    build:
+      context: .
+      dockerfile: VideoStreaming/Zs.VideoPlayer.ClientApp/Dockerfile
+      platforms:
+        - linux/arm64
+    ports:
+      - "6002:80"
+    depends_on:
+      - web-api
+    restart: unless-stopped
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"

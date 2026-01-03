@@ -67,11 +67,12 @@ public sealed class ActivityAnalyzer : IActivityAnalyzer
             return Result.Fail<DetailedActivity>(GetUserStatisticsForPeriodError);
         }
     }
+
     private async Task<List<ActivityLogItem>> GetOrderedLog(DateTime fromDate, DateTime toDate, params int[] userIds)
     {
         var log = await _vkActivityLogRepo.FindAllByIdsInDateRangeAsync(userIds, fromDate, toDate);
 
-        // Важно учитывать обрыв связи и восстановление. Это добавляет 
+        // Важно учитывать обрыв связи и восстановление. Это добавляет
         // для каждого неактивного пользователя + 2 записи в день обрыва:
         // одна с обнулением состояния, вторая с фиксацией текущего состояния после восстановления
 
@@ -178,7 +179,7 @@ public sealed class ActivityAnalyzer : IActivityAnalyzer
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, GetUsersWithActivityError);
+            _logger.LogError(ex, GetUsersWithActivityError);
             return Result.Fail<List<ActivityListItem>>(GetUsersWithActivityError);
         }
     }
@@ -239,7 +240,7 @@ public sealed class ActivityAnalyzer : IActivityAnalyzer
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, GetUsersError);
+            _logger.LogError(ex, GetUsersError);
             return Result.Fail<List<User>>(GetUsersError);
         }
     }
@@ -391,33 +392,49 @@ public sealed class ActivityAnalyzer : IActivityAnalyzer
 
     public async Task<Result<DateTime>> GetLastVisitDate(int userId)
     {
-        var lastUsersActivity = await _vkActivityLogRepo.FindLastUsersActivityAsync(userId);
-        var lastUserActivity = lastUsersActivity.FirstOrDefault();
-
-        if (lastUserActivity == null)
+        try
         {
-            return Result.Fail<DateTime>($"Activity for user {userId} is not found");
-        }
+            var lastUsersActivity = await _vkActivityLogRepo.FindLastUsersActivityAsync(userId);
+            var lastUserActivity = lastUsersActivity.FirstOrDefault();
 
-        var lastVisitDate = lastUserActivity.LastSeen.FromUnixEpoch();
-        return lastVisitDate;
+            if (lastUserActivity == null)
+            {
+                return Result.Fail<DateTime>($"Activity for user {userId} is not found");
+            }
+
+            var lastVisitDate = lastUserActivity.LastSeen.FromUnixEpoch();
+            return lastVisitDate;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogErrorIfNeed(ex);
+            throw;
+        }
     }
 
     public async Task<Result<bool>> IsOnline(int userId)
     {
-        var lastUsersActivity = await _vkActivityLogRepo.FindLastUsersActivityAsync(userId);
-        var lastUserActivity = lastUsersActivity.FirstOrDefault();
-
-        if (lastUserActivity == null)
+        try
         {
-            return Result.Fail<bool>($"Activity for user {userId} is not found");
-        }
+            var lastUsersActivity = await _vkActivityLogRepo.FindLastUsersActivityAsync(userId);
+            var lastUserActivity = lastUsersActivity.FirstOrDefault();
 
-        if (lastUserActivity.IsOnline == null)
+            if (lastUserActivity == null)
+            {
+                return Result.Fail<bool>($"Activity for user {userId} is not found");
+            }
+
+            if (lastUserActivity.IsOnline == null)
+            {
+                return Result.Fail<bool>($"Activity for user {userId} is not defined");
+            }
+
+            return lastUserActivity.IsOnline.Value;
+        }
+        catch (Exception ex)
         {
-            return Result.Fail<bool>($"Activity for user {userId} is not defined");
+            _logger.LogErrorIfNeed(ex);
+            throw;
         }
-
-        return lastUserActivity.IsOnline.Value;
     }
 }

@@ -1,0 +1,186 @@
+﻿@using System.Globalization
+@using Microsoft.Extensions.Logging
+@using Zs.Common.Extensions
+@using Zs.Home.ClientApp.Common
+@using Zs.Home.ClientApp.Pages.Dashboard.Weather
+@namespace Zs.Home.ClientApp.Pages.Dashboard
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject ILogger<AnalogParameter> Logger;
+
+@model Zs.Home.ClientApp.Pages.Dashboard.Weather.AnalogParameter
+
+@{
+    var nameToImageMap = new Dictionary<string, string>
+    {
+        ["Temperature"] = "thermometer.png",
+        ["Humidity"] = "humidity.png",
+        ["Pressure"] = "pressure.png",
+        ["Co2"] = "co2.png"
+    };
+
+    var statusToClassMap = new Dictionary<Status, string>
+    {
+        [Status.Normal] = "bg-success",
+        [Status.WarningLo] = "bg-warning",
+        [Status.WarningHi] = "bg-warning",
+        [Status.DangerLoLo] = "bg-danger",
+        [Status.DangerHiHi] = "bg-danger"
+    };
+
+    var statusToColorMap = new Dictionary<Status, string>
+    {
+        [Status.Normal] = "green",
+        [Status.WarningLo] = "orange",
+        [Status.WarningHi] = "orange",
+        [Status.DangerLoLo] = "red",
+        [Status.DangerHiHi] = "red"
+    };
+
+    var forecastToDynamicArrowColorMap = new Dictionary<Forecast, string>
+    {
+        [Forecast.Normal] = "gray",
+        [Forecast.Good] = "green",
+        [Forecast.Warning] = "red",
+        [Forecast.Danger] = "red"
+    };
+
+    var minScaleValue = Math.Floor((Model.LoLo ?? 0) - ((Model.Lo ?? 0) - (Model.LoLo ?? 0)));
+    var maxScaleValue = Math.Ceiling((Model.HiHi ?? 0) + ((Model.HiHi ?? 0) - (Model.Hi ?? 0)));
+    var scaleSize = maxScaleValue - minScaleValue;
+    var parameterValueOnScale = Model.CurrentValue - minScaleValue;
+    var parameterValueOnProgress = parameterValueOnScale / scaleSize * 100;
+
+    var chartStartAt = (DateTime.UtcNow - Model.ValueLog.Keys.Min()).ToTimeAgo();
+    var chartEndAt = (DateTime.UtcNow - Model.ValueLog.Keys.Max()).ToTimeAgo();
+
+    void RenderDynamicIcon()
+    {
+        string arrowPath = null!;
+        string topLineColor = null!;
+        string bottomLineColor = null!;
+        var kDynamic = Model.Dynamic switch
+        {
+            Dynamic.Positive when Model.Status is not (Status.Normal or Status.DangerHiHi) => +1,
+            Dynamic.Negative when Model.Status is not (Status.Normal or Status.DangerLoLo) => -1,
+            _ => 0
+        };
+
+        switch (Model.Dynamic)
+        {
+            case Dynamic.Negative:
+                arrowPath = "M14 13.5a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1 0-1h4.793L2.146 2.854a.5.5 0 1 1 .708-.708L13 12.293V7.5a.5.5 0 0 1 1 0z";
+                topLineColor = statusToColorMap[Model.Status];
+                bottomLineColor = statusToColorMap[Model.Status + kDynamic];
+                break;
+            case Dynamic.Positive:
+                arrowPath = "M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0z";
+                topLineColor = statusToColorMap[Model.Status + kDynamic];
+                bottomLineColor = statusToColorMap[Model.Status];
+                break;
+        }
+
+        <svg class="bi-arrow-down-right"
+             width="16" height="16"
+             viewBox="0 0 16 16">
+
+            <svg y="0">
+                <line stroke="@topLineColor" x1="1.5" y1="1" x2="12" y2="1" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            @if (Model.Dynamic is not Dynamic.Stable)
+            {
+                <svg y="3">
+                    <path d="@arrowPath"
+                          transform="translate(0, -0.5) scale(0.7)"
+                          stroke-width="0.8"
+                          fill="@forecastToDynamicArrowColorMap[Model.Forecast]"
+                          stroke="@forecastToDynamicArrowColorMap[Model.Forecast]" />
+                </svg>
+            }
+            <svg y="14">
+                <line stroke="@bottomLineColor" x1="1.5" y1="1" x2="12" y2="1" stroke-width="2" stroke-linecap="round" />
+            </svg>
+        </svg>
+    }
+
+    Logger.LogDebugIfNeed($"{Model.Name}: [ ..., {string.Join(", ", Model.ValueLog.Values.Take(5).Reverse().Select(i => i.ToString(CultureInfo.InvariantCulture)))} ]," +
+                          $" status=\"{Model.Status}\"," +
+                          $" dynamic=\"{Model.Dynamic}\"," +
+                          $" forecast=\"{Model.Forecast}\"," +
+                          $" LL={Model.LoLo}, L={Model.Lo}, H={Model.Hi}, HH={Model.HiHi}");
+}
+
+<div class="row card indicator mt-1 ms-1 me-1 p-0">
+    <div class="progress p-0">
+        <img class="icon" src="@nameToImageMap[Model.Name]" alt="@Model.Name[..2]" >
+
+        @* Примерно 0.2 от прогрессбара занимает иконка и стрелка по краям *@
+        <div class="progress-bar @statusToClassMap[Model.Status]" role="progressbar"
+             style="width: @Math.Round(parameterValueOnScale / scaleSize * 100 * 0.8, 0)%"
+             aria-valuenow="@Math.Round(parameterValueOnProgress, 1).ToString(CultureInfo.InvariantCulture)"
+             aria-valuemin="0" aria-valuemax="100">
+            @Model.CurrentValue&nbsp;@Model.Unit
+        </div>
+
+        @{
+            RenderDynamicIcon();
+
+            /* Дано:
+             *   X   Y         Диапазон возможных значений на графике: от 0 до 16
+             *   0   31        min(Y) = 31 => 0
+             *   1   45        max(Y) = 65 => 16
+             *   3   65
+             *   4   47        65 - 31 = 34   - диапазон фактических значений
+             *                 16 / 34 = 0.47 - коэффициент, на который надо умножить фактические значения
+             *
+             *                                               Значения
+             *   X   Y                                      на графике
+             *   0   31 * 0.47 = 14.57     - 14.57   =>         0
+             *   1   45 * 0.47 = 21.15     - 14.57   =>         6.58
+             *   3   65 * 0.47 = 30.55     - 14.57   =>        15.98
+             *   4   47 * 0.47 = 22.09     - 14.57   =>         7.52
+             */
+
+            var vbHeight = 16; // 16 = 1rem
+            var vbWidth = Model.ValueLog.Count;
+            var min = Model.ValueLog.Values.Min();
+            var max = Model.ValueLog.Values.Max();
+            var kX = 1;
+            var kY = vbHeight / (max - min);
+            var offset = kY * min;
+
+            var points = Model.ValueLog
+                .OrderBy(v => v.Key)
+                .Select(i => i.Value * kY - offset)
+                .Select((value, index) => string.Create(CultureInfo.GetCultureInfo("en-US"),  $"{index*kX}, {value:F1}"));
+        }
+    </div>
+
+    @* <div class="container" style="height:5px"> *@
+    @*     <div class="row"> *@
+    @*         <div class="col-auto" style="width:15%; background:red">qwe</div> *@
+    @*         <div class="col-auto" style="width:15%; background:orange">qwe</div> *@
+    @*         <div class="col-auto" style="width:40%; background:limegreen">qwe</div> *@
+    @*         <div class="col-auto" style="width:15%; background:orange">qwe</div> *@
+    @*         <div class="col-auto" style="width:15%; background:red">qwe</div> *@
+    @*     </div> *@
+    @* </div> *@
+
+    @* <svg viewBox="@scaleMinValue 0 @scaleMaxValue 3" preserveAspectRatio="none"> *@
+    @*     <line x1="@scaleMinValue" y1="1" x2="@lolo"          y2="1" stroke="red"    stroke-width="3" /> *@
+    @*     <line x1="@lolo"          y1="1" x2="@lo"            y2="1" stroke="orange" stroke-width="3" /> *@
+    @*     <line x1="@lo"            y1="1" x2="@hi"            y2="1" stroke="green"  stroke-width="3" /> *@
+    @*     <line x1="@hi"            y1="1" x2="@hihi"          y2="1" stroke="orange" stroke-width="3" /> *@
+    @*     <line x1="@hihi"          y1="1" x2="@scaleMaxValue" y2="1" stroke="red"    stroke-width="3" /> *@
+    @*     $1$ <circle r="5" cx="@Model.CurrentValue" cy="2" fill="black" stroke-width="1" vector-effect="non-scaling-stroke" /> #1# *@
+    @* </svg> *@
+
+    <div class="row chart-wrapper">
+        <div class="chart-text">@chartStartAt</div>
+        <svg class="chart chart-line" viewBox="0 -1 @(vbWidth - 1) @(vbHeight + 2)" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#0000FF"
+                      vector-effect="non-scaling-stroke"
+                      points="@string.Join(Environment.NewLine, points)"/>
+        </svg>
+        <div class="chart-text">@chartEndAt</div>
+    </div>
+</div>

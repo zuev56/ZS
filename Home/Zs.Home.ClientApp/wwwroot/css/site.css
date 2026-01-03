@@ -1,4 +1,4 @@
-﻿html {
+html {
   font-size: 14px;
 }
 
@@ -19,4 +19,88 @@ html {
 
 body {
   margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+
+.bg-body-tertiary {
+    margin: 5px 0;
+}
+
+.indicator {
+
+    .icon {
+        padding-top: 0.10rem;
+        padding-bottom: 0.10rem;
+        padding-right: 0.25rem;
+        padding-left: 0.25rem;
+    }
+
+    .progress {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    .bg-success {
+        --bs-bg-opacity: 0.8;
+        background-color: rgba(var(--bs-success-rgb), var(--bs-bg-opacity)) !important;
+    }
+
+    .bg-warning {
+        --bs-bg-opacity: 0.9;
+        background-color: rgba(var(--bs-warning-rgb), var(--bs-bg-opacity)) !important;
+    }
+
+    .bg-danger {
+        --bs-bg-opacity: 1;
+        background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
+    }
+     .bi-arrow-down-right {
+         margin-left: auto;
+         margin-right: 0;
+     }
+
+    .chart-wrapper {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    .row.chart-wrapper > * {
+        flex-shrink: unset !important;
+    }
+
+    .chart-line {
+        height: 1rem;
+        padding-left: 3px;
+        padding-right: 3px;
+        padding-top: 1px;
+        padding-bottom: 1px;
+        transform: scaleY(-1);
+    }
+
+    .chart-text {
+        line-height: 70%;
+        font-size: 0.5em;
+        margin-left: 1px;
+        margin-top: 1px;
+        padding: 0;
+        width: min-content;
+        color: dimgray;
+    }
+}
+
+.ping-result {
+
+    .badge {
+        font-weight: 500;
+    }
 }

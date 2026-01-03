@@ -27,7 +27,7 @@ public static class StringExtensions
 
         return value.Length < maxStringLength
             ? value
-            : value[..(maxStringLength - 3)] + "...";
+            : value[..(maxStringLength - 3)].TrimEnd() + "...";
     }
 
     public static string FirstCharToUpper(this string value)
@@ -134,7 +134,7 @@ public static class StringExtensions
                 var elements = original.EnumerateArray().ToList();
                 if (elements.Count > 0 && IsObjectOrArray(elements[0]))
                 {
-                    for (int i = 0; i < elements.Count; i++)
+                    for (var i = 0; i < elements.Count; i++)
                     {
                         elements[i] = SortPropertiesAlphabetically(elements[i]);
                     }
@@ -162,5 +162,27 @@ public static class StringExtensions
 
         var splitValues = value.Split('.');
         return splitValues.Length == 4 && splitValues.All(r => byte.TryParse(r, out _));
+    }
+
+    public static bool IsConnectionString(this string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var lowerValue = value.ToLowerInvariant();
+
+        var isPostgres =
+            lowerValue.Contains("host=") ||
+            lowerValue.Contains("port=") ||
+            lowerValue.Contains("database=") ||
+            lowerValue.Contains("user=") ||
+            lowerValue.Contains("password=");
+
+        var isSqlite =
+            lowerValue.Contains("data source=") ||
+            lowerValue.Contains("cache=") ||
+            lowerValue.Contains("mode=");
+
+        return isPostgres || isSqlite;
     }
 }

@@ -1,13 +1,34 @@
-﻿services:
+﻿# sudo docker compose -f docker-compose.vk.yml up -d
+
+name: "vk-activity"
+services:
 
   worker:
+    image: vk-activity.worker
+    container_name: vk-activity-worker
+    environment:
+      - HOSTNAME=${HOSTNAME}  # Предварительно выполнить на хосте: echo "HOSTNAME=$(hostname)" > .env
     build:
-      context: ./Vk/Zs.VkActivity.Worker
-    restart: always
+      context: .
+      dockerfile: Vk/Zs.VkActivity.Worker/Dockerfile
+      platforms:
+        - linux/arm64
+    restart: unless-stopped
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"
 
   web-api:
+    image: vk-activity.web-api
+    container_name: vk-activity-api
+    environment:
+      - HOSTNAME=$(hostname)  # Значение подставится ТОЛЬКО при сборке
     build:
-      context: ./Vk/Zs.VkActivity.WebApi
+      context: .
+      dockerfile: Vk/Zs.VkActivity.WebApi/Dockerfile
+      platforms:
+        - linux/arm64
     ports:
       - "6011:80"
-    restart: always
+    restart: unless-stopped
+    volumes:
+      - "/opt/configs:/opt/configs/:ro"

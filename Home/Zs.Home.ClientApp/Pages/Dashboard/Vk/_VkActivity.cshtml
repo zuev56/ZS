@@ -1,0 +1,27 @@
+﻿@namespace Zs.Home.ClientApp.Pages.Dashboard.Vk
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@using Zs.Home.ClientApp.Common
+@model VkActivity
+@{
+    var statusToClassMap = new Dictionary<LastActivity, string>
+    {
+        [LastActivity.Recent] = "bg-success",
+        [LastActivity.LongAgo] = "bg-warning",
+        [LastActivity.TooLongAgo] = "bg-danger"
+    };
+}
+
+<div class="bg-body-tertiary">
+
+    <h6>Vk Activity</h6>
+
+    <div class="d-flex flex-wrap p-1">
+        @foreach (var user in Model.Users)
+        {
+            <div class="badge m-1 @statusToClassMap[user.LastActivity]">
+                @user.Name (@user.InactiveTime.ToTimeAgo())
+            </div>
+        }
+    </div>
+</div>

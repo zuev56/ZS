@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -43,27 +42,25 @@ public sealed class ActivityLogger : IActivityLogger
     {
         try
         {
-            var userIds = await _usersRepo.FindAllIdsAsync().ConfigureAwait(false);
+            var userIds = await _usersRepo.FindAllIdsAsync();
 
             if (!userIds.Any())
-            {
                 return new Fault(NoUsersInDatabase);
-            }
 
             var userStringIds = userIds.Select(id => id.ToString()).ToArray();
-            var vkUsers = await _vkIntegration.GetUsersWithActivityInfoAsync(userStringIds).ConfigureAwait(false);
-            var loggedItemsCount = await LogVkUsersActivityAsync(vkUsers).ConfigureAwait(false);
+            var vkUsers = await _vkIntegration.GetUsersWithActivityInfoAsync(userStringIds);
+            var loggedItemsCount = await LogVkUsersActivityAsync(vkUsers);
 
-#if DEBUG
-            Trace.WriteLine(LoggedItemsCount(loggedItemsCount));
-#endif
+            _logger.LogTraceIfNeed("LoggedItems: {Count}", loggedItemsCount);
+
             return Result.Success();
         }
         catch (Exception ex)
         {
-            _delayedLogger.LogError(SaveUsersActivityError);
+            _logger.LogTraceIfNeed("Code: {Code}, Exception: {ExceptionType}, Message: {ExceptionMessage}", SaveUsersActivityError, ex.GetType().Name, ex.Message);
+            _delayedLogger.LogError($"Code: {SaveUsersActivityError}, Exception: {ex.GetType().Name}, Message: {ex.Message}");
 
-            await ChangeAllUserActivitiesToUndefinedAsync().ConfigureAwait(false);
+            await ChangeAllUserActivitiesToUndefinedAsync();
 
             return Result.Fail(new Fault(SaveUsersActivityError));
         }
@@ -72,15 +69,15 @@ public sealed class ActivityLogger : IActivityLogger
     /// <summary>Save undefined user activities to database</summary>
     public async Task<Result> ChangeAllUserActivitiesToUndefinedAsync()
     {
+        _logger.TraceMethod();
+
         try
         {
-            var users = await _usersRepo.FindAllAsync().ConfigureAwait(false);
+            var users = await _usersRepo.FindAllAsync();
 
             var lastUsersActivityLogItems = await _activityLogRepo.FindLastUsersActivityAsync();
             if (!lastUsersActivityLogItems.Any())
-            {
                 return Result.Fail(ActivityLogIsEmpty);
-            }
 
             var activityLogItems = new List<ActivityLogItem>();
             foreach (var user in users)
@@ -101,34 +98,29 @@ public sealed class ActivityLogger : IActivityLogger
 
             await _activityLogRepo.SaveRangeAsync(activityLogItems);
 
-#if DEBUG
-            Trace.WriteLine(SetUndefinedActivityToAllUsers);
-#endif
             return Result.Success();
         }
         catch
         {
-            _logger.LogErrorIfNeed(SetUndefinedActivityToAllUsersError);
-            return Result.Fail(SetUndefinedActivityToAllUsersError);
+            _logger.LogErrorIfNeed(nameof(ChangeAllUserActivitiesToUndefinedAsync));
+            return Result.Fail(nameof(ChangeAllUserActivitiesToUndefinedAsync));
         }
     }
 
     /// <summary>Save user activities to database</summary>
     /// <param name="apiUsers">All users current state from VK API</param>
     /// <returns>Logged <see cref="ActivityLogItem"/>s count</returns>
-    private async Task<int> LogVkUsersActivityAsync(List<VkApiUser> apiUsers)
+    private async Task<int> LogVkUsersActivityAsync(List<UserResponse> apiUsers)
     {
         // TODO: Add user activity info (range) - ???
-        var lastActivityLogItems = await _activityLogRepo.FindLastUsersActivityAsync().ConfigureAwait(false);
+        var lastActivityLogItems = await _activityLogRepo.FindLastUsersActivityAsync();
         var activityLogItemsForSave = new List<ActivityLogItem>();
 
         foreach (var apiUser in apiUsers)
         {
             // When account is deleted or banned or smth else
             if (apiUser.LastSeen == null)
-            {
                 continue;
-            }
 
             var lastActivityLogItem = lastActivityLogItems.FirstOrDefault(i => i.UserId == apiUser.Id);
             var currentPlatform = apiUser.LastSeen.Platform;
@@ -141,9 +133,7 @@ public sealed class ActivityLogger : IActivityLogger
                 // Vk corrects LastSeen, so we have to work with logged value, not current API value
                 var lastSeenForLog = apiUser.LastSeen?.UnixTime ?? 0;
                 if (lastActivityLogItem != null && apiUser.LastSeen != null)
-                {
                     lastSeenForLog = Math.Max(lastActivityLogItem.LastSeen, apiUser.LastSeen.UnixTime);
-                }
 
                 activityLogItemsForSave.Add(
                     new ActivityLogItem
@@ -158,11 +148,9 @@ public sealed class ActivityLogger : IActivityLogger
         }
 
         if (!activityLogItemsForSave.Any())
-        {
             return 0;
-        }
 
-        return await _activityLogRepo.SaveRangeAsync(activityLogItemsForSave).ConfigureAwait(false)
+        return await _activityLogRepo.SaveRangeAsync(activityLogItemsForSave)
             ? activityLogItemsForSave.Count
             : -1;
     }

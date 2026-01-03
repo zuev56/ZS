@@ -1,80 +1,51 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Zs.Bot.Data.PostgreSQL;
+using Zs.Common.Data.Postgres.Services;
 using Zs.Common.Extensions;
+using Zs.Common.Models;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Scheduling;
 using Zs.Home.Application.Features.Hardware;
-using Zs.Home.Application.Features.Ping;
 using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
-using Zs.Home.Application.Features.Weather;
+using Zs.Home.Application.Models;
+using Zs.Home.Bot.Interaction;
+using Zs.Home.WebApi.Client.Bootstrap;
 
 namespace Zs.Home.Bot;
 
-public static class Program
+public sealed class Program
 {
     public static async Task Main(string[] args)
     {
-        try
-        {
-            InitializeLogger();
+        var hostBuilder = CreateHostBuilder(args);
+        var host = hostBuilder.UseConsoleLifetime().Build();
 
-            var hostBuilder = CreateHostBuilder(args);
-            var host = hostBuilder.UseConsoleLifetime().Build();
-            await InitializeDataBaseAsync(host.Services);
-            await host.RunAsync();
-        }
-        catch (Exception ex)
-        {
-            TrySaveFailInfo(ex.ToText());
-            Console.WriteLine(ex.ToText());
-            Console.Read();
-        }
-    }
+        var logger = host.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogProgramStartup();
 
-    private static void InitializeLogger()
-    {
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(CreateConfiguration(), "Serilog")
-            .CreateLogger();
-
-        Log.Warning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
-            Process.GetCurrentProcess().MainModule!.ModuleName,
-            Environment.MachineName,
-            Environment.OSVersion,
-            Environment.UserName,
-            Environment.ProcessId);
-    }
-
-    private static IConfiguration CreateConfiguration()
-    {
-        var appsettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-
-        if (!File.Exists(appsettingsPath))
-            throw new InvalidOperationException("appsettings.json not found");
-
-        var configuration = new ConfigurationManager();
-        configuration.AddJsonFile(appsettingsPath, optional: false, reloadOnChange: true);
-
-        return configuration;
+        await InitializeDataBaseAsync(host.Services);
+        await host.RunAsync();
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
-        var cultureInfo = new CultureInfo("en-US");
-        CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-        CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+        CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
 
         return Host.CreateDefaultBuilder(args)
-            .UseSerilog()
+            .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
             .ConfigureServices(static (hostContext, services) =>
             {
                 var configuration = hostContext.Configuration;
@@ -83,16 +54,41 @@ public static class Program
                     .AddDatabase(configuration)
                     .AddConnectionAnalyzer()
                     .AddTelegramBot(configuration)
-                    .AddSeq(configuration)
                     .AddDbClient(configuration)
-                    .AddWeatherAnalyzer(configuration)
-                    .AddUserWatcher(configuration) // TODO: Переедет в Jobs
-                    .AddLinuxHardwareMonitor(configuration)
+                    .AddHomeClient(configuration)
+                    .AddUserWatcher(configuration)
                     .AddInteractionServices(configuration)
-                    .AddPingChecker(configuration)
-                    .AddSingleton<IScheduler, Scheduler>();
+                    .AddSingleton<IScheduler, Scheduler>()
+                    .AddSerilog(loggerConfig => loggerConfig.ReadFrom.Configuration(configuration))
+                    .AddHostedService<HomeBot>();
+            })
+            .ConfigureWebHostDefaults(webHostBuilder =>
+            {
+                webHostBuilder.Configure(app =>
+                {
+                    app.UseRouting();
 
-                services.AddHostedService<HomeBot>();
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapGet("/healthcheck", async (HttpContext context) =>
+                        {
+                            var connectionString = context.RequestServices
+                                .GetRequiredService<IConfiguration>()
+                                .GetConnectionString("Default")!;
+                            var currentProcess = Process.GetCurrentProcess();
+                            var dbTables = await DbInfoService.GetInfoAsync(connectionString, "bot");
+                            var healthStatus = HealthStatus.Get(currentProcess, dbTables);
+
+                            return Results.Ok(healthStatus);
+                        });
+
+                        endpoints.MapPost("/send", async (Notification notification, Notifier notifier) =>
+                        {
+                            await notifier.NotifyAsync(notification.Text);
+                            return Results.Ok();
+                        });
+                    });
+                });
             });
     }
 
@@ -103,18 +99,5 @@ public static class Program
         var db = scopedServices.GetRequiredService<PostgreSqlBotContext>();
 
         await db.Database.EnsureCreatedAsync();
-    }
-
-    private static void TrySaveFailInfo(string text)
-    {
-        try
-        {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), $"Critical_failure_{DateTime.Now:yyyy.MM.dd HH:mm:ss.ff}.log");
-            File.AppendAllText(path, text);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"\n\n{ex}\nMessage:\n{ex.Message}\n\nStackTrace:\n{ex.StackTrace}");
-        }
     }
 }

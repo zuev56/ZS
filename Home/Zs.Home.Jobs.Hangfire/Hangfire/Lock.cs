@@ -6,7 +6,7 @@ public sealed class Lock
 {
     public string Resource { get; set; } = null!;
 
-    public int Updatecount { get; set; }
+    public int UpdateCount { get; set; }
 
     public DateTime? Acquired { get; set; }
 }

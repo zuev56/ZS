@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -54,11 +55,11 @@ internal sealed class WorkerService : BackgroundService
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _connectionAnalyzer.ConnectionStatusChanged += ConnectionAnalyzer_StatusChanged;
-        _connectionAnalyzer.Start(2.Seconds(), 30.Seconds());
+        _connectionAnalyzer.Start(2.Seconds(), 60.Seconds());
 
         _scheduler.Start(3.Seconds(), 1.Seconds());
 
-        _logger.LogInformation($"{nameof(WorkerService)} started");
+        _logger.LogInformation($"{nameof(WorkerService)} started.");
         return Task.CompletedTask;
     }
 
@@ -69,7 +70,7 @@ internal sealed class WorkerService : BackgroundService
 
         _scheduler.Stop();
 
-        _logger.LogInformation($"{nameof(WorkerService)} stopped");
+        _logger.LogInformation($"{nameof(WorkerService)} stopped.");
         return Task.CompletedTask;
     }
 
@@ -95,19 +96,22 @@ internal sealed class WorkerService : BackgroundService
             description: "userDataUpdaterJob",
             logger: _logger);
 
-        return new List<JobBase>
-        {
+        return
+        [
             _userActivityLoggerJob,
             userDataUpdaterJob
-        };
+        ];
     }
 
     /// <summary>Activity data collection</summary>
     private async Task SaveVkUsersActivityAsync()
     {
+        var sw = Stopwatch.StartNew();
+        _logger.LogTraceIfNeed("Start SaveVkUsersActivityAsync");
+
         if (_disconnectionTime != default)
         {
-            await SetUndefinedActivityToAllUsers().ConfigureAwait(false);
+            await SetUndefinedActivityToAllUsers();
 
             _delayedLogger.LogError(NoInternetConnection);
             return;
@@ -117,46 +121,59 @@ internal sealed class WorkerService : BackgroundService
         {
             _isFirstStep = false;
             _userActivityLoggerJob.IdleStepsCount = 1;
-            await AddUsersFullInfoAsync().ConfigureAwait(false);
+            await AddUsersFullInfoAsync();
             return;
         }
 
         if (_userActivityLoggerJob.IdleStepsCount > 0)
-        {
             _userActivityLoggerJob.IdleStepsCount = 0;
-        }
 
-        await SaveUsersActivityAsync().ConfigureAwait(false);
+        await SaveUsersActivityAsync();
 
+        _logger.LogTraceIfNeed("Finish SaveVkUsersActivityAsync. Elapsed: {Elapsed}", sw.Elapsed);
     }
 
     private async Task<Result> SaveUsersActivityAsync()
     {
         using var scope = _scopeFactory.CreateScope();
         var activityLoggerService = scope.ServiceProvider.GetRequiredService<IActivityLogger>();
-        return await activityLoggerService.SaveUsersActivityAsync().ConfigureAwait(false);
+        return await activityLoggerService.SaveUsersActivityAsync();
     }
 
     private async Task SetUndefinedActivityToAllUsers()
     {
+        _logger.LogTraceIfNeed("Set undefined activity to all users");
+
         using var scope = _scopeFactory.CreateScope();
         var activityLoggerService = scope.ServiceProvider.GetRequiredService<IActivityLogger>();
-        await activityLoggerService.ChangeAllUserActivitiesToUndefinedAsync().ConfigureAwait(false);
+        var setUndefinedActivityResult = await activityLoggerService.ChangeAllUserActivitiesToUndefinedAsync();
+
+        if (!setUndefinedActivityResult.Successful)
+            _logger.LogErrorIfNeed(setUndefinedActivityResult.Fault!);
     }
     private async Task AddUsersFullInfoAsync()
     {
+        _logger.LogTraceIfNeed("Add users full infos");
+
         using var scope = _scopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<IUserManager>();
         var initialUserIds = _configuration.GetSection(AppSettings.Vk.InitialUserIds).Get<string[]>();
-        await userManager.AddUsersAsync(initialUserIds ?? Array.Empty<string>()).ConfigureAwait(false);
+        var addResult = await userManager.AddUsersAsync(initialUserIds ?? []);
+
+        if (!addResult.Successful)
+            _logger.LogErrorIfNeed(addResult.Fault!);
     }
 
     private async Task UpdateUsersDataAsync()
     {
+        _logger.LogTraceIfNeed("Start UpdateUsersDataAsync");
+
         using var scope = _scopeFactory.CreateScope();
         var usersRepo = scope.ServiceProvider.GetRequiredService<IUsersRepository>();
-        var userIds = await usersRepo.FindAllIdsAsync().ConfigureAwait(false);
+        var userIds = await usersRepo.FindAllIdsAsync();
         var userManager = scope.ServiceProvider.GetRequiredService<IUserManager>();
         await userManager.UpdateUsersAsync(userIds);
+
+        _logger.LogTraceIfNeed("Finish UpdateUsersDataAsync");
     }
 }

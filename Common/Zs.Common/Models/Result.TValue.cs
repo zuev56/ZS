@@ -1,4 +1,3 @@
-#nullable enable
 namespace Zs.Common.Models;
 
 public class Result<TValue> : Result

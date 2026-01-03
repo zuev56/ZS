@@ -1,78 +1,56 @@
 ﻿using System;
-using System.Text;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Zs.Common.Extensions;
-using Zs.Common.Services.Http;
-using Zs.Common.Services.Scheduling;
-using static Zs.Home.Application.Features.VkUsers.Constants;
+using Zs.VkActivity.WebApi;
 
 namespace Zs.Home.Application.Features.VkUsers;
 
-internal sealed class UserWatcher : IUserWatcher
+public sealed class UserWatcher : IUserWatcher
 {
-    private readonly UserWatcherSettings _options;
-    public ProgramJob<string> Job { get; }
+    private readonly IActivityLogClient _activityLogClient;
+    private readonly IUsersClient _usersClient;
 
-    public UserWatcher(IOptions<UserWatcherSettings> options, ILogger<UserWatcher> logger)
+    public UserWatcher(
+        IActivityLogClient activityLogClient,
+        IUsersClient usersClient)
     {
-        _options = options.Value;
-
-        Job = new ProgramJob<string>(
-            period: 5.Minutes(),
-            method: DetectInactiveUsersAsync,
-            description: InactiveUsersInformer,
-            startUtcDate: DateTime.UtcNow + 5.Seconds(),
-            logger: logger);
+        _activityLogClient = activityLogClient;
+        _usersClient = usersClient;
     }
 
-    private async Task<string> DetectInactiveUsersAsync()
+    public async Task<IReadOnlyDictionary<User, TimeSpan>> GetUsersWithInactiveTimeAsync(
+        int[] userIds, CancellationToken cancellationToken)
     {
-        var result = new StringBuilder();
-        foreach (var userId in _options.TrackedIds)
+        var inactiveUsers = new Dictionary<User, TimeSpan>();
+        foreach (var userId in userIds)
         {
-            var inactiveTime = await GetInactiveTimeAsync(userId);
-            if (inactiveTime < _options.InactiveHoursLimit.Hours())
-                continue;
+            var inactiveTimeTask = GetInactiveTimeAsync(userId, cancellationToken);
+            var userTask = GetUserAsync(userId, cancellationToken);
+            await Task.WhenAll(inactiveTimeTask, userTask);
 
-            var user = await GetUserAsync(userId);
-            if (user == null)
-                continue;
-
-            var userName = $"{user.FirstName} {user.LastName}";
-            result.AppendLine($@"User {userName} is not active for {inactiveTime:hh\:mm\:ss}");
+            if (userTask.Result != null)
+                inactiveUsers.Add(userTask.Result, inactiveTimeTask.Result);
         }
 
-        return result.ToString().Trim();
+        return inactiveUsers;
     }
 
-    private async Task<User?> GetUserAsync(int userId)
+    private async Task<User?> GetUserAsync(int userId, CancellationToken cancellationToken)
     {
-        var url = $"{_options.VkActivityApiUri}/api/users/{userId}";
-        var user = await Request.Create(url).GetAsync<User>();
-        return user;
+        var userDto = await _usersClient.GetUserAsync(userId, cancellationToken);
+        return new User
+        {
+            Id = userDto.Id,
+            FirstName = userDto.FirstName,
+            LastName = userDto.LastName
+        };
     }
 
-    private async Task<TimeSpan> GetInactiveTimeAsync(int userId)
+    private async Task<TimeSpan> GetInactiveTimeAsync(int userId, CancellationToken cancellationToken)
     {
-        var url = $"{_options.VkActivityApiUri}/api/activity/{userId}/last-utc";
-        var lastSeen = await Request.Create(url).GetAsync<DateTime>();
+        var lastSeen = await _activityLogClient.GetLastVisitDateAsync(userId, cancellationToken);
         var inactiveTime = DateTime.UtcNow - lastSeen;
         return inactiveTime;
-    }
-
-    public async Task<string> GetCurrentStateAsync()
-    {
-        var result = new StringBuilder();
-        foreach (var userId in _options.TrackedIds)
-        {
-            var inactiveTime = await GetInactiveTimeAsync(userId);
-            var user = await GetUserAsync(userId);
-            var userName = $"{user!.FirstName} {user.LastName}";
-            result.AppendLine($@"User {userName} is not active for {inactiveTime:hh\:mm\:ss}");
-        }
-
-        return result.ToString().Trim();
     }
 }

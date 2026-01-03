@@ -1,22 +1,29 @@
 ﻿# cd git/ZS/VideoStreaming/Zs.VideoPlayer.ClientApp
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-video-player-client-app -f Dockerfile .
-# sudo docker run --name video-player-client-app -p 6002:80 -it zs-video-player-client-app
+# sudo docker run -e HOSTNAME=$(hostname) --name video-player-client-app -p 6002:80 -it zs-video-player-client-app
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG TARGETARCH
-WORKDIR /src
-
-# copy csproj and restore as distinct layers
-COPY *.csproj .
-RUN dotnet restore
-
-# copy and publish app and libraries
-COPY . .
-RUN dotnet publish -a $TARGETARCH --self-contained true -o /app
-
-# final stage/image
-FROM mcr.microsoft.com/dotnet/runtime:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+USER $APP_UID
 WORKDIR /app
-COPY --from=build /app .
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["VideoStreaming/Zs.VideoPlayer.ClientApp/Zs.VideoPlayer.ClientApp.csproj", "VideoStreaming/Zs.VideoPlayer.ClientApp/"]
+COPY ["Common/Zs.Common/Zs.Common.csproj", "Common/Zs.Common/"]
+RUN dotnet restore "VideoStreaming/Zs.VideoPlayer.ClientApp/Zs.VideoPlayer.ClientApp.csproj"
+COPY . .
+WORKDIR "/src/VideoStreaming/Zs.VideoPlayer.ClientApp"
+RUN dotnet build "Zs.VideoPlayer.ClientApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "Zs.VideoPlayer.ClientApp.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Zs.VideoPlayer.ClientApp.dll"]
+ # command-line args (global configuration path)
+CMD ["/opt/configs/"]

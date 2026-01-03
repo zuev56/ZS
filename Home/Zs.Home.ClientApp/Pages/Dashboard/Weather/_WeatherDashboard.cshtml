@@ -1,0 +1,27 @@
+﻿@using Microsoft.Extensions.Logging
+@using Zs.Common.Extensions
+@namespace Zs.Home.ClientApp.Pages.Dashboard.Weather
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject ILogger<WeatherDashboard> Logger;
+
+@model WeatherDashboard
+
+
+<div class="bg-body-tertiary">
+
+    <h6>Weather</h6>
+
+    <div class="d-flex flex-wrap p-0">
+        @foreach (var place in Model.Places.OrderBy(p => p.Name))
+        {
+            Logger.LogDebugIfNeed($"Place=\"{place.Name}\"");
+            <div class="card m-2 p-2" style="min-width:15rem;">
+                <text>@place.Name</text>
+                @foreach (var parameter in place.Parameters.OrderBy(p => p.Order))
+                {
+                    @await Html.PartialAsync("_IndicatorLevel", parameter)
+                }
+            </div>
+        }
+    </div>
+</div>

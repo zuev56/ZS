@@ -1,0 +1,23 @@
+﻿@namespace Zs.Home.ClientApp.Pages.Dashboard.Ping
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@model PingResult
+@{
+    var statusToClassMap = new Dictionary<bool, string>
+    {
+        [true] = "bg-success",
+        [false] = "bg-danger"
+    };
+}
+
+<div class="bg-body-tertiary ping-result">
+
+    <h6>Ping</h6>
+
+    <div class="d-flex flex-wrap p-1">
+        @foreach (var target in Model.Targets)
+        {
+            <div class="badge m-1 @statusToClassMap[target.IsReachable]">@target.Name</div>
+        }
+    </div>
+</div>

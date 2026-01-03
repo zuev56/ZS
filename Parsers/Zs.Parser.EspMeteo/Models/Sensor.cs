@@ -1,16 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Zs.Parser.EspMeteo.Models;
 
-public class Sensor
+public sealed record Sensor
 {
-    public string Name { get; }
-    public IReadOnlyList<Parameter> Parameters { get; }
-
-    public Sensor(string name, IEnumerable<Parameter> parameters)
-    {
-        Name = name;
-        Parameters = parameters.ToList();
-    }
+    public required string Name { get; init; }
+    public required IReadOnlyList<Parameter> Parameters { get; init; }
 }

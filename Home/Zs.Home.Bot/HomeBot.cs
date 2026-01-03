@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,11 +13,6 @@ using Zs.Common.Extensions;
 using Zs.Common.Models;
 using Zs.Common.Services.Scheduling;
 using Zs.Common.Utilities;
-using Zs.Home.Application.Features.Hardware;
-using Zs.Home.Application.Features.Ping;
-using Zs.Home.Application.Features.Seq;
-using Zs.Home.Application.Features.VkUsers;
-using Zs.Home.Application.Features.Weather;
 using Zs.Home.Bot.Interaction;
 using Zs.Home.Bot.Interaction.MessagePipeline;
 using static Zs.Home.Application.Features.VkUsers.Constants;
@@ -101,32 +95,16 @@ internal sealed class HomeBot : IHostedService
 
     private void CreateJobs()
     {
-        // TODO: Вынести из этого класса
-        var userWatcher = _serviceProvider.GetRequiredService<IUserWatcher>();
-        var hardwareMonitor = _serviceProvider.GetRequiredService<IHardwareMonitor>();
-        var weatherAnalyzer = _serviceProvider.GetRequiredService<IWeatherAnalyzer>();
-        var seqEventsInformer = _serviceProvider.GetRequiredService<ISeqEventsInformer>();
-        var pingChecker = _serviceProvider.GetRequiredService<IPingChecker>();
-
-        _scheduler.Jobs.Add(userWatcher.Job);
-        _scheduler.Jobs.Add(hardwareMonitor.Job);
-        _scheduler.Jobs.Add(weatherAnalyzer.Job);
-        _scheduler.Jobs.Add(seqEventsInformer.DayEventsInformerJob);
-        _scheduler.Jobs.Add(seqEventsInformer.NightEventsInformerJob);
-        _scheduler.Jobs.Add(pingChecker.Job);
-        _scheduler.Jobs.Add(LogProcessStateJob());
-        _scheduler.SetDefaultExecutionCompletedHandler<string>(Job_ExecutionCompleted);
-    }
-
-    private ProgramJob LogProcessStateJob()
-    {
-        var logProcessStateInfo = new ProgramJob(
-            period: 1.Days(),
-            method: () => Task.Run(() => _logger.LogProcessState(Process.GetCurrentProcess())),
+        var hangfireHealthCheck = new ProgramJob(
+            period: 15.Minutes(),
+            method: () => Task.Run(() => { /* TODO */ }),
             startUtcDate: DateTime.UtcNow + 1.Minutes(),
-            description: "logProcessStateInfo"
+            description: "HangfireHealthCheck"
         );
-        return logProcessStateInfo;
+
+        _scheduler.Jobs.Add(hangfireHealthCheck);
+
+        _scheduler.SetDefaultExecutionCompletedHandler<string>(Job_ExecutionCompleted);
     }
 
     // ReSharper disable once AsyncVoidMethod

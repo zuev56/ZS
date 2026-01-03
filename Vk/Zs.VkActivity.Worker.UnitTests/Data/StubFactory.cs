@@ -53,7 +53,7 @@ internal class StubFactory
                 ""is_closed"": false,
                 ""sex"": {Random.Shared.Next(1, 2)},
                 ""screen_name"": ""id{userId}"",
-                ""photo_50"": ""https://vk.com/images/camera_50.png"",
+                ""photo_50"": ""https://vk.ru/images/camera_50.png"",
                 ""verified"": {Random.Shared.Next(0, 1)},
                 ""nickname"": """",
                 ""domain"": ""id{userId}"",
@@ -212,9 +212,9 @@ internal class StubFactory
 
     }
 
-    private static List<VkApiUser> GetApiUsers(int[] userIds, Func<int, string> getApiUserJson)
+    private static List<UserResponse> GetApiUsers(int[] userIds, Func<int, string> getApiUserJson)
     {
-        var users = new List<VkApiUser>(userIds.Length);
+        var users = new List<UserResponse>(userIds.Length);
 
         var sbUsersJsonArray = new StringBuilder("[");
         foreach (var id in userIds)
@@ -228,20 +228,20 @@ internal class StubFactory
         {
             foreach (var user in document.RootElement.EnumerateArray())
             {
-                users.Add(JsonSerializer.Deserialize<VkApiUser>(user)!);
+                users.Add(JsonSerializer.Deserialize<UserResponse>(user)!);
             }
         }
 
         return users;
     }
 
-    private static List<VkApiUser> GetApiUsersWithUpdates(int[] userIds)
+    private static List<UserResponse> GetApiUsersWithUpdates(int[] userIds)
     {
-        var changedUsers = new List<VkApiUser>(userIds.Length);
+        var changedUsers = new List<UserResponse>(userIds.Length);
         foreach (var id in userIds)
         {
             var userFullInfoJson = GetApiUserFullInfoJson_v5_131(id);
-            var user = JsonSerializer.Deserialize<VkApiUser>(userFullInfoJson)!;
+            var user = JsonSerializer.Deserialize<UserResponse>(userFullInfoJson)!;
             var changedUser = GetChangedUser(user);
             changedUsers.Add(changedUser);
         }
@@ -249,14 +249,14 @@ internal class StubFactory
         return changedUsers;
     }
 
-    private static VkApiUser GetChangedUser(VkApiUser user)
+    private static UserResponse GetChangedUser(UserResponse user)
     {
         var changeType = Random.Shared.Next(1, 5);
 
         switch (changeType)
         {
             case 1:
-                return new VkApiUser
+                return new UserResponse
                 {
                     Id = user.Id,
                     FirstName = user.FirstName + "_changed",
@@ -264,7 +264,7 @@ internal class StubFactory
                     RawData = user.RawData
                 };
             case 2:
-                return new VkApiUser
+                return new UserResponse
                 {
                     Id = user.Id,
                     FirstName = user.FirstName,
@@ -276,7 +276,7 @@ internal class StubFactory
                 var updatedValue = user.RawData!["screen_name"] + "_changed";
                 newRawData["screen_name"] = JsonSerializer.SerializeToElement(updatedValue);
 
-                return new VkApiUser
+                return new UserResponse
                 {
                     Id = user.Id,
                     FirstName = user.FirstName,

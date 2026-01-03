@@ -32,7 +32,7 @@ internal sealed class CommandHandler
             HardwareStatus => await _systemStatusService.GetHardwareStatusAsync(),
             UserStatus => await _systemStatusService.GetUsersStatusAsync(),
             PingStatus => await _systemStatusService.GetPingStatusAsync(),
-            SeqStatus => await _systemStatusService.GetSeqStatusAsync(),
+            SeqStatus => await _systemStatusService.GetLogStatusAsync(),
             _ => throw new ArgumentOutOfRangeException(nameof(command))
         };
 

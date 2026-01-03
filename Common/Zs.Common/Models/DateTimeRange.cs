@@ -17,4 +17,21 @@ public sealed class DateTimeRange
     {
         End = end;
     }
+
+    public void Deconstruct(out DateTime start, out DateTime end)
+    {
+        start = Start;
+        end = End;
+    }
+}
+
+public static class DateTimeRangeExtensions
+{
+    public static DateTimeRange LastHourUtc => new(DateTime.UtcNow.AddHours(-1), DateTime.UtcNow);
+    public static DateTimeRange Last6HoursUtc => new(DateTime.UtcNow.AddHours(-6), DateTime.UtcNow);
+    public static DateTimeRange Last12HoursUtc => new(DateTime.UtcNow.AddHours(-12), DateTime.UtcNow);
+    public static DateTimeRange LastDayUtc => new(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow);
+    public static DateTimeRange LastWeekUtc => new(DateTime.UtcNow.AddDays(-7), DateTime.UtcNow);
+    public static DateTimeRange LastMonthUtc => new(DateTime.UtcNow.AddMonths(-1), DateTime.UtcNow);
+    public static DateTimeRange LastYearUtc => new(DateTime.UtcNow.AddYears(-1), DateTime.UtcNow);
 }

@@ -1,20 +1,35 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Zs.Common.Models;
+using static System.Environment;
 
 namespace Zs.Common.Extensions;
 
 public static class LoggerExtensions
 {
-    public static void LogProgramStart(this ILogger logger)
+    public static void LogProgramStartup(this ILogger logger)
     {
+        var evHostName = GetEnvironmentVariable("HOSTNAME");
         logger.LogWarning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
-            Process.GetCurrentProcess().MainModule?.ModuleName,
-            Environment.MachineName,
-            Environment.OSVersion,
-            Environment.UserName,
-            Environment.ProcessId);
+            Assembly.GetEntryAssembly()?.GetName().Name ?? "Unknown",
+            evHostName != null
+                ? $"{evHostName} (Docker: {MachineName})"
+                : MachineName,
+            OSVersion,
+            UserName,
+            ProcessId);
+    }
+
+    public static void LogAppliedConfigurationFiles(this ILogger logger, IConfigurationBuilder configuration)
+    {
+        var configFiles = configuration.GetAppliedConfigurationFileNames();
+
+        logger.LogInformationIfNeed($"Configuration files: {string.Join(", ", configFiles)}");
     }
 
     public static void LogProcessState(this ILogger logger, Process process)
@@ -74,10 +89,27 @@ public static class LoggerExtensions
         logger.LogError(exception, message, args);
     }
 
+    public static void LogErrorIfNeed(this ILogger logger, Exception exception)
+        => logger.LogErrorIfNeed(exception, null);
+
+    public static void LogErrorIfNeed(this ILogger logger, Fault fault)
+    {
+        if (logger.IsEnabled(LogLevel.Error))
+            logger.LogError("Code: {Code}, Message: {Message}", fault.Code, fault.Message);
+    }
+
     public static void LogCriticalIfNeed(this ILogger logger, string? message, params object?[] args)
     {
         if (logger.IsEnabled(LogLevel.Critical))
             logger.LogCritical(message, args);
     }
+
+    public static void TraceMethod(this ILogger logger,
+        [CallerFilePath] string? callerFilePath = null,
+        [CallerMemberName] string? callerName = null)
+    {
+        logger.LogTraceIfNeed($"{callerFilePath}.{callerName}");
+    }
+
     #endregion
 }

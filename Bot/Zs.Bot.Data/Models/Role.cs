@@ -2,8 +2,8 @@
 
 public enum Role
 {
-    Guest = 1,
-    Moderator,
+    Guest = 0,
+    Moderator = 2,
     Admin,
     Owner
 }

@@ -2,12 +2,10 @@
 using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Zs.Common.Extensions;
 using Zs.VkActivity.Data.Models;
 
 namespace Zs.VkActivity.Data;

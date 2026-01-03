@@ -1,5 +1,5 @@
 using System;
-using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,8 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Zs.Common.Extensions;
 using Zs.VkActivity.Common;
 using Zs.VkActivity.Common.Abstractions;
 using Zs.VkActivity.Common.Services;
@@ -27,9 +29,9 @@ using static Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders;
 [assembly: InternalsVisibleTo("Api.UnitTests")]
 [assembly: InternalsVisibleTo("Api.IntegrationTests")]
 
-
 var host = Host.CreateDefaultBuilder(args)
     .UseSerilog()
+    .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
     .ConfigureWebHostDefaults(ConfigureWebHostDefaults)
     .ConfigureServices(ConfigureServices)
     .Build();
@@ -38,9 +40,8 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(host.Services.GetRequiredService<IConfiguration>())
     .CreateLogger();
 
-Log.Warning("-! Starting {ProcessName} (MachineName: {MachineName}, OS: {OS}, User: {User}, ProcessId: {ProcessId})",
-    Process.GetCurrentProcess().MainModule?.ModuleName, Environment.MachineName,
-    Environment.OSVersion, Environment.UserName, Environment.ProcessId);
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
+logger.LogProgramStartup();
 
 await host.RunAsync();
 
@@ -49,6 +50,15 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
 {
     webHostBuilder.ConfigureServices((context, services) =>
     {
+        services.AddSwaggerDocument(config =>
+        {
+            config.PostProcess = document =>
+            {
+                document.Info.Title = context.Configuration[AppSettings.Swagger.ApiTitle];
+                document.Info.Version = context.Configuration[AppSettings.Swagger.ApiVersion];
+            };
+        });
+
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -92,10 +102,15 @@ static void ConfigureWebHostDefaults(IWebHostBuilder webHostBuilder)
 
         app.UseForwardedHeaders();
         app.UseSwagger();
-        app.UseSwaggerUI(c => c.SwaggerEndpoint(
-            context.Configuration[AppSettings.Swagger.EndpointUrl],
-            context.Configuration[AppSettings.Swagger.ApiTitle] + " " + context.Configuration[AppSettings.Swagger.ApiVersion])
-        );
+        app.UseSwaggerUI(options =>
+        {
+            options.EnableTryItOutByDefault();
+            options.DisplayRequestDuration();
+            options.SwaggerEndpoint(
+                context.Configuration[AppSettings.Swagger.EndpointUrl],
+                context.Configuration[AppSettings.Swagger.ApiTitle] + " " + context.Configuration[AppSettings.Swagger.ApiVersion]);
+        });
+        // app.UseOpenApi(); Что-то вдруг стал тут ругаться
 
         app.UseRouting();
 

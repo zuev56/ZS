@@ -1,26 +1,33 @@
 ﻿# cd git/ZS/VideoStreaming/Zs.RtspToHlsConverter
 # git pull
 # sudo docker buildx build --platform linux/arm64 -t zs-rtsp-to-hls-converter -f Dockerfile .
-# docker run --name rtsp-to-hls-converter --mount type=bind,source=/var/lib/videos,target=/var/lib/videos -it zs-rtsp-to-hls-converter
+# docker run -e HOSTNAME=$(hostname) --name rtsp-to-hls-converter -v /opt/configs:/opt/configs/:ro -v /opt/videos:/opt/videos/ -it zs-rtsp-to-hls-converter
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG TARGETARCH
-WORKDIR /src
-
-# copy csproj and restore as distinct layers
-COPY *.csproj .
-RUN dotnet restore
-
-# copy and publish app and libraries
-COPY . .
-RUN dotnet publish -a $TARGETARCH --self-contained true -o /app
-
-# final stage/image
-FROM mcr.microsoft.com/dotnet/runtime:8.0
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
+USER $APP_UID
 WORKDIR /app
-COPY --from=build /app .
-ENTRYPOINT ["dotnet", "Zs.RtspToHlsConverter.dll"]
 
-# install ffmpeg and other software
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["VideoStreaming/Zs.RtspToHlsConverter/Zs.RtspToHlsConverter.csproj", "VideoStreaming/Zs.RtspToHlsConverter/"]
+COPY ["Common/Zs.Common/Zs.Common.csproj", "Common/Zs.Common/"]
+RUN dotnet restore "VideoStreaming/Zs.RtspToHlsConverter/Zs.RtspToHlsConverter.csproj"
+COPY . .
+WORKDIR "/src/VideoStreaming/Zs.RtspToHlsConverter"
+RUN dotnet build "Zs.RtspToHlsConverter.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "Zs.RtspToHlsConverter.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Zs.RtspToHlsConverter.dll"]
+ # command-line args (global configuration path)
+CMD ["/opt/configs/"]
+
+USER root
 RUN apt update && apt install -y ffmpeg mc && rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/lib/videos
+#RUN mkdir /opt/videos

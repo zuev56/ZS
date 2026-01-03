@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -7,15 +8,18 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Zs.Common.Extensions;
-using Zs.Home.Jobs.Hangfire.WeatherRegistrator.Models;
+using Zs.Home.Application.Features.Weather.Data;
+using Zs.Home.Application.Features.Weather.Data.Models;
+using Zs.Home.Jobs.Hangfire.Extensions;
+using Zs.Home.Jobs.Hangfire.Hangfire;
 using Zs.Parser.EspMeteo;
 using Zs.Parser.EspMeteo.Models;
+using static Zs.Home.Jobs.Hangfire.Constants;
 
 namespace Zs.Home.Jobs.Hangfire.WeatherRegistrator;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class WeatherRegistratorJob
+public sealed class WeatherRegistratorJob : IJob
 {
     private readonly EspMeteoParser _espMeteoParser;
     private readonly WeatherRegistratorSettings _settings;
@@ -34,15 +38,15 @@ public sealed class WeatherRegistratorJob
         _logger = logger;
     }
 
-    public async Task ExequteAsync(CancellationToken cancellationToken)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var sw = Stopwatch.StartNew();
-        _logger.LogDebugIfNeed("Start {Job}", nameof(WeatherRegistratorJob));
+        _logger.LogJobStart();
 
         var weatherData = await GetWeatherDataAsync(cancellationToken);
 
         await SaveWeatherDataAsync(weatherData, cancellationToken);
-        _logger.LogDebugIfNeed("Finish {Job}, elapsed: {Elapsed}", nameof(WeatherRegistratorJob), sw.Elapsed);
+        _logger.LogJobFinish(sw.Elapsed);
     }
 
     private async Task<IReadOnlyList<WeatherData>> GetWeatherDataAsync(CancellationToken cancellationToken)
@@ -50,19 +54,36 @@ public sealed class WeatherRegistratorJob
         var espMeteos = await GetEspMeteoInfosAsync(cancellationToken);
 
         return espMeteos.SelectMany(
-            espMeteo => espMeteo.Sensors.Select(sensor => new WeatherData
+            espMeteo => espMeteo.Sensors.Select(sensor =>
             {
-                SourceId = GetSourceId(espMeteo, sensor),
-                Temperature = sensor.Parameters.FirstOrDefault(p => p.Name == "Temperature")?.Value,
-                Humidity = sensor.Parameters.FirstOrDefault(p => p.Name == "Humidity")?.Value,
-                Pressure = sensor.Parameters.FirstOrDefault(p => p.Name == "Pressure")?.Value,
-                CO2 = null
+                var sensorSettings = GetSensorSettings(espMeteo, sensor);
+
+                return new WeatherData
+                {
+                    SourceId = sensorSettings.Id,
+                    Temperature = PrepareValue(sensor, sensorSettings, Temperature),
+                    Humidity = PrepareValue(sensor, sensorSettings, Humidity),
+                    Pressure = PrepareValue(sensor, sensorSettings, Pressure),
+                    CO2 = null
+                };
             }))
             .ToImmutableList();
     }
 
-    private short GetSourceId(EspMeteo espMeteo, Parser.EspMeteo.Models.Sensor sensor)
-        => _settings.Sensors.First(s => s.Uri == espMeteo.Uri && s.Name == sensor.Name).Id;
+    private Sensor GetSensorSettings(EspMeteo espMeteo, Parser.EspMeteo.Models.Sensor sensor)
+        => _settings.Sensors.First(s => s.Uri == espMeteo.Uri && s.Name == sensor.Name);
+
+    private static double? PrepareValue(Zs.Parser.EspMeteo.Models.Sensor sensor, Sensor sensorSettings, string parameterName)
+    {
+        if (sensorSettings.Except?.Contains(parameterName) == true)
+            return null;
+
+        var parameterValue = sensor.Parameters.FirstOrDefault(p => p.Name == parameterName)?.Value;
+
+        return parameterValue.HasValue
+            ? Math.Round(parameterValue.Value, 2)
+            : null;
+    }
 
     private async Task<IReadOnlyList<EspMeteo>> GetEspMeteoInfosAsync(CancellationToken cancellationToken)
     {
