@@ -50,15 +50,16 @@ public sealed class VkIntegration : IVkIntegration
     {
         var responseResult = await GetResponseAsync<UsersApiResponse>(url, _httpClient).ConfigureAwait(false);
 
-        if (!responseResult.Successful || responseResult.Value!.Users == null)
+        if (!responseResult.Successful)
         {
-            throw new InvalidOperationException("Unable to get correct response from Vk API");
+            throw new InvalidOperationException($"Unable to get correct response from Vk API: {responseResult.Fault}");
         }
 
-        return responseResult.Value.Users;
+        return responseResult.Value.Users!;
     }
 
-    private static async Task<Result<TResponse?>> GetResponseAsync<TResponse>(string url, HttpClient httpClient)
+    private static async Task<Result<TResponse>> GetResponseAsync<TResponse>(string url, HttpClient httpClient)
+        where TResponse : VkApiResponseBase
     {
         if (await _semaphore.WaitAsync(_apiAccessTimeout))
         {
@@ -70,9 +71,12 @@ public sealed class VkIntegration : IVkIntegration
                 }
 
                 _lastApiAccessTime = DateTime.UtcNow;
-                var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+                var httpResponse = await httpClient.GetAsync(url).ConfigureAwait(false);
+                var deserializedResponse = await httpResponse.Content.ReadFromJsonAsync<TResponse>();
 
-                return await response.Content.ReadFromJsonAsync<TResponse>();
+                return deserializedResponse!.Error == null
+                    ? Result.Success(deserializedResponse)
+                    : Result.Fail<TResponse?>(new Fault(deserializedResponse.Error!.ErrorCode.ToString()!, deserializedResponse.Error!.ErrorMsg))!;
             }
             finally
             {

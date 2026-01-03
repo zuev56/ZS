@@ -97,6 +97,9 @@ public sealed class UserManager : IUserManager
         var dbUsers = vkUsers.Select(Mapper.ToUser);
         var updateResult = await _usersRepo.UpdateRangeAsync(dbUsers).ConfigureAwait(false);
 
+        if (!updateResult.Successful)
+            _logger.LogError(string.Join(Environment.NewLine, updateResult.Fault!.Code), new { UserIds = userIds });
+
         return updateResult;
     }
 

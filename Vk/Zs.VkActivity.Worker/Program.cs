@@ -48,6 +48,11 @@ void ConfigureServices(HostBuilderContext context, IServiceCollection services)
     services.AddConnectionAnalyzer();
     services.AddVkIntegration(context.Configuration);
     services.AddSingleton<IScheduler, Scheduler>();
+
+    services.AddOptions<DelayedLoggerSettings>()
+        .Bind(context.Configuration.GetSection(DelayedLoggerSettings.SectionName))
+        .ValidateOnStart();
+
     // TODO: Create Factory!
     services.AddSingleton<IDelayedLogger<ActivityLogger>, DelayedLogger<ActivityLogger>>();
     services.AddSingleton<IDelayedLogger<WorkerService>, DelayedLogger<WorkerService>>();

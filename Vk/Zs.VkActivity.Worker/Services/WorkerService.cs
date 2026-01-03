@@ -54,7 +54,7 @@ internal sealed class WorkerService : BackgroundService
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _connectionAnalyzer.ConnectionStatusChanged += ConnectionAnalyzer_StatusChanged;
-        _connectionAnalyzer.Start(2.Seconds(), 3.Seconds());
+        _connectionAnalyzer.Start(2.Seconds(), 30.Seconds());
 
         _scheduler.Start(3.Seconds(), 1.Seconds());
 
@@ -126,15 +126,8 @@ internal sealed class WorkerService : BackgroundService
             _userActivityLoggerJob.IdleStepsCount = 0;
         }
 
-        var result = await SaveUsersActivityAsync().ConfigureAwait(false);
-        if (!result.Successful)
-        {
-            var logMessage = result.Fault!.Code;
+        await SaveUsersActivityAsync().ConfigureAwait(false);
 
-            _logger.LogErrorIfNeed(logMessage);
-        }
-
-        //_logger.LogTraceIfNeed(result.JoinMessages());
     }
 
     private async Task<Result> SaveUsersActivityAsync()
@@ -164,11 +157,6 @@ internal sealed class WorkerService : BackgroundService
         var usersRepo = scope.ServiceProvider.GetRequiredService<IUsersRepository>();
         var userIds = await usersRepo.FindAllIdsAsync().ConfigureAwait(false);
         var userManager = scope.ServiceProvider.GetRequiredService<IUserManager>();
-        var updateResult = await userManager.UpdateUsersAsync(userIds);
-
-        if (!updateResult.Successful)
-        {
-            _logger.LogError(string.Join(Environment.NewLine, updateResult.Fault!.Code), new { UserIds = userIds });
-        }
+        await userManager.UpdateUsersAsync(userIds);
     }
 }

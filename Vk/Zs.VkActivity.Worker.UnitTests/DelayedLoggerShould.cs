@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 using Zs.Common.Services.Logging.DelayedLogger;
@@ -146,6 +147,8 @@ public sealed class DelayedLoggerShould
         loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
             .Returns(_loggerMock.Object);
 
-        return new DelayedLogger<DelayedLoggerShould>(loggerFactoryMock.Object, _logMessageBufferAnalyzeIntervalMs);
+        var settings = new DelayedLoggerSettings {ProcessIntervalMs = _logMessageBufferAnalyzeIntervalMs};
+
+        return new DelayedLogger<DelayedLoggerShould>(Options.Create(settings), loggerFactoryMock.Object);
     }
 }

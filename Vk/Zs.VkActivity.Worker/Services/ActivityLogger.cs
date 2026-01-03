@@ -48,30 +48,24 @@ public sealed class ActivityLogger : IActivityLogger
             if (!userIds.Any())
             {
                 return new Fault(NoUsersInDatabase);
-                //result.AddMessage(NoUsersInDatabase, InfoMessageType.Warning);
-                //return result;
             }
 
             var userStringIds = userIds.Select(id => id.ToString()).ToArray();
             var vkUsers = await _vkIntegration.GetUsersWithActivityInfoAsync(userStringIds).ConfigureAwait(false);
-
             var loggedItemsCount = await LogVkUsersActivityAsync(vkUsers).ConfigureAwait(false);
 
 #if DEBUG
             Trace.WriteLine(LoggedItemsCount(loggedItemsCount));
 #endif
-
-            //result.AddMessage(LoggedItemsCount(loggedItemsCount));
             return Result.Success();
         }
         catch (Exception ex)
         {
-            _logger.LogTraceIfNeed("Code: {Code}, Exception: {ExceptionType}, Message: {ExceptionMessage}", SaveUsersActivityError, ex.GetType().Name, ex.Message);
             _delayedLogger.LogError(SaveUsersActivityError);
 
             await ChangeAllUserActivitiesToUndefinedAsync().ConfigureAwait(false);
 
-            return Result.Fail(SaveUsersActivityError);
+            return Result.Fail(new Fault(SaveUsersActivityError));
         }
     }
 

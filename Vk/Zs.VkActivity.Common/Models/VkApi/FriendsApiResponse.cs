@@ -2,7 +2,7 @@
 
 namespace Zs.VkActivity.Common.Models.VkApi;
 
-public sealed class FriendsApiResponse
+public sealed class FriendsApiResponse : VkApiResponseBase
 {
     [JsonPropertyName("response")]
     public ResponseData? Data { get; init; }
