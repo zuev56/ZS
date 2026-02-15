@@ -11,7 +11,6 @@ using Zs.Common.Extensions;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.ClientApp.Data;
-using Zs.Home.ClientApp.Pages.Dashboard.Weather;
 using Zs.Home.WebApi.Client.Bootstrap;
 
 namespace Zs.Home.ClientApp;
@@ -38,11 +37,6 @@ public static class Program
                                throw new InvalidOperationException("Connection string 'Home' not found.");
         builder.Services.AddDbContextFactory<WeatherRegistratorDbContext>(
             options => options.UseNpgsql(homeConnectionString));
-
-        builder.Services.AddOptions<WeatherDashboardSettings>()
-            .Bind(builder.Configuration.GetSection(WeatherDashboardSettings.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
 
         builder.Services
             .AddHomeClient(builder.Configuration)

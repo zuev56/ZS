@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Zs.Home.WebApi;
 
 namespace Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
@@ -25,13 +26,13 @@ public sealed record AnalogParameter
         Unit = unit;
     }
 
-    public AnalogParameter(string name, Dictionary<DateTime, double> valueLog, string unit, WeatherDashboardSettings.Parameter reference)
+    public AnalogParameter(string name, Dictionary<DateTime, double> valueLog, string unit, ParameterSettings settings)
         : this(name, valueLog, unit)
     {
-        Hi = Round(reference.Hi);
-        HiHi = Round(reference.HiHi);
-        Lo = Round(reference.Lo);
-        LoLo = Round(reference.LoLo);
+        Hi = Round(settings.Hi);
+        HiHi = Round(settings.HiHi);
+        Lo = Round(settings.Lo);
+        LoLo = Round(settings.LoLo);
     }
 
     public string Name { get; }

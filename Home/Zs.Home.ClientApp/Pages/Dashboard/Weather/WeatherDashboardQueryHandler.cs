@@ -4,24 +4,28 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Zs.Home.Application.Features.Weather.Data;
+using Zs.Home.WebApi;
 
 namespace Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
 public sealed class WeatherDashboardQueryHandler : IRequestHandler<WeatherDashboardQuery, WeatherDashboard>
 {
+    private readonly IWeatherClient _weatherClient;
     private readonly WeatherRegistratorDbContext _dbContext;
-    private readonly WeatherDashboardSettings _settings;
 
-    public WeatherDashboardQueryHandler(WeatherRegistratorDbContext dbContext, IOptions<WeatherDashboardSettings> options)
+    public WeatherDashboardQueryHandler(IWeatherClient weatherClient, WeatherRegistratorDbContext dbContext)
     {
+        _weatherClient = weatherClient;
         _dbContext = dbContext;
-        _settings = options.Value;
     }
 
     public async Task<WeatherDashboard> Handle(WeatherDashboardQuery request, CancellationToken cancellationToken)
     {
+        var settings = await _weatherClient.GetAllSettingsAsync(cancellationToken);
+
+        // TODO: _weatherClient.GetHistory вместо запроса к БД отсюда.
+
         var weatherData = await _dbContext.WeatherData.AsNoTracking()
             .Where(d => d.CreatedAt > DateTime.UtcNow.AddDays(-1))
             .Include(d => d.Source)
@@ -32,6 +36,6 @@ public sealed class WeatherDashboardQueryHandler : IRequestHandler<WeatherDashbo
         if (!weatherData.Any() || DateTime.UtcNow - weatherData.First().CreatedAt > TimeSpan.FromMinutes(15))
             throw new ApplicationException("No actual weather data found");
 
-        return weatherData.ToWeatherDashboard(_settings);
+        return weatherData.ToWeatherDashboard(settings);
     }
 }

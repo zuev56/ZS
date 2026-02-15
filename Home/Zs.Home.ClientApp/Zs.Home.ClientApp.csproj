@@ -34,10 +34,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Pages\Auth\" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\Zs.Home.Application\Zs.Home.Application.csproj" />
         <ProjectReference Include="..\Zs.Home.WebApi.Client\Zs.Home.WebApi.Client.csproj" />
     </ItemGroup>
