@@ -75,6 +75,8 @@ services:
         - linux/arm64
     ports:
       - "6021:80"
+    depends_on:
+      - web-api
     restart: unless-stopped
     volumes:
       - "/opt/configs:/opt/configs/:ro"
