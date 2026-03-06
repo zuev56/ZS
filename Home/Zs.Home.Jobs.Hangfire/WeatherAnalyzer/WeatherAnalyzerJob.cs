@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Zs.Common.Extensions;
 using Zs.Home.Jobs.Hangfire.Extensions;
 using Zs.Home.Jobs.Hangfire.Hangfire;
@@ -21,15 +22,18 @@ public sealed class WeatherAnalyzerJob : IJob
 
     private readonly IWeatherClient _weatherClient;
     private readonly Notifier _notifier;
+    private readonly WeatherAnalyzerSettings _analyzerSettings;
     private readonly ILogger<WeatherAnalyzerJob> _logger;
 
     public WeatherAnalyzerJob(
         IWeatherClient weatherClient,
         Notifier notifier,
+        IOptions<WeatherAnalyzerSettings> analyzerSettings,
         ILogger<WeatherAnalyzerJob> logger)
     {
         _weatherClient = weatherClient;
         _notifier = notifier;
+        _analyzerSettings = analyzerSettings.Value;
         _logger = logger;
     }
 
@@ -55,7 +59,7 @@ public sealed class WeatherAnalyzerJob : IJob
         _logger.LogJobFinish(sw.Elapsed);
     }
 
-    private static string GetWeatherDeviationsMessage(IList<EspMeteoAnalysisResult> espMeteoAnalysisResults)
+    private string GetWeatherDeviationsMessage(IList<EspMeteoAnalysisResult> espMeteoAnalysisResults)
     {
         var message = new StringBuilder();
         foreach (var analysisResult in espMeteoAnalysisResults)
@@ -64,6 +68,10 @@ public sealed class WeatherAnalyzerJob : IJob
             {
                 var parameter = deviation.Parameter;
                 var settings = deviation.Settings;
+
+                if (!_analyzerSettings.NotifyOnWarning && deviation.Type is DeviationType.Lo or DeviationType.Hi)
+                    continue;
+
                 var comparison = deviation.Type switch
                 {
                     DeviationType.HiHi => $"> {settings.HiHi} ({DeviationType.HiHi})",

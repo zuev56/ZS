@@ -30,7 +30,6 @@ using Zs.Home.WebApi.Client.Bootstrap;
 using PingCheckerSettings = Zs.Home.Jobs.Hangfire.Ping.PingCheckerSettings;
 using Place = Zs.Home.Application.Features.Weather.Data.Models.Place;
 using UserWatcherSettings = Zs.Home.Jobs.Hangfire.UserWatcher.UserWatcherSettings;
-using WeatherAnalyzerSettings = Zs.Home.Jobs.Hangfire.WeatherAnalyzer.WeatherAnalyzerSettings;
 
 var builder = WebApplication.CreateBuilder(args);
 

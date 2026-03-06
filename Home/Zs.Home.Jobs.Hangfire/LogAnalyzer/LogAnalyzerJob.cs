@@ -49,6 +49,9 @@ public sealed class LogAnalyzerJob : IJob
 
     private static string CreateNotification(LogSummary logSummary)
     {
+        if (logSummary.Count == 0)
+            return "The log was empty last day";
+
         var messages = logSummary.MessageInfos
             .OrderByDescending(m => m.LastTimestamp)
             .Select(m => $"[{m.LastTimestamp.ToLocalTime():u} {GetShortLogLevel(m.Level)}]" +

@@ -9,4 +9,6 @@ public sealed class WeatherAnalyzerSettings : ICronSettings
 
     [Required]
     public required string CronExpression { get; init; }
+
+    public bool NotifyOnWarning { get; init; }
 }
