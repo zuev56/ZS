@@ -6,21 +6,25 @@ window.onload = function () {
     window.setInterval(updateWeatherDashboard, updateWeatherTimeoutMs);
     window.setInterval(updatePingResult, pingTimeoutMs);
     window.setInterval(updateVkActivity, vkActivityTimeoutMs);
+
+    updateWeatherDashboard();
+    updatePingResult();
+    updateVkActivity();
 }
 
 function updateWeatherDashboard() {
-    updateDashbordBlock('weather-dashboard', 'WeatherDashboard');
+    updateDashboardBlock('weather-dashboard', 'WeatherDashboard');
 }
 
 function updatePingResult() {
-    updateDashbordBlock('ping-result', 'PingResult');
+    updateDashboardBlock('ping-result', 'PingResult');
 }
 
 function updateVkActivity() {
-    updateDashbordBlock('vk-activity', 'VkActivity');
+    updateDashboardBlock('vk-activity', 'VkActivity');
 }
 
-function updateDashbordBlock(elementId, handler) {
+function updateDashboardBlock(elementId, handler) {
     if (window.location.pathname.toUpperCase() !== '/DASHBOARD')
         return;
 
