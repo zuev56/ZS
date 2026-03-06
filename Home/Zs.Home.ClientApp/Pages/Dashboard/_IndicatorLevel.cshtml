@@ -52,6 +52,9 @@
 
     var chartStartAt = (DateTime.UtcNow - Model.ValueLog.Keys.Min()).ToTimeAgo();
     var chartEndAt = (DateTime.UtcNow - Model.ValueLog.Keys.Max()).ToTimeAgo();
+    var minValue = Model.ValueLog.Values.Min(v => v.Value);
+    var maxValue = Model.ValueLog.Values.Max(v => v.Value);
+    var avgValue = Model.ValueLog.Values.Average(v => v.Value);
 
     void RenderDynamicIcon()
     {
@@ -102,7 +105,7 @@
         </svg>
     }
 
-    Logger.LogDebugIfNeed($"{Model.Name}: [ ..., {string.Join(", ", Model.ValueLog.Values.Take(5).Reverse().Select(i => i.ToString(CultureInfo.InvariantCulture)))} ]," +
+    Logger.LogDebugIfNeed($"{Model.Name}: [ ..., {string.Join(", ", Model.ValueLog.Values.Take(5).Reverse().Select(i => i.Value.ToString(CultureInfo.InvariantCulture)))} ]," +
                           $" status=\"{Model.Status}\"," +
                           $" dynamic=\"{Model.Dynamic}\"," +
                           $" forecast=\"{Model.Forecast}\"," +
@@ -142,16 +145,37 @@
 
             var vbHeight = 16; // 16 = 1rem
             var vbWidth = Model.ValueLog.Count;
-            var min = Model.ValueLog.Values.Min();
-            var max = Model.ValueLog.Values.Max();
             var kX = 1;
-            var kY = vbHeight / (max - min);
-            var offset = kY * min;
+            var kY = vbHeight / (maxValue - minValue);
+            var offset = kY * minValue;
 
             var points = Model.ValueLog
                 .OrderBy(v => v.Key)
-                .Select(i => i.Value * kY - offset)
-                .Select((value, index) => string.Create(CultureInfo.GetCultureInfo("en-US"),  $"{index*kX}, {value:F1}"));
+                .Select(i => i.Value.Value * kY - offset)
+                .Select((value, idx) => string.Create(CultureInfo.GetCultureInfo("en-US"),  $"{idx*kX}, {value:F1}"));
+
+            var pointsWithColor = Model.ValueLog
+                .OrderBy(v => v.Key)
+                .Select(i => new { Value = i.Value.Value * kY - offset, Color = statusToColorMap[i.Value.Status] })
+                .ToList();
+
+            var exceedingPolylines = new List<(string Color, List<string> Points)>
+            {
+                (pointsWithColor.First().Color, Points: [])
+            };
+
+            var currentPolyline = exceedingPolylines.Last();
+            var index = 0;
+            foreach (var point in pointsWithColor)
+            {
+                if (point.Color != currentPolyline.Color)
+                {
+                    exceedingPolylines.Add((point.Color, Points: []));
+                    currentPolyline = exceedingPolylines.Last();
+                }
+                currentPolyline.Points.Add(string.Create(CultureInfo.GetCultureInfo("en-US"), $"{index++ * kX}, {point.Value:F1}"));
+            }
+
         }
     </div>
 
@@ -177,10 +201,46 @@
     <div class="row chart-wrapper">
         <div class="chart-text">@chartStartAt</div>
         <svg class="chart chart-line" viewBox="0 -1 @(vbWidth - 1) @(vbHeight + 2)" preserveAspectRatio="none">
-            <polyline fill="none" stroke="#0000FF"
+
+            @* Основная одноцветная линия *@
+            <polyline fill="none" stroke="@statusToColorMap[Status.Normal]"
                       vector-effect="non-scaling-stroke"
                       points="@string.Join(Environment.NewLine, points)"/>
+
+            @* Наложение цветных кусков поверх основной линии *@
+            @for (var i = 0; i < exceedingPolylines.Count; i++)
+            {
+                var curPoints = exceedingPolylines[i].Points;
+                var curColor = exceedingPolylines[i].Color;
+
+                if (curColor == statusToColorMap[Status.Normal])
+                    continue;
+
+                if (curPoints.Count > 1)
+                {
+                    <polyline fill="none" stroke="@curColor"
+                              vector-effect="non-scaling-stroke"
+                              points="@string.Join(Environment.NewLine, curPoints)"/>
+                }
+                else
+                {
+                    var threePoints = new[]
+                    {
+                        i > 0 ? exceedingPolylines[i-1].Points.Last() : null,
+                        exceedingPolylines[i].Points.First(),
+                        i < exceedingPolylines.Count - 1 ? exceedingPolylines[i+1].Points.First() : null
+                    }.Where(x => x != null);
+
+                    <polyline fill="none" stroke="@curColor"
+                              vector-effect="non-scaling-stroke"
+                              points="@string.Join(Environment.NewLine, threePoints)"/>
+                }
+            }
+
         </svg>
         <div class="chart-text">@chartEndAt</div>
+    </div>
+    <div class="row chart-wrapper" style="background: #e9ecef; height: 12px; ; border-bottom-left-radius:5px; border-bottom-right-radius:5px" >
+        <p style="font-size: 8px; color: #656565">@($"Min: {minValue:0.0}; Avg: {avgValue:0.0}; Max: {maxValue:0.0}")</p>
     </div>
 </div>

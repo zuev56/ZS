@@ -5,6 +5,8 @@ using Zs.Home.WebApi;
 
 namespace Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
+public record struct LogValue(double Value, Status Status);
+
 public sealed record WeatherDashboard
 {
     public required IReadOnlyList<Place> Places { get; init; }
@@ -19,14 +21,14 @@ public sealed record Place
 
 public sealed record AnalogParameter
 {
-    public AnalogParameter(string name, Dictionary<DateTime, double> valueLog, string unit)
+    public AnalogParameter(string name, Dictionary<DateTime, LogValue> valueLog, string unit)
     {
         Name = name;
         ValueLog = valueLog;
         Unit = unit;
     }
 
-    public AnalogParameter(string name, Dictionary<DateTime, double> valueLog, string unit, ParameterSettings settings)
+    public AnalogParameter(string name, Dictionary<DateTime, LogValue> valueLog, string unit, ParameterSettings settings)
         : this(name, valueLog, unit)
     {
         Hi = Round(settings.Hi);
@@ -36,7 +38,7 @@ public sealed record AnalogParameter
     }
 
     public string Name { get; }
-    public Dictionary<DateTime, double> ValueLog { get; } = new();
+    public Dictionary<DateTime, LogValue> ValueLog { get; } = new();
     public string Unit { get; }
     public double? Hi { get; init; }
     public double? HiHi { get; init; }
@@ -44,8 +46,8 @@ public sealed record AnalogParameter
     public double? LoLo { get; init; }
     public short Order { get; set; } = short.MaxValue;
 
-    public double CurrentValue => ValueLog.OrderByDescending(kvp => kvp.Key).First().Value;
-    public double PreviousValue => ValueLog.OrderByDescending(kvp => kvp.Key).ElementAt(1).Value;
+    public double CurrentValue => ValueLog.OrderByDescending(kvp => kvp.Key).First().Value.Value;
+    public double PreviousValue => ValueLog.OrderByDescending(kvp => kvp.Key).ElementAt(1).Value.Value;
 
     public Dynamic Dynamic => (CurrentValue - PreviousValue) switch
     {

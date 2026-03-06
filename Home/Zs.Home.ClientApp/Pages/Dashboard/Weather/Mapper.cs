@@ -20,7 +20,6 @@ internal static class Mapper
             .DistinctBy(p => p.Id)
             .ToList();
 
-        // TODO: O(n^3)
         foreach (var place in dbPlaces)
         {
             place.Sources = dbSources.Where(s => s.PlaceId == place.Id).ToList();
@@ -74,8 +73,8 @@ internal static class Mapper
             .Where(g => g.Key.ParameterName != null && parameterSettings.Any(p => p.Name == g.Key.ParameterName))
             .Select(g =>
             {
-                var valueLog = g.ToDictionary(i => i.CreatedAt, i => i.Value);
                 var paramSettings = parameterSettings.Single(p => p.Name == g.Key.ParameterName);
+                var valueLog = g.ToDictionary(i => i.CreatedAt, i => new LogValue(i.Value, GetStatus(i.Value, paramSettings)));
 
                 return new AnalogParameter(g.Key.ParameterName!, valueLog, g.Key.Unit!, paramSettings);
             })
@@ -86,5 +85,16 @@ internal static class Mapper
             Name = place.Name,
             Parameters = parameters
         };
+    }
+
+    private static Status GetStatus(double value, ParameterSettings settings)
+    {
+        var (lolo, lo, hi, hihi) = (settings.LoLo, settings.Lo, settings.Hi, settings.HiHi);
+        if (lolo < value && value < lo) return Status.WarningLo;
+        if (hi < value && value < hihi) return Status.WarningHi;
+        if (lolo > value) return Status.DangerLoLo;
+        if (value > hihi) return Status.DangerHiHi;
+
+        return Status.Normal;
     }
 }
