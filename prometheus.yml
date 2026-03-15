@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['192.168.1.104:9090'] # PROMETHEUS_PORT
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['192.168.1.104:9100'] # NODE_EXPORTER_PORT
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['192.168.1.104:8085'] # CADVISOR_PORT

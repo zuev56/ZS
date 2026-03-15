@@ -87,6 +87,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.vk.yml = docker-compose.vk.yml
 		docker-compose.home.yml = docker-compose.home.yml
 		docker-compose.video-streaming.yml = docker-compose.video-streaming.yml
+		docker-compose.infrastructure.yml = docker-compose.infrastructure.yml
+		.env = .env
+		prometheus.yml = prometheus.yml
+		grafana.ini = grafana.ini
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Home.Jobs.Quartz", "Home\Zs.Home.Jobs.Quartz\Zs.Home.Jobs.Quartz.csproj", "{3CB09435-5413-49D8-98E5-BF43110F8293}"
