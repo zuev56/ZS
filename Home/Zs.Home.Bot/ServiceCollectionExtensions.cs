@@ -7,6 +7,7 @@ using Zs.Bot.Data.PostgreSQL;
 using Zs.Bot.Data.Repositories;
 using Zs.Bot.Services;
 using Zs.Bot.Telegram.Extensions;
+using Zs.Bot.Vk;
 using Zs.Common.Abstractions;
 using Zs.Home.Bot.Interaction;
 
@@ -35,6 +36,21 @@ internal static class ServiceCollectionExtensions
 
         var settings = services.BuildServiceProvider().GetRequiredService<IOptions<BotSettings>>().Value;
         services.AddTelegramBotClient(settings.Token);
+        services.AddPostgreSqlMessageDataStorage();
+        services.AddCommandManager(settings.CliPath);
+
+        return services;
+    }
+
+    internal static IServiceCollection AddVkBotClient(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<BotSettings>()
+            .Bind(configuration.GetSection(BotSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        var settings = services.BuildServiceProvider().GetRequiredService<IOptions<BotSettings>>().Value;
+        services.AddVkBotClient(settings.Token);
         services.AddPostgreSqlMessageDataStorage();
         services.AddCommandManager(settings.CliPath);
 

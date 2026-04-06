@@ -17,8 +17,6 @@ using Zs.Common.Extensions;
 using Zs.Common.Models;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Scheduling;
-using Zs.Home.Application.Features.Hardware;
-using Zs.Home.Application.Features.Seq;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Models;
 using Zs.Home.Bot.Interaction;
@@ -53,6 +51,7 @@ public sealed class Program
                 services
                     .AddDatabase(configuration)
                     .AddConnectionAnalyzer()
+                    //.AddVkBotClient(configuration)
                     .AddTelegramBot(configuration)
                     .AddDbClient(configuration)
                     .AddHomeClient(configuration)

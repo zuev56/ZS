@@ -2,6 +2,7 @@ using Zs.Bot.Data.Queries;
 
 namespace Zs.Bot.Telegram;
 
+// TODO: Кажется, что-то уже неактуальное
 public static class RawData
 {
     public static RawDataStructure Structure => new()
