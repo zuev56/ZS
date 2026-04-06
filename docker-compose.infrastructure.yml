@@ -35,6 +35,19 @@ services:
     networks:
       - infra-network
 
+  # ----------------------------------------- Если Portainer есть на другой машине
+  portainer-agent:
+    image: portainer/agent:latest
+    container_name: portainer_agent
+    restart: unless-stopped
+    ports:
+      - "${PORTAINER_AGENT_HTTP:-9001}:9001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - infra-network
+
   # -----------------------------------------
   postgresql:
     image: postgres:${POSTGRES_VERSION:-latest}
@@ -59,7 +72,6 @@ services:
     restart: unless-stopped
     ports:
       - "${KAFKA_PORT:-9092}:9092" # Для доступа извне
-      #- "${KAFKA_JMX_PORT:-9101}:9101" # Для JMX метрик
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -73,11 +85,23 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_MIN_ISR:-1}
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
-      #KAFKA_JMX_PORT: ${KAFKA_JMX_PORT:-9101}
-      #KAFKA_JMX_HOSTNAME: ${KAFKA_JMX_HOSTNAME:-localhost}
     volumes:
       - /opt/infrastructure/kafka/data:/var/lib/kafka/data
       - /opt/infrastructure/kafka/configs:/etc/kafka
+    networks:
+      - infra-network
+
+  # -----------------------------------------
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:latest
+    container_name: kafka-exporter
+    restart: unless-stopped
+    ports:
+      - "${KAFKA_EXPORTER_PORT:-9308}:9308"
+    command:
+      - --kafka.server=kafka:${KAFKA_PORT:-9092}
+    depends_on:
+      - kafka
     networks:
       - infra-network
 
@@ -98,23 +122,22 @@ services:
     networks:
       - infra-network
 
-  # TODO
-  ## -----------------------------------------
-  #rabbitmq:
-  #  image: rabbitmq:${RABBITMQ_VERSION:-3-management-alpine}
-  #  container_name: rabbitmq
-  #  restart: unless-stopped
-  #  ports:
-  #    - "${RABBITMQ_AMQP_PORT:-5672}:5672"   # AMQP
-  #    - "${RABBITMQ_MGMT_PORT:-15672}:15672" # UI
-  #  environment:
-  #    RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
-  #    RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin}
-  #  volumes:
-  #    - /opt/infrastructure/rabbitmq/data:/var/lib/rabbitmq
-  #    - /opt/infrastructure/rabbitmq/configs:/etc/rabbitmq
-  #  networks:
-  #    - infra-network
+  # -----------------------------------------
+  rabbitmq:
+    image: rabbitmq:${RABBITMQ_VERSION:-3-management-alpine}
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "${RABBITMQ_AMQP_PORT:-5672}:5672"
+      - "${RABBITMQ_UI_PORT:-15672}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin}
+    volumes:
+      - /opt/infrastructure/rabbitmq/data:/var/lib/rabbitmq
+      - /opt/infrastructure/rabbitmq/configs:/etc/rabbitmq
+    networks:
+      - infra-network
 
   # -----------------------------------------
   node-exporter:
