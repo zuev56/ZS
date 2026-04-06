@@ -39,14 +39,14 @@ internal static class Mapper
             {
                 // TODO: сделать возможность маппить по ID!
                 var sensorSettings = settings.DeviceSettings.SelectMany(s => s.Sensors).Where(s => s.Alias == p.Name).ToList();
-                return p.ToClientModel(sensorSettings);
+                return p.ToClientPlaceModel(sensorSettings);
             })
             .ToList();
 
         return new WeatherDashboard { Places = clientPlaces };
     }
 
-    private static Place ToClientModel(
+    private static Place ToClientPlaceModel(
         this Application.Features.Weather.Data.Models.Place place,
         IReadOnlyList<SensorSettings> sensorSettings)
     {
@@ -78,6 +78,7 @@ internal static class Mapper
 
                 return new AnalogParameter(g.Key.ParameterName!, valueLog, g.Key.Unit!, paramSettings);
             })
+            //.OrderBy(p => p.Name)
             .ToList();
 
         return new Place

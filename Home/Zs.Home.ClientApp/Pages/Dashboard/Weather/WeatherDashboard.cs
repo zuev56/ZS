@@ -5,7 +5,7 @@ using Zs.Home.WebApi;
 
 namespace Zs.Home.ClientApp.Pages.Dashboard.Weather;
 
-public record struct LogValue(double Value, Status Status);
+public record struct LogValue(double Value, Status Status, bool IsBasic = true);
 
 public sealed record WeatherDashboard
 {
@@ -39,6 +39,7 @@ public sealed record AnalogParameter
 
     public string Name { get; }
     public Dictionary<DateTime, LogValue> ValueLog { get; } = new();
+
     public string Unit { get; }
     public double? Hi { get; init; }
     public double? HiHi { get; init; }
@@ -56,18 +57,7 @@ public sealed record AnalogParameter
         > 0 => Dynamic.Positive,
     };
 
-    public Status Status
-    {
-        get
-        {
-            if (LoLo < CurrentValue && CurrentValue < Lo) return Status.WarningLo;
-            if (Hi < CurrentValue && CurrentValue < HiHi) return Status.WarningHi;
-            if (LoLo > CurrentValue) return Status.DangerLoLo;
-            if (CurrentValue > HiHi) return Status.DangerHiHi;
-
-            return Status.Normal;
-        }
-    }
+    public Status Status => CalculateStatus(CurrentValue);
 
     public Forecast Forecast
     {
@@ -103,7 +93,17 @@ public sealed record AnalogParameter
     }
 
     private static double? Round(double? rawValue)
-        => rawValue.HasValue ? Math.Round(rawValue.Value, 2, MidpointRounding.AwayFromZero) : default;
+        => rawValue.HasValue ? Math.Round(rawValue.Value, 2, MidpointRounding.AwayFromZero) : 0.0;
+
+    public Status CalculateStatus(double value)
+    {
+        if (LoLo < value && value < Lo) return Status.WarningLo;
+        if (Hi < value && value < HiHi) return Status.WarningHi;
+        if (LoLo > value) return Status.DangerLoLo;
+        if (value > HiHi) return Status.DangerHiHi;
+
+        return Status.Normal;
+    }
 
     public override string ToString() => $"{CurrentValue} {Unit}";
 }

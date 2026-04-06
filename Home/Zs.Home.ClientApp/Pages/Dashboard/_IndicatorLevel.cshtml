@@ -56,7 +56,7 @@
     var maxValue = Model.ValueLog.Values.Max(v => v.Value);
     var avgValue = Model.ValueLog.Values.Average(v => v.Value);
 
-    void RenderDynamicIcon()
+    void RenderDynamicArrowIcon()
     {
         string arrowPath = null!;
         string topLineColor = null!;
@@ -110,6 +110,14 @@
                           $" dynamic=\"{Model.Dynamic}\"," +
                           $" forecast=\"{Model.Forecast}\"," +
                           $" LL={Model.LoLo}, L={Model.Lo}, H={Model.Hi}, HH={Model.HiHi}");
+
+    // static double GetSignificantDifferenceInConsecutiveValues()
+    // {
+    //     // TODO: Выявление значительной разницы между Элементами по Y, которая потребует добавления промежуточных точек
+    //     //       С учётом высоты 16 px
+    // }
+
+    static string ToStrDouble(double value) => string.Create(CultureInfo.InvariantCulture, $"{value:F1}");
 }
 
 <div class="row card indicator mt-1 ms-1 me-1 p-0">
@@ -125,118 +133,109 @@
         </div>
 
         @{
-            RenderDynamicIcon();
-
-            /* Дано:
-             *   X   Y         Диапазон возможных значений на графике: от 0 до 16
-             *   0   31        min(Y) = 31 => 0
-             *   1   45        max(Y) = 65 => 16
-             *   3   65
-             *   4   47        65 - 31 = 34   - диапазон фактических значений
-             *                 16 / 34 = 0.47 - коэффициент, на который надо умножить фактические значения
-             *
-             *                                               Значения
-             *   X   Y                                      на графике
-             *   0   31 * 0.47 = 14.57     - 14.57   =>         0
-             *   1   45 * 0.47 = 21.15     - 14.57   =>         6.58
-             *   3   65 * 0.47 = 30.55     - 14.57   =>        15.98
-             *   4   47 * 0.47 = 22.09     - 14.57   =>         7.52
-             */
+            RenderDynamicArrowIcon();
 
             var vbHeight = 16; // 16 = 1rem
             var vbWidth = Model.ValueLog.Count;
-            var kX = 1;
             var kY = vbHeight / (maxValue - minValue);
             var offset = kY * minValue;
 
-            var points = Model.ValueLog
-                .OrderBy(v => v.Key)
-                .Select(i => i.Value.Value * kY - offset)
-                .Select((value, idx) => string.Create(CultureInfo.GetCultureInfo("en-US"),  $"{idx*kX}, {value:F1}"));
 
-            var pointsWithColor = Model.ValueLog
-                .OrderBy(v => v.Key)
-                .Select(i => new { Value = i.Value.Value * kY - offset, Color = statusToColorMap[i.Value.Status] })
-                .ToList();
+            // var repairedValueLog = new List<KeyValuePair<DateTime, LogValue>>(Model.ValueLog.Count + 20);
+            var repairedValueLog = Model.ValueLog.OrderBy(x => x.Key).ToList();
 
-            var exceedingPolylines = new List<(string Color, List<string> Points)>
+            var i = 1;
+            while (i < repairedValueLog.Count)
             {
-                (pointsWithColor.First().Color, Points: [])
-            };
+                var prevY = repairedValueLog[i - 1].Value.Value;
+                var curY = repairedValueLog[i].Value.Value;
+                var additionalPointsCount = (int)Math.Abs(prevY - curY) - 1;
 
-            var currentPolyline = exceedingPolylines.Last();
-            var index = 0;
-            foreach (var point in pointsWithColor)
-            {
-                if (point.Color != currentPolyline.Color)
+                if (additionalPointsCount > 1)
                 {
-                    exceedingPolylines.Add((point.Color, Points: []));
-                    currentPolyline = exceedingPolylines.Last();
+                    var prevDate = repairedValueLog[i-1].Key;
+                    var curDate = repairedValueLog[i].Key;
+                    var secondsShift = (curDate - prevDate).TotalSeconds / (additionalPointsCount + 1);
+                    var nextTimeShift = secondsShift;
+                    foreach (var index in Enumerable.Range(i, additionalPointsCount))
+                    {
+                        var date = prevDate.AddSeconds(nextTimeShift);
+                        var value = prevY > curY ? --prevY : ++prevY;
+                        var status = Model.CalculateStatus(value);
+                        var kvp = new KeyValuePair<DateTime, LogValue>(date, new LogValue(value, status, IsBasic: false));
+                        repairedValueLog.Insert(index, kvp);
+                        nextTimeShift += secondsShift;
+                    }
                 }
-                currentPolyline.Points.Add(string.Create(CultureInfo.GetCultureInfo("en-US"), $"{index++ * kX}, {point.Value:F1}"));
+                i++;
             }
 
+            var pointsWithColor = repairedValueLog
+                .Where(kvp => kvp.Value.IsBasic)
+                .OrderBy(kvp => kvp.Key)
+                .Select((kvp, index) => new
+                {
+                    X = (double)index,
+                    Y = Math.Round(kvp.Value.Value * kY - offset, 2),
+                    Color = statusToColorMap[kvp.Value.Status],
+                    Date = kvp.Key,
+                    IsBasic = true
+                })
+                .Union(repairedValueLog
+                    .Where(kvp => !kvp.Value.IsBasic)
+                    .Select(kvp => new
+                        {
+                            X = double.NaN,
+                            Y = Math.Round(kvp.Value.Value * kY - offset, 2),
+                            Color = statusToColorMap[kvp.Value.Status],
+                            Date = kvp.Key,
+                            IsBasic = false
+                        }
+                    ))
+                .OrderBy(p => p.Date)
+                .ToArray();
         }
     </div>
-
-    @* <div class="container" style="height:5px"> *@
-    @*     <div class="row"> *@
-    @*         <div class="col-auto" style="width:15%; background:red">qwe</div> *@
-    @*         <div class="col-auto" style="width:15%; background:orange">qwe</div> *@
-    @*         <div class="col-auto" style="width:40%; background:limegreen">qwe</div> *@
-    @*         <div class="col-auto" style="width:15%; background:orange">qwe</div> *@
-    @*         <div class="col-auto" style="width:15%; background:red">qwe</div> *@
-    @*     </div> *@
-    @* </div> *@
-
-    @* <svg viewBox="@scaleMinValue 0 @scaleMaxValue 3" preserveAspectRatio="none"> *@
-    @*     <line x1="@scaleMinValue" y1="1" x2="@lolo"          y2="1" stroke="red"    stroke-width="3" /> *@
-    @*     <line x1="@lolo"          y1="1" x2="@lo"            y2="1" stroke="orange" stroke-width="3" /> *@
-    @*     <line x1="@lo"            y1="1" x2="@hi"            y2="1" stroke="green"  stroke-width="3" /> *@
-    @*     <line x1="@hi"            y1="1" x2="@hihi"          y2="1" stroke="orange" stroke-width="3" /> *@
-    @*     <line x1="@hihi"          y1="1" x2="@scaleMaxValue" y2="1" stroke="red"    stroke-width="3" /> *@
-    @*     $1$ <circle r="5" cx="@Model.CurrentValue" cy="2" fill="black" stroke-width="1" vector-effect="non-scaling-stroke" /> #1# *@
-    @* </svg> *@
 
     <div class="row chart-wrapper">
         <div class="chart-text">@chartStartAt</div>
         <svg class="chart chart-line" viewBox="0 -1 @(vbWidth - 1) @(vbHeight + 2)" preserveAspectRatio="none">
+            @{
+                var additionalPointSeqNumber = 0;
 
-            @* Основная одноцветная линия *@
-            <polyline fill="none" stroke="@statusToColorMap[Status.Normal]"
-                      vector-effect="non-scaling-stroke"
-                      points="@string.Join(Environment.NewLine, points)"/>
-
-            @* Наложение цветных кусков поверх основной линии *@
-            @for (var i = 0; i < exceedingPolylines.Count; i++)
-            {
-                var curPoints = exceedingPolylines[i].Points;
-                var curColor = exceedingPolylines[i].Color;
-
-                if (curColor == statusToColorMap[Status.Normal])
-                    continue;
-
-                if (curPoints.Count > 1)
+                for (i = 0; i < pointsWithColor.Length; i++)
                 {
-                    <polyline fill="none" stroke="@curColor"
-                              vector-effect="non-scaling-stroke"
-                              points="@string.Join(Environment.NewLine, curPoints)"/>
-                }
-                else
-                {
-                    var threePoints = new[]
+                    var curPoint = pointsWithColor[i];
+                    if (curPoint.IsBasic)
                     {
-                        i > 0 ? exceedingPolylines[i-1].Points.Last() : null,
-                        exceedingPolylines[i].Points.First(),
-                        i < exceedingPolylines.Count - 1 ? exceedingPolylines[i+1].Points.First() : null
-                    }.Where(x => x != null);
+                        <circle cx="@curPoint.X" cy="@ToStrDouble(curPoint.Y)" r="0.7" fill="@curPoint.Color"/>
+                        additionalPointSeqNumber = 0;
+                    }
+                    else
+                    {
+                        var prevBasicX = double.NaN;
+                        var basicStepLength = double.NaN;
+                        var additionalPointsCount = -1;
 
-                    <polyline fill="none" stroke="@curColor"
-                              vector-effect="non-scaling-stroke"
-                              points="@string.Join(Environment.NewLine, threePoints)"/>
+                        if (additionalPointSeqNumber++ == 0)
+                        {
+                            var prevBasicPointIndex = i-1;
+                            var nextBasicPointIndex = Array.IndexOf(pointsWithColor, pointsWithColor.Skip(i).First(p => p.IsBasic));
+                            prevBasicX = pointsWithColor[prevBasicPointIndex].X;
+                            var nextBasicX = pointsWithColor[nextBasicPointIndex].X;
+                            basicStepLength = nextBasicX - prevBasicX;
+                            additionalPointsCount = nextBasicPointIndex - prevBasicPointIndex - 1;
+                        }
+
+                        var additionalX = Math.Round(prevBasicX + basicStepLength / additionalPointsCount * additionalPointSeqNumber, 2);
+                        <circle cx="@ToStrDouble(additionalX)" cy="@ToStrDouble(curPoint.Y)" r="0.7" fill="@curPoint.Color"/>
+                    }
                 }
+                @* foreach (var point in pointsWithColor) *@
+                @* { *@
+                @*     <circle cx="@point.X" cy="@ToStrDouble(point.Y)" r="0.7" fill="@point.Color"/> *@
+                @* } *@
             }
-
         </svg>
         <div class="chart-text">@chartEndAt</div>
     </div>
