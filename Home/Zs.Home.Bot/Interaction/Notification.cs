@@ -1,4 +1,4 @@
-﻿namespace Zs.Home.Application.Models;
+﻿namespace Zs.Home.Bot.Interaction;
 
 /// <summary>
 /// Notification from services

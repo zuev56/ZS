@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Zs.Common.Extensions;
-using Zs.Common.Services.Http;
+using Zs.Home.Application.Features.RabbitMq;
 
 namespace Zs.Home.Jobs.Hangfire.Notification;
 
 public sealed class Notifier
 {
-    private readonly string _homeBotUrl;
+    private readonly RabbitMqService _rabbitMqService;
     private readonly ILogger<Notifier> _logger;
 
-    public Notifier(IConfiguration configuration, ILogger<Notifier> logger)
+    public Notifier(RabbitMqService rabbitMqService, ILogger<Notifier> logger)
     {
-        _homeBotUrl = configuration.GetRequiredSection("HomeBotUrl").Value!.TrimEnd('/');
+        _rabbitMqService = rabbitMqService;
         _logger = logger;
     }
 
@@ -24,17 +23,14 @@ public sealed class Notifier
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        var url = $"{_homeBotUrl}/send";
-        var notification = new Application.Models.Notification(message);
         try
         {
-            await Request.Create(url)
-                .WithLogger(_logger)
-                .PostAsync(notification, ct);
+            await _rabbitMqService.PublishToNotificationsAsync(message, ct);
         }
-        catch
+        catch (Exception e)
         {
-            _logger.LogErrorIfNeed($"Unable to send notification: \"{message}\"");
+            _logger.LogErrorIfNeed(e, "An error occurred while sending notification");
+            throw;
         }
     }
 }

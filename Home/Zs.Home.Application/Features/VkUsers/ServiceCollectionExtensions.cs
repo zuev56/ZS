@@ -7,7 +7,7 @@ namespace Zs.Home.Application.Features.VkUsers;
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddUserWatcher(this IServiceCollection services, IConfiguration configuration)
-        => AddUserWatcher<UserWatcherSettings>(services, configuration);
+        => services.AddUserWatcher<UserWatcherSettings>(configuration);
 
     public static IServiceCollection AddUserWatcher<TSettings>(this IServiceCollection services, IConfiguration configuration)
         where TSettings : UserWatcherSettings

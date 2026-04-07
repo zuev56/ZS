@@ -52,7 +52,7 @@ internal static class ServiceCollectionExtensions
         return services.AddHangfireServer();
     }
 
-    internal static IServiceCollection AddJobConfigurations(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection AddJobSettings(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<LogAnalyzerSettings>()
             .Bind(configuration.GetSection(LogAnalyzerSettings.SectionName))

@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire;
-using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +13,7 @@ using Microsoft.Extensions.Options;
 using Npgsql;
 using Serilog;
 using Zs.Common.Extensions;
+using Zs.Home.Application.Features.RabbitMq;
 using Zs.Home.Application.Features.VkUsers;
 using Zs.Home.Application.Features.Weather.Data;
 using Zs.Home.Application.Features.Weather.Data.Models;
@@ -42,9 +42,11 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Services
     .AddHangfire(builder.Configuration)
+    .AddRabbitMq(builder.Configuration)
+    .AddSingleton<RabbitMqService>()
     .AddHomeClient(builder.Configuration)
     .AddSingleton<Notifier>()
-    .AddJobConfigurations(builder.Configuration)
+    .AddJobSettings(builder.Configuration)
     // TODO: Получать настройки из API
     .AddUserWatcher<UserWatcherSettings>(builder.Configuration)
     // TODO: Попробовать объединить с настройками из API и брать их оттуда
@@ -68,10 +70,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 // app.UseAuthorization();
 
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
-{
-    Authorization = Array.Empty<IDashboardAuthorizationFilter>()
-});
+app.UseHangfireDashboard("/hangfire", new DashboardOptions { Authorization = [] });
 
 AddRecurringJob<LogAnalyzerJob, LogAnalyzerSettings>(app);
 AddRecurringJob<HardwareAnalyzerJob, HardwareAnalyzerSettings>(app);
@@ -80,10 +79,7 @@ AddRecurringJob<UserWatcherJob, UserWatcherSettings>(app);
 AddRecurringJob<WeatherAnalyzerJob, WeatherAnalyzerSettings>(app);
 AddRecurringJob<WeatherRegistratorJob, WeatherRegistratorSettings>(app);
 
-// TODO: Нужен джоб-хелсчекер. Если бот будет недоступен, то отправить уведомление на email
-//       Этот же джоб будет проверять все остальные сервисы. А сам Hangfire будет проверяться ботом.
-//       Метод API должен возвращать Zs.Common.Models.HealthStatus и, например,
-//       когда было выполнено последнее действие сервисом (нужно реализовать такой функционал)
+await SetupRabbitMq(app.Services);
 
 app.Run();
 return;
@@ -161,3 +157,7 @@ static async Task DeleteHangfireLocksAsync(IServiceProvider serviceProvider)
         logger.LogInformationIfNeed("Hangfire tables have not been created yet.");
     }
 }
+
+static Task SetupRabbitMq(IServiceProvider serviceProvider)
+    => serviceProvider.GetRequiredService<RabbitMqService>()
+        .SetupRabbitMqAsync();

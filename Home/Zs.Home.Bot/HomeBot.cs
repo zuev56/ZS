@@ -120,7 +120,7 @@ internal sealed class HomeBot : IHostedService
 
             if (job.Description == InactiveUsersInformer)
             {
-                await _notifier.NotifyOnceADayAsync(result.Value, "is not active for");
+                await _notifier.NotifyOnlyOnceADayAsync(result.Value, "is not active for");
             }
             else
             {

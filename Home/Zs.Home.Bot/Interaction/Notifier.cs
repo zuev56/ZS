@@ -35,17 +35,15 @@ internal sealed class Notifier
         _logger = logger;
     }
 
-    public Task ForceNotifyAsync(string notification)
+    public async Task ForceNotifyAsync(string notification)
     {
         var preparedMessage = GetPreparedMessage(notification);
 
         foreach (var rawUserId in _botSettings.PrivilegedUserRawIds)
         {
-            _chatsRepository.FindByRawIdAsync(rawUserId)
+            await _chatsRepository.FindByRawIdAsync(rawUserId)
                 .ContinueWith(task => _botClient.SendMessageAsync(preparedMessage, task.Result!));
         }
-
-        return Task.CompletedTask;
     }
 
     private static string GetPreparedMessage(string message)
@@ -64,7 +62,7 @@ internal sealed class Notifier
         await ForceNotifyAsync(preparedMessage);
     }
 
-    public async Task NotifyOnceADayAsync(string message, string templateForExclusion)
+    public async Task NotifyOnlyOnceADayAsync(string message, string templateForExclusion)
     {
         var preparedMessage = GetPreparedMessage(message);
         var utcToday = DateTime.Today.ToUniversalTime();

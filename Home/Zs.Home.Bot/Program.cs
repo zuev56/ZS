@@ -17,9 +17,10 @@ using Zs.Common.Extensions;
 using Zs.Common.Models;
 using Zs.Common.Services.Connection;
 using Zs.Common.Services.Scheduling;
+using Zs.Home.Application.Features.RabbitMq;
 using Zs.Home.Application.Features.VkUsers;
-using Zs.Home.Application.Models;
 using Zs.Home.Bot.Interaction;
+using Zs.Home.Bot.RabbitMq;
 using Zs.Home.WebApi.Client.Bootstrap;
 
 namespace Zs.Home.Bot;
@@ -28,7 +29,13 @@ public sealed class Program
 {
     public static async Task Main(string[] args)
     {
-        var hostBuilder = CreateHostBuilder(args);
+        var hostBuilder = CreateHostBuilder(args).ConfigureServices((hostContext, services) =>
+        {
+            services.AddRabbitMq(hostContext.Configuration);
+            services.AddSingleton<RabbitMqListener>();
+            services.AddHostedService<RabbitMqHostedLifecycle>();
+        });
+
         var host = hostBuilder.UseConsoleLifetime().Build();
 
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
