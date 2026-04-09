@@ -1,18 +1,19 @@
-﻿using System.Runtime.InteropServices;
-using System.Text;
+﻿using System;
+using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace Zs.Common.Utilities;
 
 public static class RuntimeInformationWrapper
 {
     public static string GetRuntimeInfo()
-    {
-        var sb = new StringBuilder()
-          .Append("OS: ").Append(RuntimeInformation.OSDescription).Append(' ').Append(RuntimeInformation.OSArchitecture).AppendLine()
-          .Append("Framework: ").Append(RuntimeInformation.FrameworkDescription).AppendLine()
-          .Append("Process: ").Append(RuntimeInformation.ProcessArchitecture).AppendLine()
-          .Append("RuntimeID: ").Append(RuntimeInformation.RuntimeIdentifier);
-
-        return sb.ToString();
-    }
+        => $"""
+            Host: {(Environment.GetEnvironmentVariable("HOSTNAME") ?? "unknown")}
+            OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}
+            Framework: {RuntimeInformation.FrameworkDescription}
+            Process: {RuntimeInformation.ProcessArchitecture}
+            RuntimeID: {RuntimeInformation.RuntimeIdentifier}
+            Time: {DateTime.Now:s} ({TimeZoneInfo.Local})
+            Culture: {CultureInfo.CurrentCulture.Name}
+            """;
 }

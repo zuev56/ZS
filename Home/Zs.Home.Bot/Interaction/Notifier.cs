@@ -56,7 +56,7 @@ internal sealed class Notifier
         var curHour = DateTime.Now.Hour;
         if (string.IsNullOrWhiteSpace(message) || curHour < _notifierSettings.FromHour || curHour >= _notifierSettings.ToHour)
         {
-            _logger.LogInformationIfNeed($"Quiet hours, message not sent: {message}");
+            _logger.LogInformationIfNeed($"Quiet hours before: {_notifierSettings.FromHour} and after: {_notifierSettings.ToHour}, now: {curHour}. Message not sent: {message}");
             return;
         }
 
