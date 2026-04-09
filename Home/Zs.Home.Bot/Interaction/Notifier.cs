@@ -13,37 +13,39 @@ namespace Zs.Home.Bot.Interaction;
 internal sealed class Notifier
 {
     private readonly IBotClient _botClient;
-    private readonly IChatsRepository _chatsRepository;
-    private readonly IMessagesRepository _messagesRepository;
+    //private readonly IChatsRepository _chatsRepository;
+    //private readonly IMessagesRepository _messagesRepository;
     private readonly NotifierSettings _notifierSettings;
     private readonly BotSettings _botSettings;
     private readonly ILogger<Notifier> _logger;
 
     public Notifier(
         IBotClient botClient,
-        IChatsRepository chatsRepository,
-        IMessagesRepository messagesRepository,
+        //IChatsRepository chatsRepository,
+        //IMessagesRepository messagesRepository,
         IOptions<NotifierSettings> notifierOptions,
         IOptions<BotSettings> botOptions,
         ILogger<Notifier> logger)
     {
         _botClient = botClient;
-        _chatsRepository = chatsRepository;
-        _messagesRepository = messagesRepository;
+        //_chatsRepository = chatsRepository;
+        //_messagesRepository = messagesRepository;
         _botSettings = botOptions.Value;
         _notifierSettings = notifierOptions.Value;
         _logger = logger;
     }
 
-    public async Task ForceNotifyAsync(string notification)
+    public Task ForceNotifyAsync(string notification)
     {
         var preparedMessage = GetPreparedMessage(notification);
 
         foreach (var rawUserId in _botSettings.PrivilegedUserRawIds)
         {
-            await _chatsRepository.FindByRawIdAsync(rawUserId)
-                .ContinueWith(task => _botClient.SendMessageAsync(preparedMessage, task.Result!));
+            _botClient.SendMessageAsync(preparedMessage, rawUserId);
+            // await _chatsRepository.FindByRawIdAsync(rawUserId)
+            //     .ContinueWith(task => _botClient.SendMessageAsync(preparedMessage, task.Result!));
         }
+        return Task.CompletedTask;
     }
 
     private static string GetPreparedMessage(string message)
@@ -60,16 +62,5 @@ internal sealed class Notifier
 
         var preparedMessage = GetPreparedMessage(message);
         await ForceNotifyAsync(preparedMessage);
-    }
-
-    public async Task NotifyOnlyOnceADayAsync(string message, string templateForExclusion)
-    {
-        var preparedMessage = GetPreparedMessage(message);
-        var utcToday = DateTime.Today.ToUniversalTime();
-        var dateRange = new DateTimeRange(utcToday, DateTime.MaxValue);
-        // TODO: в FindWithTextAsync происходит неправильная конвертация времени - разница 6 часов. Надо поправить в Zs.Bot.Data
-        var todayAlerts = await _messagesRepository.FindWithTextAsync(_botSettings.OwnerChatRawId, templateForExclusion, dateRange);
-        if (todayAlerts.All(m => BotSettings.GetMessageText(m)?.WithoutDigits() != message.WithoutDigits()))
-            await NotifyAsync(preparedMessage);
     }
 }

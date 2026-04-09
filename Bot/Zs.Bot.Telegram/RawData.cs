@@ -2,7 +2,7 @@ using Zs.Bot.Data.Queries;
 
 namespace Zs.Bot.Telegram;
 
-// TODO: Кажется, что-то уже неактуальное
+// Используется в репозиториях для поиска по сырым значениям
 public static class RawData
 {
     public static RawDataStructure Structure => new()

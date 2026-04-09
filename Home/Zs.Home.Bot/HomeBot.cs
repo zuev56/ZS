@@ -15,14 +15,13 @@ using Zs.Common.Services.Scheduling;
 using Zs.Common.Utilities;
 using Zs.Home.Bot.Interaction;
 using Zs.Home.Bot.Interaction.MessagePipeline;
-using static Zs.Home.Application.Features.VkUsers.Constants;
 
 namespace Zs.Home.Bot;
 
 internal sealed class HomeBot : IHostedService
 {
     private readonly IBotClient _botClient;
-    private readonly IMessageDataStorage _messageDataStorage;
+    // private readonly IMessageDataStorage _messageDataStorage;
     private readonly IScheduler _scheduler;
     private readonly Notifier _notifier;
     private readonly BotSettings _botSettings;
@@ -31,7 +30,7 @@ internal sealed class HomeBot : IHostedService
 
     public HomeBot(
         IBotClient botClient,
-        IMessageDataStorage messageDataStorage,
+        // IMessageDataStorage messageDataStorage,
         IScheduler scheduler,
         Notifier notifier,
         IOptions<BotSettings> botOptions,
@@ -39,7 +38,7 @@ internal sealed class HomeBot : IHostedService
         ILogger<HomeBot> logger)
     {
         _botClient = botClient;
-        _messageDataStorage = messageDataStorage;
+        // _messageDataStorage = messageDataStorage;
         _scheduler = scheduler;
         _notifier = notifier;
         _botSettings = botOptions.Value;
@@ -82,15 +81,15 @@ internal sealed class HomeBot : IHostedService
     {
         // TODO: Вынести из этого класса
         var authorization = new Authorization(_botClient, _botSettings.PrivilegedUserRawIds);
-        var localMessageHandler = new MessageHandler(_serviceProvider.GetRequiredService<CommandHandler>());
-        var commandManager = _serviceProvider.GetRequiredService<ICommandManager>();
+        // var localMessageHandler = new MessageHandler(_serviceProvider.GetRequiredService<CommandHandler>());
+        // var commandManager = _serviceProvider.GetRequiredService<ICommandManager>();
 
         _botClient
             .UseLogger(_logger)
-            .UseMessageDataSaver(_messageDataStorage)
-            .Use(authorization)
-            .Use(localMessageHandler)
-            .UseCommandManager(commandManager, BotSettings.GetMessageText, _botSettings.Name);
+            // .UseMessageDataSaver(_messageDataStorage)
+            .Use(authorization);
+            // .Use(localMessageHandler)
+            // .UseCommandManager(commandManager, BotSettings.GetMessageText, _botSettings.Name);
     }
 
     private void CreateJobs()
@@ -118,14 +117,7 @@ internal sealed class HomeBot : IHostedService
                 return;
             }
 
-            if (job.Description == InactiveUsersInformer)
-            {
-                await _notifier.NotifyOnlyOnceADayAsync(result.Value, "is not active for");
-            }
-            else
-            {
-                await _notifier.NotifyAsync(result.Value);
-            }
+            await _notifier.NotifyAsync(result.Value);
         }
         catch (Exception ex)
         {

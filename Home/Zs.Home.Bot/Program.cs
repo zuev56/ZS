@@ -41,7 +41,7 @@ public sealed class Program
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
         logger.LogProgramStartup();
 
-        await InitializeDataBaseAsync(host.Services);
+        //await InitializeDataBaseAsync(host.Services);
         await host.RunAsync();
     }
 
@@ -56,10 +56,10 @@ public sealed class Program
                 var configuration = hostContext.Configuration;
 
                 services
-                    .AddDatabase(configuration)
+                    //.AddDatabase(configuration)
                     .AddConnectionAnalyzer()
-                    //.AddVkBotClient(configuration)
-                    .AddTelegramBot(configuration)
+                    .AddVkBotClient(configuration)
+                    //.AddTelegramBot(configuration)
                     .AddDbClient(configuration)
                     .AddHomeClient(configuration)
                     .AddUserWatcher(configuration)
@@ -98,12 +98,12 @@ public sealed class Program
             });
     }
 
-    private static async Task InitializeDataBaseAsync(IServiceProvider serviceProvider)
-    {
-        using var scope = serviceProvider.CreateScope();
-        var scopedServices = scope.ServiceProvider;
-        var db = scopedServices.GetRequiredService<PostgreSqlBotContext>();
-
-        await db.Database.EnsureCreatedAsync();
-    }
+    // private static async Task InitializeDataBaseAsync(IServiceProvider serviceProvider)
+    // {
+    //     using var scope = serviceProvider.CreateScope();
+    //     var scopedServices = scope.ServiceProvider;
+    //     var db = scopedServices.GetRequiredService<PostgreSqlBotContext>();
+    //
+    //     await db.Database.EnsureCreatedAsync();
+    // }
 }

@@ -51,8 +51,8 @@ internal static class ServiceCollectionExtensions
 
         var settings = services.BuildServiceProvider().GetRequiredService<IOptions<BotSettings>>().Value;
         services.AddVkBotClient(settings.Token);
-        services.AddPostgreSqlMessageDataStorage();
-        services.AddCommandManager(settings.CliPath);
+        //services.AddPostgreSqlMessageDataStorage();
+        //services.AddCommandManager(settings.CliPath);
 
         return services;
     }
@@ -80,5 +80,4 @@ internal static class ServiceCollectionExtensions
 
         return services;
     }
-
 }

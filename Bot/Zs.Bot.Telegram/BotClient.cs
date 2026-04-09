@@ -122,6 +122,12 @@ public sealed class BotClient : IBotClient
         return message.ToDbMessage();
     }
 
+    public Task<DbMessage> SendMessageAsync(string text, long userId)
+    {
+        // Этот костыль появился после попытки натянуть интерфейс на VkApi
+        throw new NotImplementedException();
+    }
+
     private static string PrepareMessageText(string text)
     {
         if (text.Length > MaxMessageLength)
