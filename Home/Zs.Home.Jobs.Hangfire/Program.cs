@@ -34,7 +34,6 @@ using UserWatcherSettings = Zs.Home.Jobs.Hangfire.UserWatcher.UserWatcherSetting
 var builder = WebApplication.CreateBuilder(args);
 
 builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
-builder.ConfigureTimezone();
 builder.Host.UseSerilog();
 
 Log.Logger = new LoggerConfiguration()

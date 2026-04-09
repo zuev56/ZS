@@ -12,7 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!);
-builder.ConfigureTimezone();
 builder.Host.UseSerilog();
 
 Log.Logger = new LoggerConfiguration()

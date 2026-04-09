@@ -53,7 +53,6 @@ public sealed class Program
 
         return hostBuilder
             .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
-            .ConfigureTimezone()
             .ConfigureServices(static (hostContext, services) =>
             {
                 var configuration = hostContext.Configuration;
