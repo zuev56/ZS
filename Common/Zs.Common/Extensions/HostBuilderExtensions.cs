@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace Zs.Common.Extensions;
@@ -26,14 +27,30 @@ public static class HostBuilderExtensions
         return builder;
     }
 
+    public static IHostBuilder ConfigureTimezone(this IHostBuilder builder)
+    {
+        var timeZone = Environment.GetEnvironmentVariable("TimeZone");
+
+        SetCurrentCulture(timeZone);
+
+        return builder;
+    }
+
+
     public static IHostApplicationBuilder ConfigureTimezone(this IHostApplicationBuilder builder)
     {
-        var timeZone =  builder.Configuration["TZ"];
+        var timeZone =  builder.Configuration["TimeZone"];
+
+        SetCurrentCulture(timeZone);
+
+        return builder;
+    }
+
+    private static void SetCurrentCulture(string? timeZone)
+    {
         if (!string.IsNullOrWhiteSpace(timeZone))
             CultureInfo.CurrentCulture = new CultureInfo(timeZone);
 
-        Console.WriteLine($"\"TZ\": {timeZone}, CurrentCulture: {CultureInfo.CurrentCulture}");
-
-        return builder;
+        Console.WriteLine($"\"TimeZone\": {timeZone}, CurrentCulture: {CultureInfo.CurrentCulture}");
     }
 }

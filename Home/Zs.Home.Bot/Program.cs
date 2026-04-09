@@ -49,8 +49,11 @@ public sealed class Program
     {
         CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
 
-        return Host.CreateDefaultBuilder(args)
+        var hostBuilder = Host.CreateDefaultBuilder(args);
+
+        return hostBuilder
             .ConfigureExternalAppConfiguration(args, Assembly.GetAssembly(typeof(Program))!)
+            .ConfigureTimezone()
             .ConfigureServices(static (hostContext, services) =>
             {
                 var configuration = hostContext.Configuration;
