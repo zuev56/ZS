@@ -29,17 +29,18 @@ public sealed class RabbitMqService
         await using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
         await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
-        var jsonString = JsonSerializer.Serialize(message);
+        var contentType = message is string ? "text/plain" : "application/json";
+        var messageString = message as string ?? JsonSerializer.Serialize(message);
 
         await channel.BasicPublishAsync(
             exchange: _settings.MainExchange,
             routingKey: _settings.NotificationsKey,
             mandatory: true,
-            body: Encoding.UTF8.GetBytes(jsonString),
+            body: Encoding.UTF8.GetBytes(messageString),
             basicProperties: new BasicProperties
             {
                 Persistent = true,
-                ContentType = "application/json"
+                ContentType = contentType
             },
             cancellationToken: cancellationToken);
     }

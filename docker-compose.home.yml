@@ -8,6 +8,7 @@ services:
     container_name: home-web-api
     environment:
       - HOSTNAME=${HOSTNAME}
+      - TZ=$(cat /etc/timezone)
     build:
       context: .
       dockerfile: Home/Zs.Home.WebApi/Dockerfile
@@ -18,7 +19,6 @@ services:
     restart: unless-stopped
     volumes:
       - /opt/configs:/opt/configs:ro
-      - /etc/localtime:/etc/localtime:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /dev:/host/dev:ro
@@ -33,6 +33,7 @@ services:
     container_name: home-bot
     environment:
       - HOSTNAME=${HOSTNAME}
+      - TZ=$(cat /etc/timezone)
     build:
       context: .
       dockerfile: Home/Zs.Home.Bot/Dockerfile
@@ -44,14 +45,14 @@ services:
       - web-api
     restart: unless-stopped
     volumes:
-      - "/opt/configs:/opt/configs/:ro"
-      - /etc/localtime:/etc/localtime:ro
+      - /opt/configs:/opt/configs/:ro
 
   jobs:
     image: home.jobs-hangfire
     container_name: home-jobs
     environment:
       - HOSTNAME=${HOSTNAME}
+      - TZ=$(cat /etc/timezone)
     build:
       context: .
       dockerfile: Home/Zs.Home.Jobs.Hangfire/Dockerfile
@@ -63,14 +64,14 @@ services:
       - web-api
     restart: unless-stopped
     volumes:
-      - "/opt/configs:/opt/configs/:ro"
-      - /etc/localtime:/etc/localtime:ro
+      - /opt/configs:/opt/configs/:ro
 
   client-app:
     image: home.client-app
     container_name: home-client-app
     environment:
       - HOSTNAME=${HOSTNAME}
+      - TZ=$(cat /etc/timezone)
     build:
       context: .
       dockerfile: Home/Zs.Home.ClientApp/Dockerfile
@@ -82,5 +83,4 @@ services:
       - web-api
     restart: unless-stopped
     volumes:
-      - "/opt/configs:/opt/configs/:ro"
-      - /etc/localtime:/etc/localtime:ro
+      - /opt/configs:/opt/configs/:ro

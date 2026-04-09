@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Reflection;
 using Microsoft.Extensions.Hosting;
 
@@ -21,6 +22,17 @@ public static class HostBuilderExtensions
 
         var configFiles = builder.Configuration.GetAppliedConfigurationFileNames();
         Console.WriteLine($"Applied configuration files: {string.Join(", ", configFiles)}");
+
+        return builder;
+    }
+
+    public static IHostApplicationBuilder ConfigureTimezone(this IHostApplicationBuilder builder)
+    {
+        var timeZone =  builder.Configuration["TZ"];
+        if (!string.IsNullOrWhiteSpace(timeZone))
+            CultureInfo.CurrentCulture = new CultureInfo(timeZone);
+
+        Console.WriteLine($"\"TZ\": {timeZone}, CurrentCulture: {CultureInfo.CurrentCulture}");
 
         return builder;
     }
