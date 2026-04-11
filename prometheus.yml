@@ -2,27 +2,31 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'raspi5-prometheus'
+  - job_name: 'prometheus-rpi5'
     static_configs:
-      - targets: ['192.168.1.104:9090'] # PROMETHEUS_PORT
+      - targets: ['192.168.1.104:9090']
 
-  - job_name: 'raspi5-node-exporter'
+  - job_name: 'raspberry-pi-5'
     static_configs:
       - targets: ['192.168.1.104:9100'] # NODE_EXPORTER_PORT
 
-  - job_name: 'raspi5-cadvisor'
+  - job_name: 'cadvisor-rpi5'
     static_configs:
-      - targets: ['192.168.1.104:8085'] # CADVISOR_PORT
+      - targets: ['192.168.1.104:8085']
 
-  - job_name: 'raspi5-kafka'
+  - job_name: 'cadvisor-rpi4'
+    static_configs:
+      - targets: ['192.168.1.105:8085']
+
+  - job_name: 'kafka-rpi5'
     static_configs:
       - targets: ['192.168.1.104:9308']
 
-  - job_name: 'raspi4-node-exporter'
+  - job_name: 'raspberry-pi-4'
     static_configs:
-      - targets: ['192.168.1.102:9100'] # NODE_EXPORTER_PORT
+      - targets: ['192.168.1.105:9100'] # NODE_EXPORTER_PORT
 
-  - job_name: 'nano-pi-node-exporter'
+  - job_name: 'nano-pi-router'
     scrape_interval: 5s
     static_configs:
       - targets: ['192.168.1.1:9100']
