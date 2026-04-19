@@ -35,19 +35,33 @@ internal sealed class RabbitMqListener : IAsyncDisposable
 
     private async Task InitializeAsync()
     {
-        _connection = await _connectionFactory.CreateConnectionAsync();
-        _channel = await _connection.CreateChannelAsync();
+        var retryCount = 0;
+        while (true)
+        {
+            try
+            {
+                _connection = await _connectionFactory.CreateConnectionAsync();
+                _channel = await _connection.CreateChannelAsync();
 
-        await _channel.ExchangeDeclareAsync(
-            exchange: _settings.MainExchange,
-            type: ExchangeType.Direct,
-            durable: true,
-            autoDelete: false);
+                await _channel.ExchangeDeclareAsync(
+                    exchange: _settings.MainExchange,
+                    type: ExchangeType.Direct,
+                    durable: true,
+                    autoDelete: false);
 
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-        consumer.ReceivedAsync += ReceivedNotificationAsync;
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+                consumer.ReceivedAsync += ReceivedNotificationAsync;
 
-        await _channel.BasicConsumeAsync(_settings.NotificationQueue, autoAck: false, consumer);
+                await _channel.BasicConsumeAsync(_settings.NotificationQueue, autoAck: false, consumer);
+                break;
+            }
+            catch (Exception e)
+            {
+                _logger.LogErrorIfNeed(e, $"{nameof(RabbitMqListener)}, initialization error. retryCount: {++retryCount}");
+                await Task.Delay(10.Seconds());
+            }
+        }
+
     }
 
     private async Task ReceivedNotificationAsync(object sender, BasicDeliverEventArgs eventArgs)
