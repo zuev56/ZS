@@ -106,7 +106,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Common.Data.Postgres", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Home.WebApi.Client", "Home\Zs.Home.WebApi.Client\Zs.Home.WebApi.Client.csproj", "{D02CA301-4641-4C69-981C-81210FD91D2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Home.AIAgent.Console", "Home\Zs.Home.AIAgent.Console\Zs.Home.AIAgent.Console.csproj", "{86910544-8FBF-4591-94BC-067602A22AE0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Home.AIAgent.Worker", "Home\Zs.Home.AIAgent.Worker\Zs.Home.AIAgent.Worker.csproj", "{86910544-8FBF-4591-94BC-067602A22AE0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zs.Bot.Vk", "Bot\Zs.Bot.Vk\Zs.Bot.Vk.csproj", "{76BB296A-E1D3-4B5C-8174-5169AF6244D4}"
 EndProject
