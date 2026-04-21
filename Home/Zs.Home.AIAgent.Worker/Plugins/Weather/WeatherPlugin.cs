@@ -28,7 +28,7 @@ public sealed class WeatherPlugin
         [Description("Название города, для которого нужно получить погоду (например, 'London' или 'Петрозаводск'")]
         string city)
     {
-        _logger.LogDebug("Использую функцию get_weather_for_city");
+        Console.Write($" Использую функцию get_weather_for_city(city: {city}).");
 
         var requestUrl = $"weather?q={city}&appid={_apiKey}&units=metric&lang=ru";
 
@@ -47,7 +47,8 @@ public sealed class WeatherPlugin
         }
         catch (HttpRequestException ex)
         {
-            return $"Произошла ошибка при запросе погоды для города '{city}': {ex.Message}";
+            _logger.LogError(ex, message: null);
+            return $"Произошла ошибка при запросе погоды для города '{city}'";
         }
     }
 }

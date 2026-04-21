@@ -16,7 +16,7 @@ public sealed class Repository
 
     private NpgsqlConnection CreateConnection() => new(_connectionString);
 
-    public async Task AddOrUpdateBatchAsync(IEnumerable<MusicTrack> tracks)
+    public async Task AddOrUpdateBatchAsync(List<MusicTrack> tracks)
     {
         var trackList = tracks.ToList();
         if (!trackList.Any()) return;
@@ -34,7 +34,7 @@ public sealed class Repository
         await connection.ExecuteAsync(sql, trackList);
     }
 
-    public async Task<IEnumerable<MusicTrack>> SearchAsync(string query, int limit = 50)
+    public async Task<List<MusicTrack>> SearchAsync(string query, int limit = 50)
     {
         if (string.IsNullOrWhiteSpace(query))
             return await GetAllAsync(limit);
@@ -54,10 +54,11 @@ public sealed class Repository
             limit @limit";
 
         await using var connection = CreateConnection();
-        return await connection.QueryAsync<MusicTrack>(sql, new { Query = safeQuery, Limit = limit });
+        var result = await connection.QueryAsync<MusicTrack>(sql, new { Query = safeQuery, Limit = limit });
+        return result.ToList();
     }
 
-    public async Task<IEnumerable<MusicTrack>> GetAllAsync(int limit = 1000, int offset = 0)
+    public async Task<List<MusicTrack>> GetAllAsync(int limit = 1000, int offset = 0)
     {
         const string sql = @"
             select
@@ -69,7 +70,8 @@ public sealed class Repository
             limit @limit offset @offset";
 
         await using var connection = CreateConnection();
-        return await connection.QueryAsync<MusicTrack>(sql, new { Limit = limit, Offset = offset });
+        var result = await connection.QueryAsync<MusicTrack>(sql, new { Limit = limit, Offset = offset });
+        return result.ToList();
     }
 
     /// <summary>

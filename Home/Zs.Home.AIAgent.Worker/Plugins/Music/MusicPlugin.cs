@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
+using Zs.Home.AIAgent.Worker.Extensions;
 using File = TagLib.File;
 
 namespace Zs.Home.AIAgent.Worker.Plugins.Music;
@@ -48,19 +49,33 @@ public sealed class MusicPlugin
         _logger.LogInformation("Music plugin loaded. {MusicFilesCount} tracks found.", musicFiles.Count);
     }
 
-    [KernelFunction("search_song")]
-    [Description("Ищет песни по названию или описанию.")]
-    [return: Description("Наиболее актуальные совпадения")]
-    public async Task<List<string>> SearchSong(
+    [KernelFunction("play_song")]
+    [Description("Запускает найдённые по названию или описанию песни.")]
+    public async Task PlaySong(
         [Description("Поисковый запрос, описывающий песню")]
         string query,
-        [Description("Максимальное количество результатов для возврата")]
+        [Description("Максимальное количество результатов поиска")]
         int limit = 3)
     {
-        _logger.LogDebug("Использую функцию search_song");
+        Console.Write($" Использую функцию play_song(query: '{query}', limit: {limit}).");
         var songResults = await _repository.SearchAsync(query, limit);
+        if (songResults.Count == 0)
+        {
+            foreach (var word in query.Split(' ').Where(w => w.Length > 2))
+                songResults.AddRange(await _repository.SearchAsync(word, limit));
+        }
 
-        return songResults.Select(track => Path.GetFileNameWithoutExtension(track.FilePath)).ToList();
+        if (songResults.Count > 0)
+        {
+            // TODO: send to MusicPlayerApi
+            ConsoleEx.AgentReadyToResponse();
+            Console.WriteLine($"play_song(query: '{query}', limit: {limit})");
+            songResults.Select(track => Path.GetFileNameWithoutExtension(track.FilePath))
+                .Distinct()
+                .Take(limit)
+                .ToList()
+                .ForEach(Console.WriteLine);
+        }
     }
 
     private string BuildSearchText(string path)

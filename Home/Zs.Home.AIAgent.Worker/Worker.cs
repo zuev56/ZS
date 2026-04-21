@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -14,10 +15,12 @@ public sealed class Worker : BackgroundService
 {
     private readonly Kernel _kernel;
     private readonly OpenAiSettings _openAiSettings;
+    private readonly ILogger<Worker> _logger;
 
-    public Worker(Kernel kernel, IOptions<OpenAiSettings> openAiSettings)
+    public Worker(Kernel kernel, IOptions<OpenAiSettings> openAiSettings, ILogger<Worker> logger)
     {
         _kernel = kernel;
+        _logger = logger;
         _openAiSettings = openAiSettings.Value;
     }
 
@@ -34,19 +37,41 @@ public sealed class Worker : BackgroundService
         // Чтобы всё проинициализировалось (TODO: сделать проверку инициализации плагинов)
         await Task.Delay(3000, stoppingToken);
 
+        var basePrompt = """
+                         Ты - русский AI-ассистент, который говорит кратко.
+
+                         Пользователь находится в России, г. Петрозаводск. Учитывай это в запросах, если не указан город.
+
+                         search_song вызывается в том числе для команды "Поставь". Если, например, пользователь просит "песню про лето", "песню ...", "музыку о космосе", "музыку ..." и подобное, то убирай из запроса слова "песню", "про", "музыку", "о" и подобные.
+                         """;
+        chatHistory.AddSystemMessage(basePrompt);
+
         while (true)
         {
             Console.Write("User > ");
             var userInput = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(userInput))
+                continue;
+
             Console.WriteLine();
             ConsoleEx.AgentThinking();
 
             if (_openAiSettings.SaveAndUseHistory)
+            {
+                if (userInput.Contains("новый контекст", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    chatHistory.Clear();
+                    chatHistory.AddSystemMessage(basePrompt);
+                    _logger.LogDebug("Контекст очищен.");
+                    continue;
+                }
+
+
                 chatHistory.AddUserMessage($"{userInput} ");
+            }
 
             var prompt = $"""
-                          Ты - русский AI-ассистент, который говорит кратко.
-                          Пользователь находится в России, г. Петрозаводск.
+                          {basePrompt}
                           Ответь на запрос пользователя: {userInput}
                           """;
 
@@ -72,7 +97,7 @@ public sealed class Worker : BackgroundService
                     {
                         if (!isResponding)
                         {
-                            ConsoleEx.AgentReadyToRespond();
+                            ConsoleEx.AgentReadyToResponse();
                             isResponding = true;
                         }
                         responseBuilder.Append(responseChunk);
@@ -87,7 +112,7 @@ public sealed class Worker : BackgroundService
             // Ожидание и вывод полного ответа за раз
             else
             {
-                var response = string.Empty;
+                string response;
 
                 if (_openAiSettings.SaveAndUseHistory)
                 {
@@ -103,9 +128,10 @@ public sealed class Worker : BackgroundService
                 {
                     var functionResult = await _kernel.InvokePromptAsync(prompt, new KernelArguments(promptExecutionSettings), cancellationToken: stoppingToken);
                     responseBuilder.Append(functionResult);
+                    response = responseBuilder.ToString();
                 }
 
-                ConsoleEx.AgentReadyToRespond();
+                ConsoleEx.AgentReadyToResponse();
                 Console.Write(response);
             }
 
