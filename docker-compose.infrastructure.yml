@@ -1,7 +1,8 @@
 ﻿# sudo docker compose -f docker-compose.infrastructure.yml up -d
 
 # 1. Эти каталоги будут созданы автоматически, но надо раздать права:
-# sudo mkdir -p /opt/infrastructure/{portainer,postgresql,kafka,rabbitmq,prometheus,grafana}/{data,configs}
+# sudo mkdir -p /opt/infrastructure/{portainer,postgresql,kafka,rabbitmq,prometheus,grafana,dashy}/{data,configs}
+# sudo mkdir -p /opt/infrastructure/angie/{configs,logs,www,ssl}
 # sudo chmod -R 777 /opt/infrastructure/
 
 # 2. prometheus.yml из Solution Items разместить в /opt/infrastructure/prometheus/configs/prometheus.yml
@@ -18,7 +19,19 @@ networks:
     driver: bridge
 
 services:
-  # TODO: ELK Stack
+
+  # -----------------------------------------
+  dockhand:
+    image: fnsys/dockhand:latest
+    container_name: dockhand
+    restart: unless-stopped
+    ports:
+      - "${DOCKHAND_PORT:-3000}:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockhand_data:/app/data
+    networks:
+      - infra-network
 
   # -----------------------------------------
   portainer:
@@ -62,6 +75,22 @@ services:
     volumes:
       - /opt/infrastructure/postgresql/data:/var/lib/postgresql/data
       - /opt/infrastructure/postgresql/configs:/etc/postgresql
+    networks:
+      - infra-network
+
+  # -----------------------------------------
+  angie:
+    image: docker.angie.software/angie:latest
+    container_name: angie
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/infrastructure/angie/configs:/etc/angie:ro
+      - /opt/infrastructure/angie/logs:/var/log/angie
+      - /opt/infrastructure/angie/www:/usr/share/angie/html:ro
+      - /opt/infrastructure/angie/ssl:/etc/angie/ssl:ro
     networks:
       - infra-network
 
@@ -215,5 +244,27 @@ services:
     volumes:
       - /opt/infrastructure/grafana/data:/var/lib/grafana
       - /opt/infrastructure/grafana/configs:/etc/grafana
+    networks:
+      - infra-network
+
+  # -----------------------------------------
+  dashy:
+    image: lissy93/dashy:latest
+    container_name: dashy
+    restart: unless-stopped
+    ports:
+      - "${DASHY_PORT:-4000}:8080"
+    volumes:
+      - /opt/infrastructure/dashy/data:/app/user-data
+      - /opt/infrastructure/dashy/configs:/app/public
+    environment:
+      - NODE_ENV=production
+      - ALLOW_CONFIG_MUTATIONS=true
+    healthcheck:
+      test: [ "CMD", "node", "/app/services/healthcheck.js" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
       - infra-network
