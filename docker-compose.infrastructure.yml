@@ -1,7 +1,7 @@
 ﻿# sudo docker compose -f docker-compose.infrastructure.yml up -d
 
 # 1. Эти каталоги будут созданы автоматически, но надо раздать права:
-# sudo mkdir -p /opt/infrastructure/{portainer,postgresql,kafka,rabbitmq,prometheus,grafana,dashy}/{data,configs}
+# sudo mkdir -p /opt/infrastructure/{dockhand,portainer,postgresql,kafka,rabbitmq,prometheus,grafana,dashy}/{data,configs}
 # sudo mkdir -p /opt/infrastructure/angie/{configs,logs,www,ssl}
 # sudo chmod -R 777 /opt/infrastructure/
 
@@ -29,7 +29,7 @@ services:
       - "${DOCKHAND_PORT:-3000}:3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - dockhand_data:/app/data
+      - /opt/infrastructure/dockhand:/app/data
     networks:
       - infra-network
 
