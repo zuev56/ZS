@@ -1,0 +1,33 @@
+﻿services:
+
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wireguard-client
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+    network_mode: host
+    volumes:
+      - ./:/config
+    restart: unless-stopped
+
+  metube:
+    image: ghcr.io/alexta69/metube:latest
+    container_name: metube
+    restart: unless-stopped
+    network_mode: "service:wireguard"
+    depends_on:
+      - wireguard
+    volumes:
+      - ./downloads:/downloads
+      - ./state:/state
+    environment:
+      - UID=1000
+      - GID=1000
+      - UMASK=022
+      - DOWNLOAD_DIR=/downloads
+      - TEMP_DIR=/downloads

@@ -5,9 +5,11 @@
 # sudo mkdir -p /opt/infrastructure/angie/{configs,logs,www,ssl}
 # sudo chmod -R 777 /opt/infrastructure/
 
-# 2. prometheus.yml из Solution Items разместить в /opt/infrastructure/prometheus/configs/prometheus.yml
+# 2. sudo chmod 600 /opt/infrastructure/rabbitmq/data/.erlang.cookie
 
-# 3. grafana.ini из Solution Items разместить в /opt/infrastructure/grafana/configs/
+# 3. prometheus.yml из Solution Items разместить в /opt/infrastructure/prometheus/configs/prometheus.yml
+
+# 4. grafana.ini из Solution Items разместить в /opt/infrastructure/grafana/configs/
 #sudo chown 472:472 /opt/infrastructure/grafana/configs/grafana.ini
 #sudo chmod 644 /opt/infrastructure/grafana/configs/grafana.ini
 
@@ -67,7 +69,7 @@ services:
     container_name: postgresql
     restart: unless-stopped
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "$5433:5432" #TODO: После переноса всех бд в этот контейнер надо будет вернуть вариант из .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
@@ -90,7 +92,6 @@ services:
       - /opt/infrastructure/angie/configs:/etc/angie:ro
       - /opt/infrastructure/angie/logs:/var/log/angie
       - /opt/infrastructure/angie/www:/usr/share/angie/html:ro
-      - /opt/infrastructure/angie/ssl:/etc/angie/ssl:ro
     networks:
       - infra-network
 
